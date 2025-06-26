@@ -292,16 +292,13 @@
         </div>
     </div>
 
+    <script src="config.js"></script>
+    <script src="utils.js"></script>
     <script>
         // Global Variables
         let userData = {};
         let currentGoldData = { totalGold: 0, avgPrice: 0, balances: { bar: { totalGold: 0, avgPrice: 0 }, ornament: { totalGold: 0, avgPrice: 0 } } };
         let walletData = { balance: 0, transactions: [] };
-
-        // Configuration - จำลองค่า config
-        const LIFF_ID = 'your-liff-id';
-        const API_URL = 'https://your-api-url.com/api';
-        const GRAMS_PER_BAHT = 15.16;
 
         // Loading progress tracker
         let loadingSteps = 0;
