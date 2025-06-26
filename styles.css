@@ -318,17 +318,7 @@
             font-family: 'Prompt', sans-serif;
         }
         
-        /* Mobile specific styles */
-        @media (max-width: 768px) {
-            .bottom-tabs {
-                height: 65px !important;
-            }
-            
-            .page-content {
-                padding-bottom: 75px !important;
-            }
-        }
-        
+     
         /* Smooth transitions */
         .content-section {
             transition: opacity 0.3s ease-in-out;
