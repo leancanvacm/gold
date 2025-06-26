@@ -9,106 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        /* Fixed Tab Styles - แก้ไขให้อยู่ด้านล่างเสมอ */
-        .bottom-tabs {
-            position: fixed !important;
-            bottom: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            z-index: 9999 !important;
-            background: white;
-            border-top: 1px solid #e5e7eb;
-            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-            height: 70px !important;
-        }
-        
-        .tab-button {
-            color: #6b7280;
-            transition: all 0.2s ease;
-            border-bottom: 3px solid transparent;
-            padding: 12px 8px !important;
-            font-size: 14px;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .tab-button:hover {
-            color: #374151;
-            background-color: #f9fafb;
-        }
-        
-        .tab-button.active {
-            color: #f59e0b !important;
-            border-bottom-color: #f59e0b !important;
-            background-color: #fffbeb;
-            font-weight: 600;
-        }
-        
-        /* Page container styles - เพิ่มพื้นที่ด้านล่างสำหรับ tabs */
-        .page-content {
-            padding-bottom: 80px !important;
-            min-height: calc(100vh - 160px) !important;
-            overflow-y: auto;
-        }
-        
-        /* App container */
-        #app {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
-        
-        /* Loading and other styles */
-        #loading {
-            transition: opacity 0.3s ease-out, transform 0.3s ease-out;
-        }
-        
-        .card-hover, .btn-animate {
-            will-change: transform;
-            transform: translateZ(0);
-            transition: all 0.2s ease;
-        }
-        
-        .card-hover:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-        }
-        
-        .btn-animate:active {
-            transform: scale(0.95);
-        }
-        
-        /* Prevent body scroll when needed */
-        body {
-            overflow-x: hidden;
-            font-family: 'Prompt', sans-serif;
-        }
-        
-        /* Mobile specific styles */
-        @media (max-width: 768px) {
-            .bottom-tabs {
-                height: 65px !important;
-            }
-            
-            .page-content {
-                padding-bottom: 75px !important;
-            }
-        }
-        
-        /* Smooth transitions */
-        .content-section {
-            transition: opacity 0.3s ease-in-out;
-        }
-        
-        .content-section.hidden {
-            display: none !important;
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body class="bg-gray-100">
     <!-- Mobile Only Warning Screen -->
@@ -150,8 +51,22 @@
             </div>
         </div>
     </div>
-
-    <!-- Loading Screen -->
+       <!-- Tab Navigation -->
+        <div class="tabs fixed bottom-0 left-0 right-0 bg-white shadow-lg border-t z-10" style="position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important; z-index: 50 !important;">
+            <div class="flex">
+                <button id="portfolioTab" onclick="switchTab('portfolio')" class="tab flex-1 py-3 text-center font-semibold tab-active btn-animate">
+                    <i class="fas fa-chart-pie mr-2"></i>พอร์ตโฟลิโอ
+                </button>
+                <button id="dashboardTab" onclick="switchTab('dashboard')" class="tab flex-1 py-3 text-center font-semibold btn-animate">
+                    <i class="fas fa-chart-line mr-2"></i>ราคาทอง
+                </button>
+                <button id="walletTab" onclick="switchTab('wallet')" class="tab flex-1 py-3 text-center font-semibold btn-animate">
+                    <i class="fas fa-wallet mr-2"></i>กระเป๋าเงิน
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- Improved Loading Screen -->
     <div id="loading" class="fixed inset-0 bg-gradient-to-br from-yellow-400 to-amber-500 z-50 flex items-center justify-center">
         <div class="text-center">
             <div class="relative mb-6">
@@ -173,8 +88,8 @@
         </div>
     </div> 
 
-    <!-- Main App -->
-    <div id="app" class="hidden">
+    <!-- Main App (hidden by default) -->
+    <div id="app" class="hidden min-h-screen flex-col">
         <!-- Header -->
         <div class="bg-gradient-to-r from-yellow-400 to-amber-500 p-4 shadow-lg">
             <div class="flex items-center space-x-3">
@@ -190,158 +105,172 @@
             </div>
         </div>
 
-        <!-- Content Container -->
-        <div class="flex-1">
-            <!-- Portfolio Content -->
-            <div id="portfolioContent" class="p-4 page-container flex-1">
-                <!-- Action Buttons -->
-                <div class="grid grid-cols-2 gap-4 mb-6">
-                    <button onclick="navigateToPage('buy.html')" class="bg-green-500 text-white py-4 rounded-lg font-semibold hover:bg-green-600 transition card-hover btn-animate">
-                        <i class="fas fa-plus-circle mr-2"></i>ซื้อทอง
-                    </button>
-                    <button onclick="navigateToPage('sell.html')" class="bg-red-500 text-white py-4 rounded-lg font-semibold hover:bg-red-600 transition card-hover btn-animate">
-                        <i class="fas fa-minus-circle mr-2"></i>ขายทอง
-                    </button>
-                </div>
-
-                <!-- Gold Balance Cards -->
-                <div class="grid grid-cols-2 gap-4 mb-6">
-                    <div class="bg-white p-4 rounded-lg shadow card-hover">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-gray-500 text-sm">ทองคำแท่ง</p>
-                                <p id="barGold" class="text-xl font-bold text-yellow-600">0 กรัม</p>
-                            </div>
-                            <i class="fas fa-coins text-3xl text-yellow-500"></i>
-                        </div>
-                    </div>
-                    <div class="bg-white p-4 rounded-lg shadow card-hover">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-gray-500 text-sm">ทองรูปพรรณ</p>
-                                <p id="ornamentGold" class="text-xl font-bold text-yellow-600">0 กรัม</p>
-                            </div>
-                            <i class="fas fa-gem text-3xl text-yellow-500"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Transaction History -->
-                <div class="bg-white rounded-lg shadow p-4 card-hover">
-                    <h3 class="font-bold text-lg mb-4"><i class="fas fa-history mr-2"></i>ประวัติการทำรายการ</h3>
-                    <div id="transactionList" class="space-y-3">
-                        <p class="text-gray-500 text-center">กำลังโหลด...</p>
-                    </div>
-                </div>
+        <!-- Portfolio Content -->
+        <div id="portfolioContent" class="p-4 page-container flex-1">
+            <!-- Action Buttons -->
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <button onclick="navigateToPage('buy.html')" class="bg-green-500 text-white py-4 rounded-lg font-semibold hover:bg-green-600 transition card-hover btn-animate">
+                    <i class="fas fa-plus-circle mr-2"></i>ซื้อทอง
+                </button>
+                <button onclick="navigateToPage('sell.html')" class="bg-red-500 text-white py-4 rounded-lg font-semibold hover:bg-red-600 transition card-hover btn-animate">
+                    <i class="fas fa-minus-circle mr-2"></i>ขายทอง
+                </button>
             </div>
 
-            <!-- Dashboard Content -->
-            <div id="dashboardContent" class="p-4 hidden page-container flex-1">
-                <p class="text-center text-gray-500">กำลังโหลดข้อมูลราคาทอง...</p>
-            </div>
-
-            <!-- Wallet Content -->
-            <div id="walletContent" class="p-4 hidden page-container flex-1">
-                <!-- Wallet Balance -->
-                <div class="bg-white rounded-lg shadow p-6 mb-4 card-hover">
+            <!-- Gold Balance Cards -->
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-white p-4 rounded-lg shadow card-hover">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-gray-500 text-sm">ยอดเงินคงเหลือ</p>
-                            <p id="walletBalance" class="text-3xl font-bold text-green-600">฿0.00</p>
+                            <p class="text-gray-500 text-sm">ทองคำแท่ง</p>
+                            <p id="barGold" class="text-xl font-bold text-yellow-600">0 กรัม</p>
                         </div>
-                        <i class="fas fa-wallet text-5xl text-green-500"></i>
+                        <i class="fas fa-coins text-3xl text-yellow-500"></i>
                     </div>
                 </div>
-
-                <!-- Wallet Actions -->
-                <div class="grid grid-cols-2 gap-4 mb-6">
-                    <button onclick="navigateToPage('topup.html')" class="bg-blue-500 text-white py-4 rounded-lg font-semibold hover:bg-blue-600 transition card-hover btn-animate">
-                        <i class="fas fa-plus mr-2"></i>เติมเงิน
-                    </button>
-                    <button onclick="navigateToPage('withdraw.html')" class="bg-orange-500 text-white py-4 rounded-lg font-semibold hover:bg-orange-600 transition card-hover btn-animate">
-                        <i class="fas fa-minus mr-2"></i>ถอนเงิน
-                    </button>
-                </div>
-
-                <!-- Wallet History -->
-                <div class="bg-white rounded-lg shadow p-4 card-hover">
-                    <h3 class="font-bold text-lg mb-4"><i class="fas fa-list mr-2"></i>ประวัติกระเป๋าเงิน</h3>
-                    <div id="walletHistory" class="space-y-3">
-                        <p class="text-gray-500 text-center">กำลังโหลด...</p>
+                <div class="bg-white p-4 rounded-lg shadow card-hover">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">ทองรูปพรรณ</p>
+                            <p id="ornamentGold" class="text-xl font-bold text-yellow-600">0 กรัม</p>
+                        </div>
+                        <i class="fas fa-gem text-3xl text-yellow-500"></i>
                     </div>
+                </div>
+            </div>
+
+            <!-- Transaction History -->
+            <div class="bg-white rounded-lg shadow p-4 card-hover">
+                <h3 class="font-bold text-lg mb-4"><i class="fas fa-history mr-2"></i>ประวัติการทำรายการ</h3>
+                <div id="transactionList" class="space-y-3">
+                    <p class="text-gray-500 text-center">กำลังโหลด...</p>
                 </div>
             </div>
         </div>
 
-        <!-- Fixed Bottom Tab Navigation -->
-        <div class="bottom-tabs">
-            <div class="flex h-full">
-                <button id="portfolioTab" onclick="switchTab('portfolio')" class="tab-button flex-1 active">
-                    <i class="fas fa-chart-pie text-lg mb-1"></i>
-                    <span class="text-xs">พอร์ตโฟลิโอ</span>
+        <!-- Dashboard Content -->
+        <div id="dashboardContent" class="p-4 hidden page-container flex-1">
+            <p class="text-center text-gray-500">กำลังโหลดข้อมูลราคาทอง...</p>
+        </div>
+
+        <!-- Wallet Content -->
+        <div id="walletContent" class="p-4 hidden page-container flex-1">
+            <!-- Wallet Balance -->
+            <div class="bg-white rounded-lg shadow p-6 mb-4 card-hover">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">ยอดเงินคงเหลือ</p>
+                        <p id="walletBalance" class="text-3xl font-bold text-green-600">฿0.00</p>
+                    </div>
+                    <i class="fas fa-wallet text-5xl text-green-500"></i>
+                </div>
+            </div>
+
+            <!-- Wallet Actions -->
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <button onclick="navigateToPage('topup.html')" class="bg-blue-500 text-white py-4 rounded-lg font-semibold hover:bg-blue-600 transition card-hover btn-animate">
+                    <i class="fas fa-plus mr-2"></i>เติมเงิน
                 </button>
-                <button id="dashboardTab" onclick="switchTab('dashboard')" class="tab-button flex-1">
-                    <i class="fas fa-chart-line text-lg mb-1"></i>
-                    <span class="text-xs">ราคาทอง</span>
-                </button>
-                <button id="walletTab" onclick="switchTab('wallet')" class="tab-button flex-1">
-                    <i class="fas fa-wallet text-lg mb-1"></i>
-                    <span class="text-xs">กระเป๋าเงิน</span>
+                <button onclick="navigateToPage('withdraw.html')" class="bg-orange-500 text-white py-4 rounded-lg font-semibold hover:bg-orange-600 transition card-hover btn-animate">
+                    <i class="fas fa-minus mr-2"></i>ถอนเงิน
                 </button>
             </div>
+
+            <!-- Wallet History -->
+            <div class="bg-white rounded-lg shadow p-4 card-hover">
+                <h3 class="font-bold text-lg mb-4"><i class="fas fa-list mr-2"></i>ประวัติกระเป๋าเงิน</h3>
+                <div id="walletHistory" class="space-y-3">
+                    <p class="text-gray-500 text-center">กำลังโหลด...</p>
+                </div>
+            </div>
         </div>
-    </div>
+
+     
 
     <script src="config.js"></script>
     <script src="utils.js"></script>
     <script>
-        // Global Variables
-        let userData = {};
-        let currentGoldData = { totalGold: 0, avgPrice: 0, balances: { bar: { totalGold: 0, avgPrice: 0 }, ornament: { totalGold: 0, avgPrice: 0 } } };
-        let walletData = { balance: 0, transactions: [] };
-
-        // Loading progress tracker
-        let loadingSteps = 0;
-        const totalSteps = 4;
-        const loadingMessages = [
-            'เชื่อมต่อ LINE...',
-            'โหลดข้อมูลผู้ใช้...',
-            'โหลดข้อมูลทอง...',
-            'เสร็จสิ้น!'
-        ];
-
         // Mobile Device Detection
         function detectMobileDevice() {
             const userAgent = navigator.userAgent || navigator.vendor || window.opera;
             const screenWidth = window.screen.width;
             const screenHeight = window.screen.height;
             
+            // ตรวจสอบ User Agent
             const mobileRegex = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
             const isMobileUserAgent = mobileRegex.test(userAgent);
+            
+            // ตรวจสอบขนาดหน้าจอ (มือถือและแท็บเล็ต)
             const isMobileScreen = screenWidth <= 768 || screenHeight <= 768;
+            
+            // ตรวจสอบ Touch Support
             const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
             
+            // ตรวจสอบ Orientation API (มักมีใน mobile)
+            const hasOrientationAPI = 'orientation' in window;
+            
+            // ตรวจสอบ Device Pixel Ratio (mobile มักมีค่าสูง)
+            const hasHighDPR = window.devicePixelRatio > 1;
+            
+            console.log('Mobile Detection:', {
+                userAgent: userAgent,
+                isMobileUserAgent: isMobileUserAgent,
+                screenWidth: screenWidth,
+                screenHeight: screenHeight,
+                isMobileScreen: isMobileScreen,
+                isTouchDevice: isTouchDevice,
+                hasOrientationAPI: hasOrientationAPI,
+                hasHighDPR: hasHighDPR
+            });
+            
+            // ถือว่าเป็น mobile หาก:
+            // 1. User Agent เป็น mobile หรือ
+            // 2. ขนาดหน้าจอเล็กและมี touch support
             return isMobileUserAgent || (isMobileScreen && isTouchDevice);
         }
 
+        // ตรวจสอบว่าเป็น PC หรือไม่
         function isPCDevice() {
             const userAgent = navigator.userAgent || navigator.vendor || window.opera;
             const screenWidth = window.screen.width;
             
+            // ตรวจสอบ Desktop OS
             const desktopOS = /Windows NT|Macintosh|Linux/i.test(userAgent);
+            
+            // ตรวจสอบ Desktop Browser
             const desktopBrowser = /Chrome|Firefox|Safari|Edge|Opera/i.test(userAgent) && 
                                   !/Mobile|Android|iPhone|iPad/i.test(userAgent);
+            
+            // ตรวจสอบขนาดหน้าจอใหญ่
             const largeScreen = screenWidth >= 1024;
+            
+            // ไม่มี Touch Support หรือมี Mouse
             const hasMouseInput = !('ontouchstart' in window) || window.matchMedia('(pointer: fine)').matches;
+            
+            console.log('PC Detection:', {
+                desktopOS: desktopOS,
+                desktopBrowser: desktopBrowser,
+                largeScreen: largeScreen,
+                hasMouseInput: hasMouseInput,
+                screenWidth: screenWidth
+            });
             
             return (desktopOS && desktopBrowser) || (largeScreen && hasMouseInput);
         }
 
+        // แสดง Mobile Only Warning และ redirect ไป LINE Developers
         function showMobileOnlyWarning() {
             document.getElementById('loading').classList.add('hidden');
             document.getElementById('mobileOnlyWarning').classList.remove('hidden');
             document.getElementById('app').classList.add('hidden');
             
+            // ป้องกันการเข้าถึง console
+            if (typeof console !== 'undefined') {
+                console.log('%c⚠️ การเข้าถึงระบบผ่าน PC ถูกจำกัด', 'color: red; font-size: 16px; font-weight: bold;');
+                console.log('%c🔒 กรุณาใช้งานผ่านมือถือหรือแท็บเล็ตเท่านั้น', 'color: orange; font-size: 14px;');
+            }
+            
+            // เริ่ม countdown
             let countdownTime = 3;
             const countdownElement = document.getElementById('countdown');
             const countdownBar = document.getElementById('countdownBar');
@@ -362,15 +291,33 @@
             }, 1000);
         }
 
+        // ตรวจสอบ LIFF Environment
+        function isLIFFEnvironment() {
+            return typeof liff !== 'undefined' && window.location.hostname.includes('liff');
+        }
+
+        // Device Check ก่อนโหลดแอป
         function performDeviceCheck() {
             const isMobile = detectMobileDevice();
             const isPC = isPCDevice();
+            const inLIFF = isLIFFEnvironment();
             
+            console.log('Device Check Results:', {
+                isMobile: isMobile,
+                isPC: isPC,
+                inLIFF: inLIFF,
+                userAgent: navigator.userAgent,
+                screenSize: `${window.screen.width}x${window.screen.height}`,
+                viewportSize: `${window.innerWidth}x${window.innerHeight}`
+            });
+            
+            // บล็อกการเข้าถึงจาก PC
             if (isPC && !isMobile) {
                 showMobileOnlyWarning();
                 return false;
             }
             
+            // ตรวจสอบเพิ่มเติมสำหรับขนาดหน้าจอ
             if (window.screen.width > 1200 && window.innerWidth > 1200) {
                 showMobileOnlyWarning();
                 return false;
@@ -378,6 +325,21 @@
             
             return true;
         }
+
+        // Global Variables
+        let userData = {};
+        let currentGoldData = { totalGold: 0, avgPrice: 0, balances: { bar: { totalGold: 0, avgPrice: 0 }, ornament: { totalGold: 0, avgPrice: 0 } } };
+        let walletData = { balance: 0, transactions: [] };
+
+        // Optimized Loading progress tracker (ใช้ของไฟล์แรก)
+        let loadingSteps = 0;
+        const totalSteps = 4; // เพิ่มขึ้นตามไฟล์ที่สอง
+        const loadingMessages = [
+            'เชื่อมต่อ LINE...',
+            'โหลดข้อมูลผู้ใช้...',
+            'โหลดข้อมูลทอง...',
+            'เสร็จสิ้น!'
+        ];
 
         function updateLoadingProgress(customMessage) {
             loadingSteps++;
@@ -399,10 +361,11 @@
                 loadingMessage.textContent = message;
             }
             
+            // เมื่อโหลดเสร็จครบทุกขั้นตอน
             if (loadingSteps >= totalSteps) {
                 setTimeout(() => {
                     hideLoading();
-                }, 500);
+                }, 500); // ปรับเวลาตามไฟล์แรก
             }
         }
 
@@ -410,6 +373,7 @@
             const loadingElement = document.getElementById('loading');
             const appElement = document.getElementById('app');
             
+            // Smooth transition (ใช้ของไฟล์แรก)
             loadingElement.style.opacity = '0';
             loadingElement.style.transform = 'scale(0.95)';
             
@@ -419,6 +383,7 @@
                 appElement.style.opacity = '0';
                 appElement.style.transform = 'translateY(20px)';
                 
+                // Animate app entrance
                 setTimeout(() => {
                     appElement.style.transition = 'all 0.3s ease-out';
                     appElement.style.opacity = '1';
@@ -429,347 +394,104 @@
 
         // Navigation function
         function navigateToPage(page) {
-            console.log('Navigating to:', page);
-            // window.location.href = page;
+            window.location.href = page;
         }
 
-        // Tab switching - แก้ไขให้ทำงานได้ดีขึ้น
+        // Tab switching
         function switchTab(tab) {
-            // ซ่อนทุก content sections
-            const contents = ['portfolioContent', 'dashboardContent', 'walletContent'];
-            const tabs = ['portfolioTab', 'dashboardTab', 'walletTab'];
-            
-            contents.forEach(id => {
-                const element = document.getElementById(id);
-                if (element) {
-                    element.classList.add('hidden');
-                }
-            });
-            
-            tabs.forEach(id => {
-                const element = document.getElementById(id);
-                if (element) {
-                    element.classList.remove('active');
-                }
-            });
+            const portfolioTab = document.getElementById('portfolioTab');
+            const dashboardTab = document.getElementById('dashboardTab');
+            const walletTab = document.getElementById('walletTab');
+            const portfolioContent = document.getElementById('portfolioContent');
+            const dashboardContent = document.getElementById('dashboardContent');
+            const walletContent = document.getElementById('walletContent');
 
-            // แสดง content และ activate tab ที่เลือก
+            // Reset all tabs
+            portfolioTab.classList.remove('tab-active');
+            dashboardTab.classList.remove('tab-active');
+            walletTab.classList.remove('tab-active');
+            portfolioContent.classList.add('hidden');
+            dashboardContent.classList.add('hidden');
+            walletContent.classList.add('hidden');
+
+            // Activate selected tab
             if (tab === 'portfolio') {
-                document.getElementById('portfolioContent').classList.remove('hidden');
-                document.getElementById('portfolioTab').classList.add('active');
+                portfolioTab.classList.add('tab-active');
+                portfolioContent.classList.remove('hidden');
             } else if (tab === 'dashboard') {
-                document.getElementById('dashboardContent').classList.remove('hidden');
-                document.getElementById('dashboardTab').classList.add('active');
+                dashboardTab.classList.add('tab-active');
+                dashboardContent.classList.remove('hidden');
                 loadDashboard();
             } else if (tab === 'wallet') {
-                document.getElementById('walletContent').classList.remove('hidden');
-                document.getElementById('walletTab').classList.add('active');
+                walletTab.classList.add('tab-active');
+                walletContent.classList.remove('hidden');
                 loadWalletData();
             }
         }
 
+        // Load dashboard content
         function loadDashboard() {
-            console.log('Loading dashboard...');
-            // เปลี่ยนเป็นโหลดข้อมูลในหน้าเดียวกันแทนการ redirect
-            const dashboardContent = document.getElementById('dashboardContent');
-            dashboardContent.innerHTML = `
-                <div class="space-y-4">
-                    <div class="bg-white rounded-lg shadow p-6 text-center">
-                        <i class="fas fa-chart-line text-4xl text-yellow-500 mb-4"></i>
-                        <h3 class="text-xl font-bold mb-2">ราคาทองคำวันนี้</h3>
-                        <div class="grid grid-cols-2 gap-4 mt-4">
-                            <div class="text-center">
-                                <p class="text-sm text-gray-500">ทองคำแท่ง (ซื้อ)</p>
-                                <p class="text-lg font-bold text-green-600">฿42,500</p>
-                            </div>
-                            <div class="text-center">
-                                <p class="text-sm text-gray-500">ทองคำแท่ง (ขาย)</p>
-                                <p class="text-lg font-bold text-red-600">฿42,400</p>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4 mt-4">
-                            <div class="text-center">
-                                <p class="text-sm text-gray-500">ทองรูปพรรณ (ซื้อ)</p>
-                                <p class="text-lg font-bold text-green-600">฿43,000</p>
-                            </div>
-                            <div class="text-center">
-                                <p class="text-sm text-gray-500">ทองรูปพรรณ (ขาย)</p>
-                                <p class="text-lg font-bold text-red-600">฿41,500</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bg-white rounded-lg shadow p-4">
-                        <h4 class="font-bold mb-2">แนวโน้มราคาทอง</h4>
-                        <p class="text-sm text-gray-600">ราคาทองในวันนี้มีแนวโน้มเพิ่มขึ้นจากวันที่ผ่านมา</p>
-                    </div>
-                </div>
-            `;
+            window.location.href = 'dashboard.html';
         }
 
-        // Utility functions
-        function formatNumber(num) {
-            return num.toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-        }
-
-        function formatCurrency(amount) {
-            return amount.toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-        }
-
-        // API Mock functions
-        async function loadGoldData() {
-            try {
-                updateLoadingProgress('โหลดข้อมูลทอง...');
-                
-                // Mock data
-                currentGoldData = {
-                    totalGold: 15.55,
-                    avgPrice: 42450,
-                    balances: {
-                        bar: { totalGold: 10.25, avgPrice: 42400 },
-                        ornament: { totalGold: 5.30, avgPrice: 42500 }
-                    }
-                };
-                
-                const gramsPerBaht = GRAMS_PER_BAHT || 15.16;
-                const totalValue = (currentGoldData.totalGold / gramsPerBaht) * currentGoldData.avgPrice;
-                
-                document.getElementById('totalGold').textContent = 'จำนวน:' + formatNumber(currentGoldData.totalGold) + ' กรัม';
-                document.getElementById('totalValue').textContent = 'มูลค่า: ฿' + formatCurrency(totalValue);
-                document.getElementById('barGold').textContent = formatNumber(currentGoldData.balances.bar?.totalGold || 0) + ' กรัม';
-                document.getElementById('ornamentGold').textContent = formatNumber(currentGoldData.balances.ornament?.totalGold || 0) + ' กรัม';
-                
-            } catch (error) {
-                console.error('Error loading gold data:', error);
-                document.getElementById('totalGold').textContent = 'จำนวน:0 กรัม';
-                document.getElementById('totalValue').textContent = 'มูลค่า: ฿0';
-                document.getElementById('barGold').textContent = '0 กรัม';
-                document.getElementById('ornamentGold').textContent = '0 กรัม';
-            }
-        }
-
-        async function loadTransactions() {
-            try {
-                // Mock transactions data
-                const mockTransactions = [
-                    {
-                        type: 'ซื้อ',
-                        amount: 5.25,
-                        goldType: 'bar',
-                        price: 42400,
-                        total: 14766,
-                        date: '26/06/2025 14:30'
-                    },
-                    {
-                        type: 'ขาย',
-                        amount: 2.15,
-                        goldType: 'ornament',
-                        price: 41500,
-                        total: 5883,
-                        date: '25/06/2025 10:15'
-                    }
-                ];
-
-                const transactionList = document.getElementById('transactionList');
-                transactionList.innerHTML = '';
-                
-                if (mockTransactions.length === 0) {
-                    transactionList.innerHTML = '<p class="text-gray-500 text-center">ยังไม่มีรายการ</p>';
-                    return;
-                }
-                
-                mockTransactions.forEach(transaction => {
-                    const div = document.createElement('div');
-                    div.className = 'flex justify-between items-center p-3 bg-gray-50 rounded-lg';
-                    const typeColor = transaction.type === 'ซื้อ' ? 'text-green-600' : 'text-red-600';
-                    const typeIcon = transaction.type === 'ซื้อ' ? 'fa-plus' : 'fa-minus';
-                    const goldTypeText = transaction.goldType === 'bar' ? 'ทองคำแท่ง' : 'ทองรูปพรรณ';
-                    div.innerHTML = `
-                        <div>
-                            <p class="font-semibold ${typeColor}">
-                                <i class="fas ${typeIcon} mr-1"></i>
-                                ${transaction.type} ${formatNumber(transaction.amount)} กรัม (${goldTypeText})
-                            </p>
-                            <p class="text-sm text-gray-500">${transaction.date}</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="font-semibold">฿${formatCurrency(transaction.price)}/บาท</p>
-                            <p class="text-sm text-gray-500">฿${formatCurrency(transaction.total)}</p>
-                        </div>
-                    `;
-                    transactionList.appendChild(div);
-                });
-                
-            } catch (error) {
-                console.error('Error loading transactions:', error);
-                document.getElementById('transactionList').innerHTML = '<p class="text-gray-500 text-center">ไม่สามารถโหลดข้อมูลได้</p>';
-            }
-        }
-
-        async function loadWalletData() {
-            try {
-                // Mock wallet data
-                walletData = {
-                    balance: 25000.50,
-                    transactions: [
-                        {
-                            type: 'เติมเงิน',
-                            amount: 10000,
-                            date: '26/06/2025 09:30',
-                            status: 'สำเร็จ',
-                            bank: 'ธนาคารกสิกรไทย'
-                        },
-                        {
-                            type: 'ซื้อทอง',
-                            amount: -14766,
-                            date: '26/06/2025 14:30',
-                            status: 'สำเร็จ',
-                            bank: ''
-                        },
-                        {
-                            type: 'ขายทอง',
-                            amount: 5883,
-                            date: '25/06/2025 10:15',
-                            status: 'สำเร็จ',
-                            bank: ''
-                        }
-                    ]
-                };
-
-                document.getElementById('walletBalance').textContent = '฿' + formatCurrency(walletData.balance);
-
-                const walletHistory = document.getElementById('walletHistory');
-                walletHistory.innerHTML = '';
-
-                if (walletData.transactions.length === 0) {
-                    walletHistory.innerHTML = '<p class="text-gray-500 text-center">ยังไม่มีรายการ</p>';
-                    return;
-                }
-
-                walletData.transactions.forEach(transaction => {
-                    const div = document.createElement('div');
-                    div.className = 'flex justify-between items-center p-3 bg-gray-50 rounded-lg';
-                    
-                    let typeColor, typeIcon;
-                    if (transaction.type === 'เติมเงิน') {
-                        typeColor = 'text-green-600';
-                        typeIcon = 'fa-plus-circle';
-                    } else if (transaction.type === 'อนุมัติถอนเงิน' || transaction.type === 'อนุมัติเติมเงิน') {
-                        typeColor = 'text-green-600';
-                        typeIcon = 'fa-check-circle';
-                    } else if (transaction.type === 'ซื้อทอง') {
-                        typeColor = 'text-blue-600';
-                        typeIcon = 'fa-coins';
-                    } else if (transaction.type === 'ขายทอง') {
-                        typeColor = 'text-red-600';
-                        typeIcon = 'fa-coins';
-                    } else {
-                        typeColor = 'text-red-600';
-                        typeIcon = 'fa-minus-circle';
-                    }
-
-                    let statusColor;
-                    if (transaction.status === 'สำเร็จ' || transaction.status === 'อนุมัติแล้ว') {
-                        statusColor = 'text-green-500';
-                    } else if (transaction.status === 'รอดำเนินการ' || transaction.status === 'รอการอนุมัติ') {
-                        statusColor = 'text-yellow-500';
-                    } else if (transaction.status === 'ยกเลิก' || transaction.status === 'ปฏิเสธ') {
-                        statusColor = 'text-red-500';
-                    } else {
-                        statusColor = 'text-gray-500';
-                    }
-
-                    const amountPrefix = transaction.amount >= 0 ? '+' : '';
-                    const amountColor = transaction.amount >= 0 ? 'text-green-600' : 'text-red-600';
-
-                    div.innerHTML = `
-                        <div>
-                            <p class="font-semibold ${typeColor}">
-                                <i class="fas ${typeIcon} mr-1"></i>
-                                ${transaction.type}
-                            </p>
-                            <p class="text-sm text-gray-500">${transaction.date}</p>
-                            <p class="text-xs ${statusColor}">${transaction.status}</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="font-semibold ${amountColor}">${amountPrefix}฿${formatCurrency(Math.abs(transaction.amount))}</p>
-                            <p class="text-sm text-gray-500">${transaction.bank || ''}</p>
-                        </div>
-                    `;
-                    walletHistory.appendChild(div);
-                });
-                
-            } catch (error) {
-                console.error('Error loading wallet data:', error);
-                document.getElementById('walletBalance').textContent = '฿0.00';
-                document.getElementById('walletHistory').innerHTML = '<p class="text-gray-500 text-center">ไม่สามารถโหลดข้อมูลได้</p>';
-            }
-        }
-
-        // Initialize App
-        async function initApp() {
-            try {
-                // Mock user data
-                userData = {
-                    userId: 'U1234567890',
-                    name: 'ผู้ใช้ทดสอบ',
-                    picture: 'https://cdn-icons-gif.flaticon.com/11255/11255995.gif'
-                };
-                
-                document.getElementById('userName').textContent = userData.name;
-                document.getElementById('userPic').src = userData.picture;
-                
-                updateLoadingProgress('โหลดข้อมูลทอง...');
-                
-                // โหลดข้อมูลแบบ parallel
-                const dataPromises = [
-                    loadGoldData().catch(console.error),
-                    loadTransactions().catch(console.error),
-                    loadWalletData().catch(console.error)
-                ];
-                
-                await Promise.race([
-                    Promise.all(dataPromises),
-                    new Promise(resolve => setTimeout(resolve, 1000))
-                ]);
-                
-                updateLoadingProgress('เสร็จสิ้น!');
-                
-                setTimeout(() => {
-                    Promise.all(dataPromises).catch(console.error);
-                }, 100);
-                
-            } catch (error) {
-                console.error('Error initializing app:', error);
-                updateLoadingProgress('เสร็จสิ้น!');
-            }
-        }
-
-        // Main initialization
+        // Initialize LIFF - ผสมแบบของไฟล์แรก (เร็วขึ้น) กับไฟล์ที่สอง
         window.onload = async function() {
             // ตรวจสอบอุปกรณ์ก่อนโหลดแอป
             if (!performDeviceCheck()) {
-                return;
+                return; // หยุดการทำงานถ้าไม่ใช่ mobile
             }
 
             try {
                 updateLoadingProgress('เชื่อมต่อ LINE...');
                 
-                // จำลองการเชื่อมต่อ LIFF
-                await new Promise(resolve => setTimeout(resolve, 500));
+                // ตรวจสอบว่ามี LIFF_ID หรือไม่
+                if (!LIFF_ID) {
+                    console.error('LIFF_ID not found in config.js');
+                    throw new Error('LIFF_ID not configured');
+                }
                 
-                updateLoadingProgress('โหลดข้อมูลผู้ใช้...');
-                await initApp();
+                await liff.init({ liffId: LIFF_ID });
                 
+                // Start background data fetching (ไม่รอผลลัพธ์)
+                fetchDataInBackground();
+                
+                if (liff.isLoggedIn()) {
+                    updateLoadingProgress('โหลดข้อมูลผู้ใช้...');
+                    await initApp();
+                } else {
+                    liff.login();
+                }
             } catch (err) {
-                console.error('App init failed:', err);
+                console.error('LIFF init failed:', err);
+                // ยังคงแสดงแอปแม้มี error แต่แจ้งเตือนผู้ใช้
                 updateLoadingProgress('เสร็จสิ้น!');
                 setTimeout(() => {
-                    alert('ไม่สามารถเชื่อมต่อระบบได้ กรุณาลองใหม่อีกครั้ง');
+                    Swal.fire({
+                        title: 'เตือน',
+                        text: 'ไม่สามารถเชื่อมต่อระบบได้ กรุณาลองใหม่อีกครั้ง',
+                        icon: 'warning',
+                        confirmButtonText: 'ตกลง'
+                    });
                 }, 1000);
             }
         };
 
-        // Event Listeners for responsive design
+        // Background data fetching (ไม่บล็อก loading)
+        async function fetchDataInBackground() {
+            try {
+                // เริ่มดึงข้อมูลพื้นฐานทันที
+                if (typeof fetchGoldPrices === 'function') {
+                    fetchGoldPrices().catch(console.error);
+                }
+                if (typeof fetchBankAccounts === 'function') {
+                    fetchBankAccounts().catch(console.error);
+                }
+            } catch (error) {
+                console.error('Background fetch error:', error);
+            }
+        }
+
+        // Monitor screen size changes
         window.addEventListener('resize', function() {
             if (window.innerWidth > 1200) {
                 if (!document.getElementById('mobileOnlyWarning').classList.contains('hidden')) {
@@ -779,26 +501,334 @@
             }
         });
 
-        window.addEventListener('orientationchange', function() {
-            setTimeout(function() {
-                if (window.innerWidth > 1200) {
-                    showMobileOnlyWarning();
-                }
-            }, 500);
-        });
-
-        // Prevent context menu
+        // Prevent right-click context menu on mobile
         document.addEventListener('contextmenu', function(e) {
             e.preventDefault();
         });
 
-        // Prevent text selection on mobile
+        // Prevent text selection
         document.addEventListener('selectstart', function(e) {
             e.preventDefault();
         });
 
-        // Disable developer tools shortcuts
+        // Initialize App (ผสมทั้งสองไฟล์)
+        async function initApp() {
+            try {
+                const profile = await liff.getProfile();
+                userData = {
+                    userId: profile.userId,
+                    name: profile.displayName,
+                    picture: profile.pictureUrl
+                };
+                
+                // อัพเดท UI ทันที
+                document.getElementById('userName').textContent = userData.name;
+                document.getElementById('userPic').src = userData.picture;
+                
+                updateLoadingProgress('โหลดข้อมูลทอง...');
+                
+                // โหลดข้อมูลแบบ parallel และไม่รอให้เสร็จทั้งหมด
+                const dataPromises = [
+                    loadGoldData().catch(console.error),
+                    loadTransactions().catch(console.error),
+                    loadWalletData().catch(console.error)
+                ];
+                
+                // รอเพียงข้อมูลหลักเท่านั้น
+                await Promise.race([
+                    Promise.all(dataPromises),
+                    new Promise(resolve => setTimeout(resolve, 1000)) // timeout 1 วินาที
+                ]);
+                
+                updateLoadingProgress('เสร็จสิ้น!');
+                
+                // โหลดข้อมูลที่เหลือใน background
+                setTimeout(() => {
+                    Promise.all(dataPromises).catch(console.error);
+                }, 100);
+                
+            } catch (error) {
+                console.error('Error initializing app:', error);
+                // แสดงแอปแม้มี error
+                updateLoadingProgress('เสร็จสิ้น!');
+            }
+        }
+
+        // Fixed API call with better error handling and faster timeout
+        async function makeApiCall(url, options = {}) {
+            const defaultOptions = {
+                method: 'GET',
+                mode: 'cors',
+                credentials: 'omit',
+                headers: {
+                    'Accept': 'application/json',
+                },
+            };
+            
+            const finalOptions = { ...defaultOptions, ...options };
+            
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000); // ลด timeout เป็น 5 วินาที
+                
+                const response = await fetch(url, {
+                    ...finalOptions,
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const text = await response.text();
+                
+                // Try to parse as JSON
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    console.error('Response is not valid JSON:', text);
+                    throw new Error('Invalid JSON response');
+                }
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    throw new Error('Request timeout');
+                }
+                throw error;
+            }
+        }
+
+        // Load Gold Data (improved with silent error handling)
+        async function loadGoldData() {
+            try {
+                if (!API_URL) {
+                    console.error('API_URL not found in config.js');
+                    throw new Error('API_URL not configured');
+                }
+                
+                console.log('Fetching gold data from:', `${API_URL}?action=getBalance&userId=${userData.userId}`);
+                
+                const data = await makeApiCall(`${API_URL}?action=getBalance&userId=${userData.userId}`);
+                console.log('Gold data response:', data);
+                
+                if (data.success) {
+                    currentGoldData.totalGold = data.totalGold || 0;
+                    currentGoldData.avgPrice = data.avgPrice || 0;
+                    currentGoldData.balances = data.balances || { bar: { totalGold: 0, avgPrice: 0 }, ornament: { totalGold: 0, avgPrice: 0 } };
+                    
+                    const gramsPerBaht = GRAMS_PER_BAHT || 15.16;
+                    const totalValue = (currentGoldData.totalGold / gramsPerBaht) * currentGoldData.avgPrice;
+                    
+                    document.getElementById('totalGold').textContent = formatNumber(currentGoldData.totalGold) + ' กรัม';
+                    document.getElementById('totalValue').textContent = 'มูลค่า: ฿' + formatCurrency(totalValue);
+                    document.getElementById('barGold').textContent = formatNumber(currentGoldData.balances.bar?.totalGold || 0) + ' กรัม';
+                    document.getElementById('ornamentGold').textContent = formatNumber(currentGoldData.balances.ornament?.totalGold || 0) + ' กรัม';
+                    
+                    console.log('Gold data updated successfully');
+                } else {
+                    console.error('API returned success: false', data);
+                    throw new Error(data.message || 'Failed to get gold data');
+                }
+            } catch (error) {
+                console.error('Error loading gold data:', error);
+                // แสดงข้อมูลเริ่มต้นและไม่แสดง error popup
+                document.getElementById('totalGold').textContent = '0 กรัม';
+                document.getElementById('totalValue').textContent = 'มูลค่า: ฿0';
+                document.getElementById('barGold').textContent = '0 กรัม';
+                document.getElementById('ornamentGold').textContent = '0 กรัม';
+            }
+        }
+
+        // Load Wallet Data (improved with silent error handling)
+        async function loadWalletData() {
+            try {
+                if (!API_URL) {
+                    throw new Error('API_URL not configured');
+                }
+                
+                console.log('Fetching wallet data from:', `${API_URL}?action=getWallet&userId=${userData.userId}`);
+                
+                const data = await makeApiCall(`${API_URL}?action=getWallet&userId=${userData.userId}`);
+                console.log('Wallet data response:', data);
+                
+                if (data.success) {
+                    walletData.balance = data.balance || 0;
+                    walletData.transactions = data.transactions || [];
+                    document.getElementById('walletBalance').textContent = '฿' + formatCurrency(walletData.balance);
+
+                    const walletHistory = document.getElementById('walletHistory');
+                    walletHistory.innerHTML = '';
+
+                    if (walletData.transactions.length === 0) {
+                        walletHistory.innerHTML = '<p class="text-gray-500 text-center">ยังไม่มีรายการ</p>';
+                        return;
+                    }
+
+                    walletData.transactions.forEach(transaction => {
+                        const div = document.createElement('div');
+                        div.className = 'flex justify-between items-center p-3 bg-gray-50 rounded-lg';
+                        
+                        let typeColor, typeIcon;
+                        if (transaction.type === 'เติมเงิน') {
+                            typeColor = 'text-green-600';
+                            typeIcon = 'fa-plus-circle';
+                        } else if (transaction.type === 'อนุมัติถอนเงิน'|| transaction.type === 'อนุมัติเติมเงิน' ) {
+                            typeColor = 'text-green-600';
+                            typeIcon = 'fas fa-check-circle';
+                        } else if (transaction.type === 'ซื้อทอง' ) {
+                            typeColor = 'text-blue-600';
+                            typeIcon = 'fas fa-coins';
+                         } else if (transaction.type === 'ขายทอง' ) {
+                            typeColor = 'text-red-600';
+                            typeIcon = 'fas fa-coins';
+                        } else {
+                            typeColor = 'text-red-600';
+                            typeIcon = 'fa-minus-circle';
+                        }
+
+                        let statusColor;
+                        if (transaction.status === 'สำเร็จ' || transaction.status === 'อนุมัติแล้ว') {
+                            statusColor = 'text-green-500';
+                        } else if (transaction.status === 'รอดำเนินการ' || transaction.status === 'รอการอนุมัติ') {
+                            statusColor = 'text-yellow-500';
+                        } else if (transaction.status === 'ยกเลิก' || transaction.status === 'ปฏิเสธ') {
+                            statusColor = 'text-red-500';
+                        } else {
+                            statusColor = 'text-gray-500';
+                        }
+
+                        div.innerHTML = `
+                            <div>
+                                <p class="font-semibold ${typeColor}">
+                                    <i class="fas ${typeIcon} mr-1"></i>
+                                    ${transaction.type}
+                                </p>
+                                <p class="text-sm text-gray-500">${transaction.date}</p>
+                                <p class="text-xs ${statusColor}">${transaction.status}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-semibold">฿${formatCurrency(transaction.amount)}</p>
+                                <p class="text-sm text-gray-500">${transaction.bank || ''}</p>
+                            </div>
+                        `;
+                        walletHistory.appendChild(div);
+                    });
+                    
+                    console.log('Wallet data updated successfully');
+                } else {
+                    throw new Error(data.message || 'Failed to get wallet data');
+                }
+            } catch (error) {
+                console.error('Error loading wallet data:', error);
+                document.getElementById('walletBalance').textContent = '฿0.00';
+                document.getElementById('walletHistory').innerHTML = '<p class="text-gray-500 text-center">ไม่สามารถโหลดข้อมูลได้</p>';
+            }
+        }
+
+        // Load Transactions (improved with silent error handling)
+        async function loadTransactions() {
+            try {
+                if (!API_URL) {
+                    throw new Error('API_URL not configured');
+                }
+                
+                console.log('Fetching transactions from:', `${API_URL}?action=getTransactions&userId=${userData.userId}`);
+                
+                const data = await makeApiCall(`${API_URL}?action=getTransactions&userId=${userData.userId}`);
+                console.log('Transactions response:', data);
+                
+                if (data.success) {
+                    const transactionList = document.getElementById('transactionList');
+                    transactionList.innerHTML = '';
+                    if (data.transactions.length === 0) {
+                        transactionList.innerHTML = '<p class="text-gray-500 text-center">ยังไม่มีรายการ</p>';
+                        return;
+                    }
+                    data.transactions.forEach(transaction => {
+                        const div = document.createElement('div');
+                        div.className = 'flex justify-between items-center p-3 bg-gray-50 rounded-lg';
+                        const typeColor = transaction.type === 'ซื้อ' ? 'text-green-600' : 'text-red-600';
+                        const typeIcon = transaction.type === 'ซื้อ' ? 'fa-plus' : 'fa-minus';
+                        const goldTypeText = transaction.goldType === 'bar' ? 'ทองคำแท่ง' : 'ทองรูปพรรณ';
+                        div.innerHTML = `
+                            <div>
+                                <p class="font-semibold ${typeColor}">
+                                    <i class="fas ${typeIcon} mr-1"></i>
+                                    ${transaction.type} ${formatNumber(transaction.amount)} กรัม (${goldTypeText})
+                                </p>
+                                <p class="text-sm text-gray-500">${transaction.date}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-semibold">฿${formatCurrency(transaction.price)}/บาท</p>
+                                <p class="text-sm text-gray-500">฿${formatCurrency(transaction.total)}</p>
+                            </div>
+                        `;
+                        transactionList.appendChild(div);
+                    });
+                    
+                    console.log('Transactions updated successfully');
+                } else {
+                    throw new Error(data.message || 'Failed to get transactions');
+                }
+            } catch (error) {
+                console.error('Error loading transactions:', error);
+                document.getElementById('transactionList').innerHTML = '<p class="text-gray-500 text-center">ไม่สามารถโหลดข้อมูลได้</p>';
+            }
+        }
+
+        // Fallback functions สำหรับกรณีที่ไม่มีไฟล์ utils.js
+        if (typeof formatNumber === 'undefined') {
+            window.formatNumber = function(num) {
+                return num.toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            };
+        }
+
+        if (typeof formatCurrency === 'undefined') {
+            window.formatCurrency = function(amount) {
+                return amount.toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            };
+        }
+
+        // Improved fetchBankAccounts with better error handling
+        async function fetchBankAccounts() {
+            try {
+                if (!API_URL) {
+                    throw new Error('API_URL not configured');
+                }
+                
+                console.log('Fetching bank accounts...');
+                const data = await makeApiCall(`${API_URL}?action=getBankAccounts`);
+                console.log('Bank accounts fetched:', data);
+                return data;
+            } catch (error) {
+                console.error('Error fetching bank accounts:', error);
+                return { success: false, accounts: [] };
+            }
+        }
+
+        // Improved fetchGoldPrices with better error handling
+        async function fetchGoldPrices() {
+            try {
+                if (!API_URL) {
+                    throw new Error('API_URL not configured');
+                }
+                
+                console.log('Fetching gold prices...');
+                const data = await makeApiCall(`${API_URL}?action=getGoldPrices`);
+                console.log('Gold prices fetched:', data);
+                return data.success || false;
+            } catch (error) {
+                console.error('Error fetching gold prices:', error);
+                return false;
+            }
+        }
+
+        // Additional security measures
+        
+        // Disable developer tools (partial protection)
         document.addEventListener('keydown', function(e) {
+            // Disable F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U
             if (e.keyCode === 123 || 
                 (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74)) ||
                 (e.ctrlKey && e.keyCode === 85)) {
@@ -807,7 +837,38 @@
             }
         });
 
-        // Prevent zoom gestures
+        // Detect if developer tools are open (basic detection)
+        setInterval(function() {
+            if (window.outerHeight - window.innerHeight > 200 || 
+                window.outerWidth - window.innerWidth > 200) {
+                console.clear();
+                console.log('%c🚫 Developer tools detected!', 'color: red; font-size: 20px; font-weight: bold;');
+                console.log('%c📱 This application is designed for mobile devices only.', 'color: orange; font-size: 14px;');
+            }
+        }, 1000);
+
+        // Disable drag and drop
+        document.addEventListener('dragstart', function(e) {
+            e.preventDefault();
+        });
+
+        // Disable image saving
+        document.addEventListener('dragstart', function(e) {
+            if (e.target.tagName === 'IMG') {
+                e.preventDefault();
+            }
+        });
+
+        // Monitor viewport changes
+        window.addEventListener('orientationchange', function() {
+            setTimeout(function() {
+                if (window.innerWidth > 1200) {
+                    showMobileOnlyWarning();
+                }
+            }, 500);
+        });
+
+        // Prevent zoom
         document.addEventListener('gesturestart', function(e) {
             e.preventDefault();
         });
@@ -820,15 +881,84 @@
             e.preventDefault();
         });
 
-        // Monitor for developer tools
-        setInterval(function() {
-            if (window.outerHeight - window.innerHeight > 200 || 
-                window.outerWidth - window.innerWidth > 200) {
-                console.clear();
-                console.log('%c🚫 Developer tools detected!', 'color: red; font-size: 20px; font-weight: bold;');
-                console.log('%c📱 This application is designed for mobile devices only.', 'color: orange; font-size: 14px;');
+        // Add CSS for smooth transitions and tab styles
+        const style = document.createElement('style');
+        style.textContent = `
+            #loading {
+                transition: opacity 0.3s ease-out, transform 0.3s ease-out;
             }
-        }, 1000);
+            
+            #app {
+                transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+            }
+            
+            #loadingProgress {
+                will-change: width;
+            }
+            
+            .card-hover, .btn-animate {
+                will-change: transform;
+                transform: translateZ(0);
+            }
+            
+            /* Tab Styles */
+            .tabs {
+                background: white;
+                border-top: 1px solid #e5e7eb;
+                position: fixed !important;
+                bottom: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                z-index: 10 !important;
+                box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            }
+            
+            .tab {
+                color: #6b7280;
+                transition: all 0.2s ease;
+                border-bottom: 3px solid transparent;
+                padding: 12px 8px !important;
+                font-size: 14px;
+            }
+            
+            .tab:hover {
+                color: #374151;
+                background-color: #f9fafb;
+            }
+            
+            .tab-active {
+                color: #f59e0b !important;
+                border-bottom-color: #f59e0b !important;
+                background-color: #fffbeb;
+            }
+            
+            .btn-animate:active {
+                transform: scale(0.95);
+            }
+            
+            .card-hover:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            }
+            
+            /* Page container styles */
+            .page-container {
+                padding-bottom: 90px !important; /* เพิ่มพื้นที่ด้านล่างสำหรับ fixed tabs */
+                min-height: calc(100vh - 140px) !important; /* ปรับความสูงให้เหมาะสม */
+            }
+            
+            /* Ensure body has proper padding for fixed tabs */
+            body {
+                padding-bottom: 0 !important;
+            }
+            
+            /* Fix z-index hierarchy */
+            #app {
+                position: relative;
+                z-index: 1;
+            }
+        `;
+        document.head.appendChild(style);
     </script>
 </body>
 </html>
