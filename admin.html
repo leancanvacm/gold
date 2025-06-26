@@ -71,6 +71,10 @@
             border-left: 4px solid #10b981;
             background: linear-gradient(135deg, #d1fae5 0%, #34d399 10%, #ffffff 20%);
         }
+        .bank-card {
+            border-left: 4px solid #3b82f6;
+            background: linear-gradient(135deg, #dbeafe 0%, #60a5fa 10%, #ffffff 20%);
+        }
         .status-pending {
             background-color: #fef3c7;
             color: #92400e;
@@ -85,6 +89,23 @@
             background-color: #fee2e2;
             color: #991b1b;
             border: 1px solid #ef4444;
+        }
+        .tab-button {
+            transition: all 0.3s ease;
+        }
+        .tab-button.active {
+            border-bottom: 2px solid;
+            font-weight: 600;
+        }
+        .bank-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -149,14 +170,17 @@
 
         <!-- Tab Navigation -->
         <div class="bg-white rounded-lg shadow mb-4">
-            <div class="flex border-b">
-                <button onclick="switchTab('pending')" id="pendingTab" class="flex-1 py-3 px-2 text-center font-medium border-b-2 border-orange-500 text-orange-600 text-sm">
+            <div class="flex border-b overflow-x-auto">
+                <button onclick="switchTab('pending')" id="pendingTab" class="tab-button flex-1 py-3 px-2 text-center font-medium border-b-2 border-orange-500 text-orange-600 text-sm active">
                     <i class="fas fa-clock mr-1"></i>รออนุมัติ
                 </button>
-                <button onclick="switchTab('withdrawals')" id="withdrawalsTab" class="flex-1 py-3 px-2 text-center font-medium text-gray-500 text-sm">
+                <button onclick="switchTab('withdrawals')" id="withdrawalsTab" class="tab-button flex-1 py-3 px-2 text-center font-medium text-gray-500 text-sm">
                     <i class="fas fa-money-bill-wave mr-1"></i>ถอนเงิน
                 </button>
-                <button onclick="switchTab('stats')" id="statsTab" class="flex-1 py-3 px-2 text-center font-medium text-gray-500 text-sm">
+                <button onclick="switchTab('banks')" id="banksTab" class="tab-button flex-1 py-3 px-2 text-center font-medium text-gray-500 text-sm">
+                    <i class="fas fa-university mr-1"></i>บัญชี
+                </button>
+                <button onclick="switchTab('stats')" id="statsTab" class="tab-button flex-1 py-3 px-2 text-center font-medium text-gray-500 text-sm">
                     <i class="fas fa-chart-bar mr-1"></i>สถิติ
                 </button>
             </div>
@@ -170,6 +194,21 @@
         <!-- Withdrawals Tab -->
         <div id="withdrawalsContent" class="hidden space-y-4">
             <!-- Withdrawal transactions will be loaded here -->
+        </div>
+
+        <!-- Bank Accounts Tab -->
+        <div id="banksContent" class="hidden space-y-4">
+            <!-- Add Bank Account Button -->
+            <div class="bg-white rounded-lg shadow p-4">
+                <button onclick="showAddBankModal()" class="w-full bg-blue-500 text-white p-3 rounded-lg font-medium hover:bg-blue-600 btn-animate">
+                    <i class="fas fa-plus mr-2"></i>เพิ่มบัญชีธนาคาร
+                </button>
+            </div>
+            
+            <!-- Bank Accounts List -->
+            <div id="bankAccountsList">
+                <!-- Bank accounts will be loaded here -->
+            </div>
         </div>
 
         <!-- Statistics Tab -->
@@ -218,6 +257,54 @@
         </div>
     </div>
 
+    <!-- Bank Account Modal -->
+    <div id="bankModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg max-w-md w-full p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="bankModalTitle" class="text-lg font-bold">เพิ่มบัญชีธนาคาร</h3>
+                <button onclick="closeBankModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="bankForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">ชื่อธนาคาร</label>
+                    <select id="bankName" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                        <option value="">เลือกธนาคาร</option>
+                        <option value="ธนาคารกรุงเทพ">ธนาคารกรุงเทพ</option>
+                        <option value="ธนาคารกสิกรไทย">ธนาคารกสิกรไทย</option>
+                        <option value="ธนาคารไทยพาณิชย์">ธนาคารไทยพาณิชย์</option>
+                        <option value="ธนาคารกรุงไทย">ธนาคารกรุงไทย</option>
+                        <option value="ธนาคารทหารไทยธนชาต">ธนาคารทหารไทยธนชาต</option>
+                        <option value="ธนาคารกรุงศรีอยุธยา">ธนาคารกรุงศรีอยุธยา</option>
+                        <option value="ธนาคารเกียรตินาคินภัทร">ธนาคารเกียรตินาคินภัทร</option>
+                        <option value="ธนาคารซีไอเอ็มบี ไทย">ธนาคารซีไอเอ็มบี ไทย</option>
+                        <option value="ธนาคารยูโอบี">ธนาคารยูโอบี</option>
+                        <option value="ธนาคารแลนด์ แอนด์ เฮ้าส์">ธนาคารแลนด์ แอนด์ เฮ้าส์</option>
+                        <option value="ธนาคารไอซีบีซี">ธนาคารไอซีบีซี</option>
+                        <option value="ธนาคารพันธสิน">ธนาคารพันธสิน</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">เลขบัญชี</label>
+                    <input type="text" id="accountNumber" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="กรอกเลขบัญชี" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">ชื่อบัญชี</label>
+                    <input type="text" id="accountName" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="กรอกชื่อบัญชี" required>
+                </div>
+                <div class="flex space-x-3 mt-6">
+                    <button type="button" onclick="closeBankModal()" class="flex-1 bg-gray-500 text-white py-2 rounded-lg font-medium hover:bg-gray-600">
+                        ยกเลิก
+                    </button>
+                    <button type="submit" class="flex-1 bg-blue-500 text-white py-2 rounded-lg font-medium hover:bg-blue-600">
+                        <span id="bankSubmitText">บันทึก</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="config.js"></script>
     <script src="utils.js"></script>
     <script>
@@ -225,9 +312,11 @@
         let userData = {};
         let pendingTransactions = [];
         let pendingWithdrawals = [];
+        let bankAccounts = [];
         let allTransactions = [];
         let systemStats = {};
         let currentTab = 'pending';
+        let editingBankId = null;
 
         // Fast loading management
         function hideLoading() {
@@ -257,6 +346,42 @@
             return 'status-pending';
         }
 
+        function getBankColor(bankName) {
+            const colors = {
+                'ธนาคารกรุงเทพ': '#1E40AF',
+                'ธนาคารกสิกรไทย': '#059669',
+                'ธนาคารไทยพาณิชย์': '#7C3AED',
+                'ธนาคารกรุงไทย': '#DC2626',
+                'ธนาคารทหารไทยธนชาต': '#EA580C',
+                'ธนาคารกรุงศรีอยุธยา': '#0891B2',
+                'ธนาคารเกียรตินาคินภัทร': '#BE185D',
+                'ธนาคารซีไอเอ็มบี ไทย': '#7C2D12',
+                'ธนาคารยูโอบี': '#0C4A6E',
+                'ธนาคารแลนด์ แอนด์ เฮ้าส์': '#365314',
+                'ธนาคารไอซีบีซี': '#DC2626',
+                'ธนาคารพันธสิน': '#1F2937'
+            };
+            return colors[bankName] || '#6B7280';
+        }
+
+        function getBankInitial(bankName) {
+            const initials = {
+                'ธนาคารกรุงเทพ': 'BBL',
+                'ธนาคารกสิกรไทย': 'KBANK',
+                'ธนาคารไทยพาณิชย์': 'SCB',
+                'ธนาคารกรุงไทย': 'KTB',
+                'ธนาคารทหารไทยธนชาต': 'TTB',
+                'ธนาคารกรุงศรีอยุธยา': 'BAY',
+                'ธนาคารเกียรตินาคินภัทร': 'KKP',
+                'ธนาคารซีไอเอ็มบี ไทย': 'CIMB',
+                'ธนาคารยูโอบี': 'UOB',
+                'ธนาคารแลนด์ แอนด์ เฮ้าส์': 'LH',
+                'ธนาคารไอซีบีซี': 'ICBC',
+                'ธนาคารพันธสิน': 'PANSIN'
+            };
+            return initials[bankName] || bankName.slice(0, 3);
+        }
+
         // Navigation Functions
         function goBack() {
             window.history.back();
@@ -265,20 +390,32 @@
         // Tab switching
         function switchTab(tab) {
             // Reset all tabs
-            document.querySelectorAll('[id$="Tab"]').forEach(tabBtn => {
-                tabBtn.classList.remove('border-orange-500', 'text-orange-600');
+            document.querySelectorAll('.tab-button').forEach(tabBtn => {
+                tabBtn.classList.remove('border-orange-500', 'text-orange-600', 'border-green-500', 'text-green-600', 'border-blue-500', 'text-blue-600', 'active');
                 tabBtn.classList.add('text-gray-500');
             });
             
             // Hide all content
             document.getElementById('pendingContent').classList.add('hidden');
             document.getElementById('withdrawalsContent').classList.add('hidden');
+            document.getElementById('banksContent').classList.add('hidden');
             document.getElementById('statsContent').classList.add('hidden');
 
             // Activate selected tab
             currentTab = tab;
-            document.getElementById(tab + 'Tab').classList.add('border-orange-500', 'text-orange-600');
-            document.getElementById(tab + 'Tab').classList.remove('text-gray-500');
+            const tabButton = document.getElementById(tab + 'Tab');
+            
+            if (tab === 'pending') {
+                tabButton.classList.add('border-orange-500', 'text-orange-600', 'active');
+            } else if (tab === 'withdrawals') {
+                tabButton.classList.add('border-orange-500', 'text-orange-600', 'active');
+            } else if (tab === 'banks') {
+                tabButton.classList.add('border-blue-500', 'text-blue-600', 'active');
+            } else if (tab === 'stats') {
+                tabButton.classList.add('border-green-500', 'text-green-600', 'active');
+            }
+            
+            tabButton.classList.remove('text-gray-500');
             document.getElementById(tab + 'Content').classList.remove('hidden');
 
             // Load content for the selected tab
@@ -286,6 +423,8 @@
                 loadPendingTransactions();
             } else if (tab === 'withdrawals') {
                 loadPendingWithdrawals();
+            } else if (tab === 'banks') {
+                loadBankAccounts();
             } else if (tab === 'stats') {
                 loadSystemStats();
             }
@@ -302,6 +441,7 @@
             try {
                 await loadPendingTransactions();
                 await loadPendingWithdrawals();
+                await loadBankAccounts();
                 await loadSystemStats();
                 updateStatistics();
                 
@@ -357,6 +497,207 @@
                 renderPendingWithdrawals();
             }
         }
+
+        // Load bank accounts
+        async function loadBankAccounts() {
+            try {
+                const response = await fetch(`${API_URL}?action=getBankAccounts`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    bankAccounts = data.bankAccounts || [];
+                    renderBankAccounts();
+                }
+            } catch (error) {
+                console.error('Error loading bank accounts:', error);
+                bankAccounts = [];
+                renderBankAccounts();
+            }
+        }
+
+        // Render bank accounts
+        function renderBankAccounts() {
+            const container = document.getElementById('bankAccountsList');
+            container.innerHTML = '';
+
+            if (bankAccounts.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-white p-6 rounded-lg shadow text-center fade-in">
+                        <i class="fas fa-university text-6xl text-blue-500 mb-4"></i>
+                        <p class="text-gray-500">ยังไม่มีบัญชีธนาคาร</p>
+                        <p class="text-gray-400 text-sm">เพิ่มบัญชีธนาคารเพื่อรับการฝากเงิน</p>
+                    </div>
+                `;
+                return;
+            }
+
+            bankAccounts.forEach((account, index) => {
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-lg shadow p-4 card-hover fade-in bank-card';
+                
+                card.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="bank-icon" style="background-color: ${getBankColor(account.bankName)}">
+                                ${getBankInitial(account.bankName)}
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-800">${account.bankName}</h4>
+                                <p class="text-sm text-gray-600">เลขบัญชี: ${account.accountNumber}</p>
+                                <p class="text-sm text-gray-600">ชื่อบัญชี: ${account.accountName}</p>
+                                <p class="text-xs text-gray-500">สร้างเมื่อ: ${account.createdDate || 'ไม่ระบุ'}</p>
+                            </div>
+                        </div>
+                        <div class="flex flex-col space-y-2">
+                            <button onclick="editBankAccount(${index})" 
+                                    class="bg-orange-500 text-white px-3 py-1 rounded text-xs hover:bg-orange-600 btn-animate">
+                                <i class="fas fa-edit mr-1"></i>แก้ไข
+                            </button>
+                            <button onclick="deleteBankAccount(${index})" 
+                                    class="bg-red-500 text-white px-3 py-1 rounded text-xs hover:bg-red-600 btn-animate">
+                                <i class="fas fa-trash mr-1"></i>ลบ
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            });
+        }
+
+        // Bank Account Management Functions
+        function showAddBankModal() {
+            editingBankId = null;
+            document.getElementById('bankModalTitle').textContent = 'เพิ่มบัญชีธนาคาร';
+            document.getElementById('bankSubmitText').textContent = 'บันทึก';
+            document.getElementById('bankForm').reset();
+            document.getElementById('bankModal').classList.remove('hidden');
+        }
+
+        function editBankAccount(index) {
+            const account = bankAccounts[index];
+            editingBankId = index;
+            
+            document.getElementById('bankModalTitle').textContent = 'แก้ไขบัญชีธนาคาร';
+            document.getElementById('bankSubmitText').textContent = 'อัพเดท';
+            document.getElementById('bankName').value = account.bankName;
+            document.getElementById('accountNumber').value = account.accountNumber;
+            document.getElementById('accountName').value = account.accountName;
+            document.getElementById('bankModal').classList.remove('hidden');
+        }
+
+        function closeBankModal() {
+            document.getElementById('bankModal').classList.add('hidden');
+            editingBankId = null;
+        }
+
+        async function deleteBankAccount(index) {
+            const account = bankAccounts[index];
+            
+            const result = await Swal.fire({
+                title: 'ยืนยันการลบ',
+                html: `คุณต้องการลบบัญชีธนาคาร<br><strong>${account.bankName}</strong><br>เลขบัญชี: <strong>${account.accountNumber}</strong><br>ใช่หรือไม่?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'ลบ',
+                cancelButtonText: 'ยกเลิก',
+                confirmButtonColor: '#ef4444'
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    Swal.fire({
+                        title: 'กำลังลบ...',
+                        text: 'กรุณารอสักครู่',
+                        allowOutsideClick: false,
+                        showConfirmButton: false,
+                        willOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    const data = new FormData();
+                    data.append('action', 'deleteBankAccount');
+                    data.append('bankName', account.bankName);
+                    data.append('accountNumber', account.accountNumber);
+
+                    const response = await fetch(API_URL, {
+                        method: "POST",
+                        body: data
+                    });
+
+                    const responseData = await response.text();
+                    console.log('Delete bank response:', responseData);
+
+                    if (responseData.includes('success') || responseData.includes('สำเร็จ')) {
+                        Swal.fire('สำเร็จ!', 'ลบบัญชีธนาคารเรียบร้อยแล้ว', 'success');
+                        loadBankAccounts();
+                    } else {
+                        throw new Error('ไม่สามารถลบได้: ' + responseData);
+                    }
+                } catch (error) {
+                    console.error('Error deleting bank account:', error);
+                    Swal.fire('ข้อผิดพลาด', error.message || 'ไม่สามารถลบบัญชีธนาคารได้', 'error');
+                }
+            }
+        }
+
+        // Handle bank form submission
+        document.getElementById('bankForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const bankName = document.getElementById('bankName').value;
+            const accountNumber = document.getElementById('accountNumber').value;
+            const accountName = document.getElementById('accountName').value;
+
+            if (!bankName || !accountNumber || !accountName) {
+                Swal.fire('ข้อผิดพลาด', 'กรุณากรอกข้อมูลให้ครบถ้วน', 'error');
+                return;
+            }
+
+            try {
+                Swal.fire({
+                    title: editingBankId !== null ? 'กำลังอัพเดท...' : 'กำลังบันทึก...',
+                    text: 'กรุณารอสักครู่',
+                    allowOutsideClick: false,
+                    showConfirmButton: false,
+                    willOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                const data = new FormData();
+                data.append('action', editingBankId !== null ? 'updateBankAccount' : 'addBankAccount');
+                data.append('bankName', bankName);
+                data.append('accountNumber', accountNumber);
+                data.append('accountName', accountName);
+                
+                if (editingBankId !== null) {
+                    const oldAccount = bankAccounts[editingBankId];
+                    data.append('oldBankName', oldAccount.bankName);
+                    data.append('oldAccountNumber', oldAccount.accountNumber);
+                }
+
+                const response = await fetch(API_URL, {
+                    method: "POST",
+                    body: data
+                });
+
+                const responseData = await response.text();
+                console.log('Bank account response:', responseData);
+
+                if (responseData.includes('success') || responseData.includes('สำเร็จ')) {
+                    Swal.fire('สำเร็จ!', editingBankId !== null ? 'อัพเดทบัญชีธนาคารเรียบร้อยแล้ว' : 'เพิ่มบัญชีธนาคารเรียบร้อยแล้ว', 'success');
+                    closeBankModal();
+                    loadBankAccounts();
+                } else {
+                    throw new Error('ไม่สามารถดำเนินการได้: ' + responseData);
+                }
+            } catch (error) {
+                console.error('Error saving bank account:', error);
+                Swal.fire('ข้อผิดพลาด', error.message || 'ไม่สามารถบันทึกบัญชีธนาคารได้', 'error');
+            }
+        });
 
         // Render pending transactions
         function renderPendingTransactions() {
@@ -1106,7 +1447,8 @@
                     totalTopupAmount: totalTopupAmount,
                     totalWithdrawalAmount: totalWithdrawalAmount,
                     pendingTopupCount: pendingTransactions.length,
-                    pendingWithdrawalCount: pendingWithdrawals.length
+                    pendingWithdrawalCount: pendingWithdrawals.length,
+                    totalBankAccounts: bankAccounts.length
                 };
 
                 renderSystemStats();
@@ -1139,22 +1481,22 @@
                     color: 'red' 
                 },
                 { 
+                    label: 'บัญชีธนาคาร', 
+                    value: systemStats.totalBankAccounts || 0, 
+                    icon: 'fa-university', 
+                    color: 'blue' 
+                },
+                { 
                     label: 'ยอดเติมเงินรอ', 
                     value: `฿${formatCurrency(systemStats.totalTopupAmount || 0)}`, 
                     icon: 'fa-wallet', 
-                    color: 'blue' 
+                    color: 'green' 
                 },
                 { 
                     label: 'ยอดถอนเงินรอ', 
                     value: `฿${formatCurrency(systemStats.totalWithdrawalAmount || 0)}`, 
                     icon: 'fa-money-bill-wave', 
-                    color: 'purple' 
-                },
-                { 
-                    label: 'ความแตกต่าง', 
-                    value: `฿${formatCurrency((systemStats.totalTopupAmount || 0) - (systemStats.totalWithdrawalAmount || 0))}`, 
-                    icon: 'fa-balance-scale', 
-                    color: 'gray' 
+                    color: 'amber' 
                 }
             ];
 
@@ -1200,6 +1542,7 @@
                         // Reload data with real user
                         loadPendingTransactions();
                         loadPendingWithdrawals();
+                        loadBankAccounts();
                         loadSystemStats();
                     } else {
                         liff.login();
@@ -1244,6 +1587,7 @@
                 Promise.all([
                     loadPendingTransactions(),
                     loadPendingWithdrawals(),
+                    loadBankAccounts(),
                     loadSystemStats()
                 ]).catch(err => {
                     console.warn('Failed to load some data:', err);
