@@ -293,12 +293,13 @@
         let currentGoldData = { totalGold: 0, avgPrice: 0, balances: { bar: { totalGold: 0, avgPrice: 0 }, ornament: { totalGold: 0, avgPrice: 0 } } };
         let walletData = { balance: 0, transactions: [] };
 
-        // Optimized Loading progress tracker
+        // Optimized Loading progress tracker (ใช้ของไฟล์แรก)
         let loadingSteps = 0;
-        const totalSteps = 3; // ลดจำนวนขั้นตอน
+        const totalSteps = 4; // เพิ่มขึ้นตามไฟล์ที่สอง
         const loadingMessages = [
-            'เชื่อมต่อระบบ...',
+            'เชื่อมต่อ LINE...',
             'โหลดข้อมูลผู้ใช้...',
+            'โหลดข้อมูลทอง...',
             'เสร็จสิ้น!'
         ];
 
@@ -326,7 +327,7 @@
             if (loadingSteps >= totalSteps) {
                 setTimeout(() => {
                     hideLoading();
-                }, 500); // ลดเวลาหน่วง
+                }, 500); // ปรับเวลาตามไฟล์แรก
             }
         }
 
@@ -334,7 +335,7 @@
             const loadingElement = document.getElementById('loading');
             const appElement = document.getElementById('app');
             
-            // Smooth transition
+            // Smooth transition (ใช้ของไฟล์แรก)
             loadingElement.style.opacity = '0';
             loadingElement.style.transform = 'scale(0.95)';
             
@@ -395,7 +396,7 @@
             window.location.href = 'dashboard.html';
         }
 
-        // Initialize LIFF - Optimized version
+        // Initialize LIFF - ผสมแบบของไฟล์แรก (เร็วขึ้น) กับไฟล์ที่สอง
         window.onload = async function() {
             // ตรวจสอบอุปกรณ์ก่อนโหลดแอป
             if (!performDeviceCheck()) {
@@ -472,7 +473,7 @@
             e.preventDefault();
         });
 
-        // Initialize App (ปรับให้เร็วขึ้นและแสดงข้อมูลหลักก่อน)
+        // Initialize App (ผสมทั้งสองไฟล์)
         async function initApp() {
             try {
                 const profile = await liff.getProfile();
@@ -486,38 +487,32 @@
                 document.getElementById('userName').textContent = userData.name;
                 document.getElementById('userPic').src = userData.picture;
                 
+                updateLoadingProgress('โหลดข้อมูลทอง...');
+                
+                // โหลดข้อมูลแบบ parallel และไม่รอให้เสร็จทั้งหมด
+                const dataPromises = [
+                    loadGoldData().catch(console.error),
+                    loadTransactions().catch(console.error),
+                    loadWalletData().catch(console.error)
+                ];
+                
+                // รอเพียงข้อมูลหลักเท่านั้น
+                await Promise.race([
+                    Promise.all(dataPromises),
+                    new Promise(resolve => setTimeout(resolve, 1000)) // timeout 1 วินาที
+                ]);
+                
                 updateLoadingProgress('เสร็จสิ้น!');
                 
-                // โหลดข้อมูลใน background (หลังจากแสดงแอปแล้ว)
+                // โหลดข้อมูลที่เหลือใน background
                 setTimeout(() => {
-                    loadDataInBackground();
+                    Promise.all(dataPromises).catch(console.error);
                 }, 100);
                 
             } catch (error) {
                 console.error('Error initializing app:', error);
                 // แสดงแอปแม้มี error
                 updateLoadingProgress('เสร็จสิ้น!');
-            }
-        }
-
-        // Background data loading (หลังจากแสดงแอปแล้ว)
-        async function loadDataInBackground() {
-            try {
-                // โหลดข้อมูลแบบ parallel
-                const promises = [
-                    loadGoldData().catch(console.error),
-                    loadTransactions().catch(console.error),
-                    loadWalletData().catch(console.error)
-                ];
-                
-                // รอให้โหลดเสร็จหรือ timeout ใน 3 วินาที
-                await Promise.race([
-                    Promise.allSettled(promises),
-                    new Promise(resolve => setTimeout(resolve, 3000))
-                ]);
-                
-            } catch (error) {
-                console.error('Background loading error:', error);
             }
         }
 
