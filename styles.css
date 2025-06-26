@@ -239,3 +239,15 @@
 .btn-animate:active {
     transform: translateY(0);
 }
+   /* Fixed Tab Styles - แก้ไขให้อยู่ด้านล่างเสมอ */
+        .bottom-tabs {
+            position: fixed !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            z-index: 9999 !important;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            height: 70px !important;
+        }
