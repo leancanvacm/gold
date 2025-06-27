@@ -306,10 +306,9 @@
         </div>
     </div>
 
-    <script src="config.js"></script>
-    <script src="utils.js"></script>
     <script>
-        // Global Variables
+    
+        // ==================== Global Variables ====================
         let userData = {};
         let pendingTransactions = [];
         let pendingWithdrawals = [];
@@ -319,13 +318,7 @@
         let currentTab = 'pending';
         let editingBankId = null;
 
-        // Fast loading management
-        function hideLoading() {
-            document.getElementById('loading').classList.add('hidden');
-            document.getElementById('app').classList.remove('hidden');
-        }
-
-        // Utility Functions
+        // ==================== Utility Functions ====================
         function formatCurrency(amount) {
             return parseFloat(amount).toLocaleString('th-TH', {
                 minimumFractionDigits: 2,
@@ -383,12 +376,18 @@
             return initials[bankName] || bankName.slice(0, 3);
         }
 
-        // Navigation Functions
+        // ==================== Loading Management ====================
+        function hideLoading() {
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('app').classList.remove('hidden');
+        }
+
+        // ==================== Navigation Functions ====================
         function goBack() {
             window.history.back();
         }
 
-        // Tab switching
+        // ==================== Tab Management ====================
         function switchTab(tab) {
             // Reset all tabs
             document.querySelectorAll('.tab-button').forEach(tabBtn => {
@@ -431,7 +430,7 @@
             }
         }
 
-        // Data Loading Functions
+        // ==================== Data Loading Functions ====================
         async function refreshData() {
             const refreshBtn = event.target;
             const originalIcon = refreshBtn.innerHTML;
@@ -473,6 +472,8 @@
                     pendingTransactions = data.transactions.filter(t => t.type === 'เติมเงิน');
                     renderPendingTransactions();
                     updateStatistics();
+                } else {
+                    throw new Error(data.message || 'ไม่สามารถโหลดข้อมูลได้');
                 }
             } catch (error) {
                 console.error('Error loading pending transactions:', error);
@@ -491,6 +492,8 @@
                     pendingWithdrawals = data.transactions.filter(t => t.type === 'ถอนเงิน');
                     renderPendingWithdrawals();
                     updateStatistics();
+                } else {
+                    throw new Error(data.message || 'ไม่สามารถโหลดข้อมูลได้');
                 }
             } catch (error) {
                 console.error('Error loading pending withdrawals:', error);
@@ -499,7 +502,7 @@
             }
         }
 
-        // Load bank accounts - แก้ไขให้ใช้ GET request
+        // Load bank accounts
         async function loadBankAccounts() {
             try {
                 const response = await fetch(`${API_URL}?action=getBankAccounts`);
@@ -520,7 +523,98 @@
             }
         }
 
-        // Render bank accounts
+        // ==================== Render Functions ====================
+        function renderPendingTransactions() {
+            const container = document.getElementById('pendingContent');
+            container.innerHTML = '';
+
+            if (pendingTransactions.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-white p-6 rounded-lg shadow text-center fade-in">
+                        <i class="fas fa-check-circle text-6xl text-green-500 mb-4"></i>
+                        <p class="text-gray-500">ไม่มีรายการเติมเงินรอการอนุมัติ</p>
+                    </div>
+                `;
+                return;
+            }
+
+            pendingTransactions.forEach(transaction => {
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-lg shadow p-4 card-hover fade-in topup-card';
+                
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <div class="flex items-center mb-2">
+                                <i class="fas fa-plus-circle text-green-600 mr-2"></i>
+                                <span class="font-semibold text-green-600">${transaction.type}</span>
+                                <span class="ml-2 px-2 py-1 text-xs rounded-full ${getStatusClass(transaction.status)}">${transaction.status}</span>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-1">ผู้ใช้: ${transaction.userId}</p>
+                            <p class="text-sm text-gray-600 mb-1">จำนวน: <span class="font-bold text-green-600">฿${formatCurrency(transaction.amount)}</span></p>
+                            <p class="text-sm text-gray-600 mb-1">ธนาคาร: ${transaction.bank}</p>
+                            <p class="text-xs text-gray-500">${transaction.date}</p>
+                        </div>
+                        <div class="flex flex-col space-y-2">
+                            <button onclick="showTransactionDetail('${transaction.userId}', '${transaction.date}', 'topup')" 
+                                    class="bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-600 btn-animate">
+                                <i class="fas fa-eye mr-1"></i>ดู
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            });
+        }
+
+        function renderPendingWithdrawals() {
+            const container = document.getElementById('withdrawalsContent');
+            container.innerHTML = '';
+
+            if (pendingWithdrawals.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-white p-6 rounded-lg shadow text-center fade-in">
+                        <i class="fas fa-wallet text-6xl text-amber-500 mb-4"></i>
+                        <p class="text-gray-500">ไม่มีรายการถอนเงินรอการอนุมัติ</p>
+                    </div>
+                `;
+                return;
+            }
+
+            pendingWithdrawals.forEach(transaction => {
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-lg shadow p-4 card-hover fade-in withdrawal-card';
+                
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <div class="flex items-center mb-2">
+                                <i class="fas fa-minus-circle text-amber-600 mr-2"></i>
+                                <span class="font-semibold text-amber-600">${transaction.type}</span>
+                                <span class="ml-2 px-2 py-1 text-xs rounded-full ${getStatusClass(transaction.status)}">${transaction.status}</span>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-1">ผู้ใช้: ${transaction.userId}</p>
+                            <p class="text-sm text-gray-600 mb-1">จำนวน: <span class="font-bold text-amber-600">฿${formatCurrency(transaction.amount)}</span></p>
+                            <p class="text-sm text-gray-600 mb-1">ธนาคาร: ${transaction.bank}</p>
+                            <p class="text-sm text-gray-600 mb-1">บัญชี: ${transaction.account}</p>
+                            <p class="text-sm text-gray-600 mb-1">ชื่อบัญชี: ${transaction.accountName}</p>
+                            ${transaction.transactionId ? `<p class="text-xs text-blue-600 mb-1">ID: ${transaction.transactionId}</p>` : ''}
+                            <p class="text-xs text-gray-500">${transaction.date}</p>
+                        </div>
+                        <div class="flex flex-col space-y-2">
+                            <button onclick="showTransactionDetail('${transaction.userId}', '${transaction.date}', 'withdrawal')" 
+                                    class="bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-600 btn-animate">
+                                <i class="fas fa-eye mr-1"></i>ดู
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            });
+        }
+
         function renderBankAccounts() {
             const container = document.getElementById('bankAccountsList');
             container.innerHTML = '';
@@ -570,266 +664,7 @@
             });
         }
 
-        // Bank Account Management Functions
-        function showAddBankModal() {
-            editingBankId = null;
-            document.getElementById('bankModalTitle').textContent = 'เพิ่มบัญชีธนาคาร';
-            document.getElementById('bankSubmitText').textContent = 'บันทึก';
-            document.getElementById('bankForm').reset();
-            document.getElementById('bankModal').classList.remove('hidden');
-        }
-
-        function editBankAccount(index) {
-            const account = bankAccounts[index];
-            editingBankId = index;
-            
-            document.getElementById('bankModalTitle').textContent = 'แก้ไขบัญชีธนาคาร';
-            document.getElementById('bankSubmitText').textContent = 'อัพเดท';
-            document.getElementById('bankName').value = account.bankName;
-            document.getElementById('accountNumber').value = account.accountNumber;
-            document.getElementById('accountName').value = account.accountName;
-            document.getElementById('bankModal').classList.remove('hidden');
-        }
-
-        function closeBankModal() {
-            document.getElementById('bankModal').classList.add('hidden');
-            editingBankId = null;
-        }
-
-        async function deleteBankAccount(index) {
-            const account = bankAccounts[index];
-            
-            const result = await Swal.fire({
-                title: 'ยืนยันการลบ',
-                html: `คุณต้องการลบบัญชีธนาคาร<br><strong>${account.bankName}</strong><br>เลขบัญชี: <strong>${account.accountNumber}</strong><br>ใช่หรือไม่?`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'ลบ',
-                cancelButtonText: 'ยกเลิก',
-                confirmButtonColor: '#ef4444'
-            });
-
-            if (result.isConfirmed) {
-                try {
-                    Swal.fire({
-                        title: 'กำลังลบ...',
-                        text: 'กรุณารอสักครู่',
-                        allowOutsideClick: false,
-                        showConfirmButton: false,
-                        willOpen: () => {
-                            Swal.showLoading();
-                        }
-                    });
-
-                    const formData = new FormData();
-                    formData.append('action', 'deleteBankAccount');
-                    formData.append('bankName', account.bankName);
-                    formData.append('accountNumber', account.accountNumber);
-
-                    const response = await fetch(API_URL, {
-                        method: "POST",
-                        body: formData
-                    });
-
-                    const responseText = await response.text();
-                    console.log('Delete bank response:', responseText);
-
-                    let responseData;
-                    try {
-                        responseData = JSON.parse(responseText);
-                    } catch (e) {
-                        // ถ้า parse JSON ไม่ได้ ตรวจสอบจาก text
-                        if (responseText.includes('success') || responseText.includes('สำเร็จ')) {
-                            responseData = { success: true };
-                        } else {
-                            throw new Error('ไม่สามารถลบได้: ' + responseText);
-                        }
-                    }
-
-                    if (responseData.success || responseText.includes('success') || responseText.includes('สำเร็จ')) {
-                        Swal.fire('สำเร็จ!', 'ลบบัญชีธนาคารเรียบร้อยแล้ว', 'success');
-                        await loadBankAccounts(); // รีโหลดข้อมูล
-                    } else {
-                        throw new Error(responseData.message || 'ไม่สามารถลบบัญชีธนาคารได้');
-                    }
-                } catch (error) {
-                    console.error('Error deleting bank account:', error);
-                    Swal.fire('ข้อผิดพลาด', error.message || 'ไม่สามารถลบบัญชีธนาคารได้', 'error');
-                }
-            }
-        }
-
-        // Handle bank form submission
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('bankForm').addEventListener('submit', async function(e) {
-                e.preventDefault();
-                
-                const bankName = document.getElementById('bankName').value;
-                const accountNumber = document.getElementById('accountNumber').value;
-                const accountName = document.getElementById('accountName').value;
-
-                if (!bankName || !accountNumber || !accountName) {
-                    Swal.fire('ข้อผิดพลาด', 'กรุณากรอกข้อมูลให้ครบถ้วน', 'error');
-                    return;
-                }
-
-                // Validate account number
-                if (!/^\d{10,15}$/.test(accountNumber)) {
-                    Swal.fire('ข้อผิดพลาด', 'เลขบัญชีต้องเป็นตัวเลข 10-15 หลัก', 'error');
-                    return;
-                }
-
-                try {
-                    Swal.fire({
-                        title: editingBankId !== null ? 'กำลังอัพเดท...' : 'กำลังบันทึก...',
-                        text: 'กรุณารอสักครู่',
-                        allowOutsideClick: false,
-                        showConfirmButton: false,
-                        willOpen: () => {
-                            Swal.showLoading();
-                        }
-                    });
-
-                    const formData = new FormData();
-                    formData.append('action', editingBankId !== null ? 'updateBankAccount' : 'addBankAccount');
-                    formData.append('bankName', bankName);
-                    formData.append('accountNumber', accountNumber);
-                    formData.append('accountName', accountName);
-                    
-                    if (editingBankId !== null) {
-                        const oldAccount = bankAccounts[editingBankId];
-                        formData.append('oldBankName', oldAccount.bankName);
-                        formData.append('oldAccountNumber', oldAccount.accountNumber);
-                    }
-
-                    const response = await fetch(API_URL, {
-                        method: "POST",
-                        body: formData
-                    });
-
-                    const responseText = await response.text();
-                    console.log('Bank account response:', responseText);
-
-                    let responseData;
-                    try {
-                        responseData = JSON.parse(responseText);
-                    } catch (e) {
-                        // ถ้า parse JSON ไม่ได้ ตรวจสอบจาก text
-                        if (responseText.includes('success') || responseText.includes('สำเร็จ')) {
-                            responseData = { success: true };
-                        } else {
-                            throw new Error('ไม่สามารถดำเนินการได้: ' + responseText);
-                        }
-                    }
-
-                    if (responseData.success || responseText.includes('success') || responseText.includes('สำเร็จ')) {
-                        Swal.fire('สำเร็จ!', editingBankId !== null ? 'อัพเดทบัญชีธนาคารเรียบร้อยแล้ว' : 'เพิ่มบัญชีธนาคารเรียบร้อยแล้ว', 'success');
-                        closeBankModal();
-                        await loadBankAccounts(); // รีโหลดข้อมูล
-                    } else {
-                        throw new Error(responseData.message || 'ไม่สามารถดำเนินการได้');
-                    }
-                } catch (error) {
-                    console.error('Error saving bank account:', error);
-                    Swal.fire('ข้อผิดพลาด', error.message || 'ไม่สามารถบันทึกบัญชีธนาคารได้', 'error');
-                }
-            });
-        });
-
-        // Render pending transactions
-        function renderPendingTransactions() {
-            const container = document.getElementById('pendingContent');
-            container.innerHTML = '';
-
-            if (pendingTransactions.length === 0) {
-                container.innerHTML = `
-                    <div class="bg-white p-6 rounded-lg shadow text-center fade-in">
-                        <i class="fas fa-check-circle text-6xl text-green-500 mb-4"></i>
-                        <p class="text-gray-500">ไม่มีรายการเติมเงินรอการอนุมัติ</p>
-                    </div>
-                `;
-                return;
-            }
-
-            pendingTransactions.forEach(transaction => {
-                const card = document.createElement('div');
-                card.className = 'bg-white rounded-lg shadow p-4 card-hover fade-in topup-card';
-                
-                card.innerHTML = `
-                    <div class="flex justify-between items-start">
-                        <div class="flex-1">
-                            <div class="flex items-center mb-2">
-                                <i class="fas fa-plus-circle text-green-600 mr-2"></i>
-                                <span class="font-semibold text-green-600">${transaction.type}</span>
-                                <span class="ml-2 px-2 py-1 text-xs rounded-full ${getStatusClass(transaction.status)}">${transaction.status}</span>
-                            </div>
-                            <p class="text-sm text-gray-600 mb-1">ผู้ใช้: ${transaction.userId}</p>
-                            <p class="text-sm text-gray-600 mb-1">จำนวน: <span class="font-bold text-green-600">฿${formatCurrency(transaction.amount)}</span></p>
-                            <p class="text-sm text-gray-600 mb-1">ธนาคาร: ${transaction.bank}</p>
-                            <p class="text-xs text-gray-500">${transaction.date}</p>
-                        </div>
-                        <div class="flex flex-col space-y-2">
-                            <button onclick="showTransactionDetail('${transaction.userId}', '${transaction.date}', 'topup')" 
-                                    class="bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-600 btn-animate">
-                                <i class="fas fa-eye mr-1"></i>ดู
-                            </button>
-                        </div>
-                    </div>
-                `;
-                
-                container.appendChild(card);
-            });
-        }
-
-        // Render pending withdrawals
-        function renderPendingWithdrawals() {
-            const container = document.getElementById('withdrawalsContent');
-            container.innerHTML = '';
-
-            if (pendingWithdrawals.length === 0) {
-                container.innerHTML = `
-                    <div class="bg-white p-6 rounded-lg shadow text-center fade-in">
-                        <i class="fas fa-wallet text-6xl text-amber-500 mb-4"></i>
-                        <p class="text-gray-500">ไม่มีรายการถอนเงินรอการอนุมัติ</p>
-                    </div>
-                `;
-                return;
-            }
-
-            pendingWithdrawals.forEach(transaction => {
-                const card = document.createElement('div');
-                card.className = 'bg-white rounded-lg shadow p-4 card-hover fade-in withdrawal-card';
-                
-                card.innerHTML = `
-                    <div class="flex justify-between items-start">
-                        <div class="flex-1">
-                            <div class="flex items-center mb-2">
-                                <i class="fas fa-minus-circle text-amber-600 mr-2"></i>
-                                <span class="font-semibold text-amber-600">${transaction.type}</span>
-                                <span class="ml-2 px-2 py-1 text-xs rounded-full ${getStatusClass(transaction.status)}">${transaction.status}</span>
-                            </div>
-                            <p class="text-sm text-gray-600 mb-1">ผู้ใช้: ${transaction.userId}</p>
-                            <p class="text-sm text-gray-600 mb-1">จำนวน: <span class="font-bold text-amber-600">฿${formatCurrency(transaction.amount)}</span></p>
-                            <p class="text-sm text-gray-600 mb-1">ธนาคาร: ${transaction.bank}</p>
-                            <p class="text-sm text-gray-600 mb-1">บัญชี: ${transaction.account}</p>
-                            <p class="text-sm text-gray-600 mb-1">ชื่อบัญชี: ${transaction.accountName}</p>
-                            ${transaction.transactionId ? `<p class="text-xs text-blue-600 mb-1">ID: ${transaction.transactionId}</p>` : ''}
-                            <p class="text-xs text-gray-500">${transaction.date}</p>
-                        </div>
-                        <div class="flex flex-col space-y-2">
-                            <button onclick="showTransactionDetail('${transaction.userId}', '${transaction.date}', 'withdrawal')" 
-                                    class="bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-600 btn-animate">
-                                <i class="fas fa-eye mr-1"></i>ดู
-                            </button>
-                        </div>
-                    </div>
-                `;
-                
-                container.appendChild(card);
-            });
-        }
-
-        // Show transaction detail modal
+        // ==================== Transaction Detail Modal ====================
         async function showTransactionDetail(userId, date, transactionType) {
             let transaction;
             if (transactionType === 'withdrawal') {
@@ -925,18 +760,17 @@
             modal.classList.remove('hidden');
         }
 
-        // Close transaction modal
         function closeTransactionModal() {
             document.getElementById('transactionModal').classList.add('hidden');
         }
 
-        // Transaction approval functions
+        // ==================== Transaction Approval Functions ====================
         async function approveWithdrawal(transactionId, userId, date, amount) {
             const result = await Swal.fire({
                 title: 'ยืนยันการอนุมัติถอนเงิน',
                 html: `
                     <p>คุณต้องการอนุมัติการถอนเงินจำนวน <strong>฿${formatCurrency(amount)}</strong> ใช่หรือไม่?</p>
-                    <p class="text-sm text-gray-600 mt-2">ระบบจะเปลี่ยนสถานะเป็น "สำเร็จ" ก่อน แล้วหักเงินจากกระเป๋า</p>
+                    <p class="text-sm text-gray-600 mt-2">ระบบจะเปลี่ยนสถานะเป็น "สำเร็จ" แล้วหักเงินจากกระเป๋า</p>
                 `,
                 icon: 'question',
                 showCancelButton: true,
@@ -1066,7 +900,7 @@
             }
         }
 
-        // Bulk Actions
+        // ==================== Bulk Actions ====================
         async function approveAllTopups() {
             if (pendingTransactions.length === 0) {
                 Swal.fire('แจ้งเตือน', 'ไม่มีรายการเติมเงินรอการอนุมัติ', 'info');
@@ -1259,10 +1093,97 @@
             }
         }
 
-        // Load system statistics
+        // ==================== Bank Account Management ====================
+        function showAddBankModal() {
+            editingBankId = null;
+            document.getElementById('bankModalTitle').textContent = 'เพิ่มบัญชีธนาคาร';
+            document.getElementById('bankSubmitText').textContent = 'บันทึก';
+            document.getElementById('bankForm').reset();
+            document.getElementById('bankModal').classList.remove('hidden');
+        }
+
+        function editBankAccount(index) {
+            const account = bankAccounts[index];
+            editingBankId = index;
+            
+            document.getElementById('bankModalTitle').textContent = 'แก้ไขบัญชีธนาคาร';
+            document.getElementById('bankSubmitText').textContent = 'อัพเดท';
+            document.getElementById('bankName').value = account.bankName;
+            document.getElementById('accountNumber').value = account.accountNumber;
+            document.getElementById('accountName').value = account.accountName;
+            document.getElementById('bankModal').classList.remove('hidden');
+        }
+
+        function closeBankModal() {
+            document.getElementById('bankModal').classList.add('hidden');
+            editingBankId = null;
+        }
+
+        async function deleteBankAccount(index) {
+            const account = bankAccounts[index];
+            
+            const result = await Swal.fire({
+                title: 'ยืนยันการลบ',
+                html: `คุณต้องการลบบัญชีธนาคาร<br><strong>${account.bankName}</strong><br>เลขบัญชี: <strong>${account.accountNumber}</strong><br>ใช่หรือไม่?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'ลบ',
+                cancelButtonText: 'ยกเลิก',
+                confirmButtonColor: '#ef4444'
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    Swal.fire({
+                        title: 'กำลังลบ...',
+                        text: 'กรุณารอสักครู่',
+                        allowOutsideClick: false,
+                        showConfirmButton: false,
+                        willOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    const formData = new FormData();
+                    formData.append('action', 'deleteBankAccount');
+                    formData.append('bankName', account.bankName);
+                    formData.append('accountNumber', account.accountNumber);
+
+                    const response = await fetch(API_URL, {
+                        method: "POST",
+                        body: formData
+                    });
+
+                    const responseText = await response.text();
+                    console.log('Delete bank response:', responseText);
+
+                    let responseData;
+                    try {
+                        responseData = JSON.parse(responseText);
+                    } catch (e) {
+                        if (responseText.includes('success') || responseText.includes('สำเร็จ')) {
+                            responseData = { success: true };
+                        } else {
+                            throw new Error('ไม่สามารถลบได้: ' + responseText);
+                        }
+                    }
+
+                    if (responseData.success || responseText.includes('success') || responseText.includes('สำเร็จ')) {
+                        Swal.fire('สำเร็จ!', 'ลบบัญชีธนาคารเรียบร้อยแล้ว', 'success');
+                        await loadBankAccounts();
+                    } else {
+                        throw new Error(responseData.message || 'ไม่สามารถลบบัญชีธนาคารได้');
+                    }
+                } catch (error) {
+                    console.error('Error deleting bank account:', error);
+                    Swal.fire('ข้อผิดพลาด', error.message || 'ไม่สามารถลบบัญชีธนาคารได้', 'error');
+                }
+            }
+        }
+
+        // ==================== System Statistics ====================
         async function loadSystemStats() {
             try {
-                // สำหรับตอนนี้แสดงสถิติพื้นฐาน จากข้อมูลที่มี
                 const totalPending = pendingTransactions.length + pendingWithdrawals.length;
                 const totalTopupAmount = pendingTransactions.reduce((sum, t) => sum + t.amount, 0);
                 const totalWithdrawalAmount = pendingWithdrawals.reduce((sum, t) => sum + t.amount, 0);
@@ -1282,7 +1203,6 @@
             }
         }
 
-        // Render system statistics
         function renderSystemStats() {
             const container = document.getElementById('systemStats');
             
@@ -1334,24 +1254,20 @@
             `).join('');
         }
 
-        // Update statistics
         function updateStatistics() {
             document.getElementById('pendingCount').textContent = pendingTransactions.length;
             document.getElementById('pendingWithdrawals').textContent = pendingWithdrawals.length;
             
-            // อัพเดทสถิติในแท็บสถิติด้วย
             if (currentTab === 'stats') {
                 loadSystemStats();
             }
         }
 
-        // Initialize LIFF with ultra fast loading
+        // ==================== Initialize Application ====================
         window.onload = async function() {
             try {
-                // Show app immediately
                 setTimeout(hideLoading, 20);
 
-                // Check API URL configuration
                 if (API_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
                     console.warn('⚠️ API_URL not configured - Please update the API_URL variable');
                     Swal.fire({
@@ -1362,15 +1278,11 @@
                     });
                 }
 
-                // Initialize app immediately
                 initApp();
 
-                // Check if LIFF is available
                 if (typeof liff !== 'undefined') {
-                    // Initialize LIFF in background
                     liff.init({ liffId: LIFF_ID || 'demo' }).then(() => {
                         if (liff.isLoggedIn()) {
-                            // Reload data with real user
                             loadPendingTransactions();
                             loadPendingWithdrawals();
                             loadBankAccounts();
@@ -1380,7 +1292,6 @@
                         }
                     }).catch(err => {
                         console.error('LIFF init failed:', err);
-                        // Continue with demo mode
                     });
                 }
 
@@ -1390,10 +1301,8 @@
             }
         };
 
-        // Initialize App with ultra fast execution
         async function initApp() {
             try {
-                // Set user data
                 if (typeof liff !== 'undefined' && liff.isLoggedIn()) {
                     const profile = await liff.getProfile();
                     userData = {
@@ -1402,7 +1311,6 @@
                         picture: profile.pictureUrl
                     };
                 } else {
-                    // Demo mode
                     userData = {
                         userId: 'demo-admin',
                         name: 'Demo Admin',
@@ -1410,12 +1318,10 @@
                     };
                 }
 
-                // Check API configuration
                 if (API_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
                     console.warn('⚠️ API_URL not configured');
                 }
 
-                // Load initial data in background
                 Promise.all([
                     loadPendingTransactions(),
                     loadPendingWithdrawals(),
@@ -1425,7 +1331,6 @@
                     console.warn('Failed to load some data:', err);
                 });
                 
-                // Set default tab
                 switchTab('pending');
                 
             } catch (error) {
@@ -1433,7 +1338,82 @@
             }
         }
 
-        // Debug function for testing bank account operations
+        // ==================== Bank Form Handler ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('bankForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const bankName = document.getElementById('bankName').value;
+                const accountNumber = document.getElementById('accountNumber').value;
+                const accountName = document.getElementById('accountName').value;
+
+                if (!bankName || !accountNumber || !accountName) {
+                    Swal.fire('ข้อผิดพลาด', 'กรุณากรอกข้อมูลให้ครบถ้วน', 'error');
+                    return;
+                }
+
+                if (!/^\d{10,15}$/.test(accountNumber)) {
+                    Swal.fire('ข้อผิดพลาด', 'เลขบัญชีต้องเป็นตัวเลข 10-15 หลัก', 'error');
+                    return;
+                }
+
+                try {
+                    Swal.fire({
+                        title: editingBankId !== null ? 'กำลังอัพเดท...' : 'กำลังบันทึก...',
+                        text: 'กรุณารอสักครู่',
+                        allowOutsideClick: false,
+                        showConfirmButton: false,
+                        willOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    const formData = new FormData();
+                    formData.append('action', editingBankId !== null ? 'updateBankAccount' : 'addBankAccount');
+                    formData.append('bankName', bankName);
+                    formData.append('accountNumber', accountNumber);
+                    formData.append('accountName', accountName);
+                    
+                    if (editingBankId !== null) {
+                        const oldAccount = bankAccounts[editingBankId];
+                        formData.append('oldBankName', oldAccount.bankName);
+                        formData.append('oldAccountNumber', oldAccount.accountNumber);
+                    }
+
+                    const response = await fetch(API_URL, {
+                        method: "POST",
+                        body: formData
+                    });
+
+                    const responseText = await response.text();
+                    console.log('Bank account response:', responseText);
+
+                    let responseData;
+                    try {
+                        responseData = JSON.parse(responseText);
+                    } catch (e) {
+                        if (responseText.includes('success') || responseText.includes('สำเร็จ')) {
+                            responseData = { success: true };
+                        } else {
+                            throw new Error('ไม่สามารถดำเนินการได้: ' + responseText);
+                        }
+                    }
+
+                    if (responseData.success || responseText.includes('success') || responseText.includes('สำเร็จ')) {
+                        Swal.fire('สำเร็จ!', editingBankId !== null ? 'อัพเดทบัญชีธนาคารเรียบร้อยแล้ว' : 'เพิ่มบัญชีธนาคารเรียบร้อยแล้ว', 'success');
+                        closeBankModal();
+                        await loadBankAccounts();
+                    } else {
+                        throw new Error(responseData.message || 'ไม่สามารถดำเนินการได้');
+                    }
+                } catch (error) {
+                    console.error('Error saving bank account:', error);
+                    Swal.fire('ข้อผิดพลาด', error.message || 'ไม่สามารถบันทึกบัญชีธนาคารได้', 'error');
+                }
+            });
+        });
+
+        // ==================== Debug Functions ====================
         window.testBankOperations = function() {
             console.log('Current bank accounts:', bankAccounts);
             console.log('API URL:', API_URL);
@@ -1448,7 +1428,6 @@
                 return;
             }
             
-            // Test GET request
             fetch(`${API_URL}?action=getBankAccounts`)
                 .then(response => response.json())
                 .then(data => {
@@ -1460,6 +1439,34 @@
                     Swal.fire('ทดสอบ GET', 'ล้มเหลว: ' + error.message, 'error');
                 });
         };
+
+        // ==================== API Configuration Check ====================
+        function checkApiConfiguration() {
+            if (API_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
+                return false;
+            }
+            return true;
+        }
+
+        // แสดงข้อความเตือนถ้ายังไม่ได้ตั้งค่า API
+        if (!checkApiConfiguration()) {
+            console.warn(`
+🚨 การตั้งค่า API ยังไม่สมบูรณ์ 🚨
+
+กรุณาทำตามขั้นตอนต่อไปนี้:
+
+1. เปิด Google Apps Script (script.google.com)
+2. สร้างโปรเจกต์ใหม่
+3. คัดลอกโค้ด Backend ที่ให้มาไปใส่
+4. Deploy เป็น Web App
+5. คัดลอก URL ที่ได้มาแทนที่ในตัวแปร API_URL
+6. ตั้งค่า LIFF_ID (ถ้าใช้ LINE LIFF)
+
+ตัวอย่าง:
+const API_URL = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec';
+const LIFF_ID = 'YOUR_LIFF_ID';
+            `);
+        }
     </script>
 </body>
 </html>
