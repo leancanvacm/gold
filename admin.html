@@ -273,16 +273,17 @@
         </div>
     </div>
 
+      <script src="config.js"></script>
+    <script src="utils.js"></script>
     <script>
+        // Global Variables
         let userData = {};
         let pendingTransactions = [];
         let pendingWithdrawals = [];
-        let bankAccounts = [];
         let allTransactions = [];
         let systemStats = {};
         let currentTab = 'pending';
-        let editingBankId = null;
-        const API_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE';
+
 
         function hideLoading() {
             document.getElementById('loading').classList.add('hidden');
