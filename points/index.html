@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ระบบ Check-in รายวัน</title>
     <link href="https://cdn.jsdelivr.net/gh/maketline/goodday/font/stylesheet.min.css" rel="stylesheet">
-    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/versions/2.21.0/sdk.js"></script>
+    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
         * {
             margin: 0;
@@ -549,24 +549,86 @@
 
         // Initialize LIFF
         document.addEventListener('DOMContentLoaded', function() {
-            liff.init({
-                liffId: liffId
-            }).then(() => {
-                console.log('LIFF initialized successfully');
-                console.log('LIFF OS:', liff.getOS());
-                console.log('LIFF Version:', liff.getVersion());
-                console.log('Send Messages API available:', liff.isApiAvailable('sendMessages'));
-                
-                if (liff.isLoggedIn()) {
-                    initializeApp();
-                } else {
-                    liff.login();
-                }
-            }).catch((err) => {
-                console.error('LIFF Initialization failed', err);
-                addMessage('ระบบ', 'เกิดข้อผิดพลาดในการเชื่อมต่อ LINE');
-            });
+            // Check if LIFF is available
+            if (typeof liff === 'undefined') {
+                console.error('LIFF SDK not loaded');
+                addMessage('❌ ระบบ', 'ไม่สามารถโหลด LIFF SDK ได้ กรุณาตรวจสอบการเชื่อมต่อ');
+                return;
+            }
+
+            // Initialize LIFF with retry mechanism
+            initializeLiff();
         });
+
+        async function initializeLiff() {
+            const maxRetries = 3;
+            let retryCount = 0;
+
+            while (retryCount < maxRetries) {
+                try {
+                    console.log(`Initializing LIFF (attempt ${retryCount + 1}/${maxRetries})`);
+                    
+                    await liff.init({
+                        liffId: liffId
+                    });
+
+                    console.log('LIFF initialized successfully');
+                    console.log('LIFF OS:', liff.getOS());
+                    console.log('LIFF Version:', liff.getVersion());
+                    console.log('LIFF Language:', liff.getLanguage());
+                    console.log('Send Messages API available:', liff.isApiAvailable('sendMessages'));
+                    console.log('Open Window API available:', liff.isApiAvailable('openWindow'));
+                    
+                    if (liff.isLoggedIn()) {
+                        console.log('User is logged in');
+                        await initializeApp();
+                    } else {
+                        console.log('User not logged in, redirecting to login');
+                        liff.login();
+                    }
+                    
+                    return; // Success, exit retry loop
+                    
+                } catch (err) {
+                    retryCount++;
+                    console.error(`LIFF Initialization failed (attempt ${retryCount}):`, err);
+                    
+                    if (retryCount >= maxRetries) {
+                        addMessage('❌ ระบบ', `เกิดข้อผิดพลาดในการเชื่อมต่อ LINE: ${err.message}`);
+                        addMessage('💡 แนะนำ', 'กรุณาลองรีเฟรชหน้าเว็บหรือเปิดใน LINE App');
+                        
+                        // Try to initialize with minimal functionality for testing
+                        initializeWithoutLiff();
+                        return;
+                    }
+                    
+                    // Wait before retry
+                    await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+                }
+            }
+        }
+
+        // Fallback initialization without LIFF for testing
+        function initializeWithoutLiff() {
+            console.log('Initializing without LIFF for testing purposes');
+            
+            // Mock user data for testing
+            currentUser = {
+                userId: 'TEST_USER_' + Date.now(),
+                displayName: 'ผู้ใช้ทดสอบ',
+                pictureUrl: 'https://via.placeholder.com/60/4CAF50/ffffff?text=U'
+            };
+
+            // Update UI with mock profile info
+            document.getElementById('displayName').textContent = currentUser.displayName;
+            document.getElementById('profilePic').src = currentUser.pictureUrl;
+
+            addMessage('⚠️ ระบบ', 'กำลังทำงานในโหมดทดสอบ (ไม่ได้เชื่อมต่อ LINE)');
+            addMessage('💡 แนะนำ', 'เพื่อใช้งานจริง กรุณาเปิดผ่าน LINE App');
+
+            // Initialize app functionality
+            initializeAppFunctionality();
+        }
 
         // Initialize Application
         async function initializeApp() {
@@ -585,6 +647,18 @@
                 document.getElementById('displayName').textContent = profile.displayName;
                 document.getElementById('profilePic').src = profile.pictureUrl;
 
+                await initializeAppFunctionality();
+                
+            } catch (error) {
+                console.error('Initialization error:', error);
+                showLoading(false);
+                addMessage('❌ ระบบ', 'เกิดข้อผิดพลาดในการเริ่มต้นระบบ');
+            }
+        }
+
+        // Initialize app functionality (separated for reuse)
+        async function initializeAppFunctionality() {
+            try {
                 // Load user data
                 await loadUserData();
                 await loadRewards();
@@ -594,12 +668,12 @@
                 updateUI();
                 
                 showLoading(false);
-                addMessage('ระบบ', `ยินดีต้อนรับ ${profile.displayName}!`);
+                addMessage('✅ ระบบ', `ยินดีต้อนรับ ${currentUser.displayName}!`);
                 
             } catch (error) {
-                console.error('Initialization error:', error);
+                console.error('App functionality initialization error:', error);
                 showLoading(false);
-                addMessage('ระบบ', 'เกิดข้อผิดพลาดในการเริ่มต้นระบบ');
+                addMessage('❌ ระบบ', 'เกิดข้อผิดพลาดในการโหลดข้อมูล');
             }
         }
 
@@ -662,11 +736,19 @@
         // Send data to Google Apps Script using JSONP
         function sendToAppScript(action, data) {
             return new Promise((resolve, reject) => {
+                // Add timeout handling
+                const timeout = setTimeout(() => {
+                    reject(new Error('Request timeout - Google Apps Script may be unavailable'));
+                }, 30000); // 30 seconds timeout
+
                 const callbackName = 'callback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
                 
                 window[callbackName] = function(response) {
+                    clearTimeout(timeout);
                     delete window[callbackName];
-                    document.head.removeChild(script);
+                    if (script && script.parentNode) {
+                        document.head.removeChild(script);
+                    }
                     resolve(response);
                 };
 
@@ -679,11 +761,15 @@
                 const script = document.createElement('script');
                 script.src = `${appScriptUrl}?${params.toString()}`;
                 script.onerror = () => {
+                    clearTimeout(timeout);
                     delete window[callbackName];
-                    document.head.removeChild(script);
-                    reject(new Error('Script loading failed'));
+                    if (script && script.parentNode) {
+                        document.head.removeChild(script);
+                    }
+                    reject(new Error('Script loading failed - Check Google Apps Script URL'));
                 };
                 
+                console.log('Sending request to:', script.src);
                 document.head.appendChild(script);
             });
         }
@@ -951,64 +1037,71 @@
             try {
                 addMessage('💬 ส่งข้อความ LINE', 'กำลังส่ง Flex Message...');
                 
+                // Check if LIFF is available and user is logged in
+                if (typeof liff === 'undefined' || !liff.isLoggedIn()) {
+                    addMessage('⚠️ ระบบ', 'ไม่สามารถส่งข้อความได้ เนื่องจากไม่ได้เชื่อมต่อ LINE');
+                    return;
+                }
+                
                 if (liff.isApiAvailable('sendMessages')) {
-                    await liff.sendMessages([{
-                        type: 'flex',
-                        altText: 'ระบบแจ้งเตือน Check-in',
-                        contents: {
-                            type: 'bubble',
-                            body: {
-                                type: 'box',
-                                layout: 'vertical',
-                                spacing: 'md',
-                                contents: [
-                                    {
-                                        type: 'text',
-                                        text: '🎉 ระบบ Check-in รายวัน',
-                                        weight: 'bold',
-                                        size: 'xl',
-                                        color: '#ff6b6b',
-                                        align: 'center'
-                                    },
-                                    {
-                                        type: 'separator',
-                                        margin: 'md'
-                                    },
-                                    {
-                                        type: 'text',
-                                        text: message,
-                                        wrap: true,
-                                        margin: 'md',
-                                        size: 'sm',
-                                        color: '#333333'
-                                    }
-                                ]
-                            },
-                            styles: {
+                    try {
+                        await liff.sendMessages([{
+                            type: 'flex',
+                            altText: 'ระบบแจ้งเตือน Check-in',
+                            contents: {
+                                type: 'bubble',
                                 body: {
-                                    backgroundColor: '#ffffff'
+                                    type: 'box',
+                                    layout: 'vertical',
+                                    spacing: 'md',
+                                    contents: [
+                                        {
+                                            type: 'text',
+                                            text: '🎉 ระบบ Check-in รายวัน',
+                                            weight: 'bold',
+                                            size: 'xl',
+                                            color: '#ff6b6b',
+                                            align: 'center'
+                                        },
+                                        {
+                                            type: 'separator',
+                                            margin: 'md'
+                                        },
+                                        {
+                                            type: 'text',
+                                            text: message,
+                                            wrap: true,
+                                            margin: 'md',
+                                            size: 'sm',
+                                            color: '#333333'
+                                        }
+                                    ]
+                                },
+                                styles: {
+                                    body: {
+                                        backgroundColor: '#ffffff'
+                                    }
                                 }
                             }
-                        }
-                    }]);
-                    
-                    addMessage('✅ ส่งข้อความ LINE', 'ส่ง Flex Message เรียบร้อยแล้ว!');
-                } else {
-                    console.warn('Send messages API not available');
-                    addMessage('⚠️ ระบบ', 'API ส่งข้อความไม่พร้อมใช้งาน');
-                    
-                    // Fallback to simple text message
-                    try {
+                        }]);
+                        
+                        addMessage('✅ ส่งข้อความ LINE', 'ส่ง Flex Message เรียบร้อยแล้ว!');
+                        
+                    } catch (flexError) {
+                        console.warn('Flex message failed, trying text message:', flexError);
+                        
+                        // Fallback to simple text message
                         await liff.sendMessages([{
                             type: 'text',
                             text: `🎉 ระบบ Check-in รายวัน\n\n${message}`
                         }]);
                         addMessage('✅ ส่งข้อความ LINE', 'ส่งข้อความธรรมดาเรียบร้อย');
-                    } catch (fallbackError) {
-                        console.error('Fallback message error:', fallbackError);
-                        addMessage('❌ ระบบ', 'ไม่สามารถส่งข้อความ LINE ได้');
                     }
+                } else {
+                    console.warn('Send messages API not available');
+                    addMessage('⚠️ ระบบ', 'API ส่งข้อความไม่พร้อมใช้งาน (ลองเปิดใน LINE App)');
                 }
+                
             } catch (error) {
                 console.error('Error sending message:', error);
                 addMessage('❌ ระบบ', `ไม่สามารถส่งข้อความ LINE ได้: ${error.message}`);
