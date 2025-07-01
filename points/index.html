@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Check-in System</title>
+    <title>ระบบเช็คอินรายวัน</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <link href="https://cdn.jsdelivr.net/gh/maketline/goodday/font/stylesheet.min.css" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -13,10 +14,11 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'line_seed_sans_th', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             color: #333;
+            line-height: 1.6;
         }
 
         .container {
@@ -26,24 +28,33 @@
             min-height: 100vh;
             position: relative;
             overflow: hidden;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.2);
         }
 
         .header {
-            background: linear-gradient(135deg, #ff6b6b, #feca57);
+            background: linear-gradient(135deg, #FF6B35, #F7931E);
             padding: 20px;
             text-align: center;
             color: white;
             position: relative;
+            overflow: hidden;
         }
 
         .header::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="10" cy="10" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="90" cy="20" r="1.5" fill="rgba(255,255,255,0.1)"/><circle cx="20" cy="80" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="90" r="2.5" fill="rgba(255,255,255,0.1)"/></svg>');
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="3" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="30" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="30" cy="70" r="2.5" fill="rgba(255,255,255,0.1)"/><circle cx="70" cy="80" r="1.5" fill="rgba(255,255,255,0.1)"/></svg>');
+            animation: float 20s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(30px, -30px) rotate(120deg); }
+            66% { transform: translate(-20px, 20px) rotate(240deg); }
         }
 
         .profile-section {
@@ -56,64 +67,85 @@
         }
 
         .profile-pic {
-            width: 60px;
-            height: 60px;
+            width: 70px;
+            height: 70px;
             border-radius: 50%;
-            border: 3px solid rgba(255, 255, 255, 0.3);
+            border: 4px solid rgba(255, 255, 255, 0.3);
             object-fit: cover;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
 
         .profile-info h2 {
-            font-size: 20px;
-            margin-bottom: 5px;
+            font-size: 22px;
+            margin-bottom: 8px;
+            font-weight: 600;
         }
 
         .points-display {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 8px 15px;
-            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            padding: 10px 20px;
+            border-radius: 25px;
             font-weight: bold;
+            font-size: 16px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
         .nav-tabs {
             display: flex;
             background: #f8f9fa;
             border-bottom: 1px solid #e9ecef;
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
 
         .nav-tab {
             flex: 1;
-            padding: 15px;
+            padding: 18px 15px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s ease;
             border: none;
             background: none;
-            font-size: 14px;
-            font-weight: 500;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: 'line_seed_sans_th';
+            color: #666;
         }
 
         .nav-tab.active {
             background: white;
-            color: #667eea;
-            border-bottom: 3px solid #667eea;
+            color: #FF6B35;
+            border-bottom: 3px solid #FF6B35;
+            transform: translateY(-2px);
         }
 
         .tab-content {
             display: none;
-            padding: 20px;
-            min-height: 400px;
+            padding: 25px 20px;
+            min-height: 500px;
         }
 
         .tab-content.active {
             display: block;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .checkin-calendar {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 10px;
+            gap: 12px;
             margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 20px;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
         .day-card {
@@ -122,36 +154,40 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            border-radius: 12px;
-            font-size: 12px;
+            border-radius: 15px;
+            font-size: 13px;
+            font-weight: 600;
             position: relative;
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            cursor: pointer;
         }
 
         .day-card.past {
-            background: #f8f9fa;
-            color: #6c757d;
+            background: #f1f3f4;
+            color: #9aa0a6;
         }
 
         .day-card.checked {
-            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            background: linear-gradient(135deg, #4CAF50, #45a049);
             color: white;
-            transform: scale(1.05);
+            transform: scale(1.1);
+            box-shadow: 0 8px 25px rgba(76, 175, 80, 0.3);
         }
 
         .day-card.today {
-            background: linear-gradient(135deg, #fa709a, #fee140);
+            background: linear-gradient(135deg, #FF6B35, #F7931E);
             color: white;
             animation: pulse 2s infinite;
+            box-shadow: 0 5px 20px rgba(255, 107, 53, 0.4);
         }
 
         .day-card.future {
-            background: #e9ecef;
-            color: #adb5bd;
+            background: #e8eaed;
+            color: #9aa0a6;
         }
 
         .day-card.bonus {
-            background: linear-gradient(135deg, #ff9a9e, #fecfef);
+            background: linear-gradient(135deg, #9C27B0, #E91E63);
             position: relative;
             overflow: hidden;
         }
@@ -159,9 +195,15 @@
         .day-card.bonus::after {
             content: '🎁';
             position: absolute;
-            top: 2px;
-            right: 2px;
-            font-size: 10px;
+            top: 3px;
+            right: 3px;
+            font-size: 12px;
+            animation: sparkle 1.5s ease-in-out infinite;
+        }
+
+        @keyframes sparkle {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.2) rotate(180deg); }
         }
 
         @keyframes pulse {
@@ -171,108 +213,163 @@
 
         .checkin-btn {
             width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            padding: 18px;
+            background: linear-gradient(135deg, #FF6B35, #F7931E);
             color: white;
             border: none;
-            border-radius: 25px;
-            font-size: 16px;
+            border-radius: 30px;
+            font-size: 18px;
             font-weight: bold;
+            font-family: 'line_seed_sans_th';
             cursor: pointer;
             transition: all 0.3s ease;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
         }
 
         .checkin-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 107, 53, 0.4);
         }
 
         .checkin-btn:disabled {
-            background: #dee2e6;
+            background: linear-gradient(135deg, #dee2e6, #adb5bd);
             color: #6c757d;
             cursor: not-allowed;
             transform: none;
+            box-shadow: none;
         }
 
         .streak-info {
-            background: linear-gradient(135deg, #ffecd2, #fcb69f);
-            padding: 20px;
-            border-radius: 15px;
+            background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+            padding: 25px;
+            border-radius: 20px;
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
+            border: 2px solid #ffcc02;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .streak-info::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 204, 2, 0.2), transparent);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
         }
 
         .streak-info h3 {
-            margin-bottom: 10px;
-            color: #d63031;
+            margin-bottom: 12px;
+            color: #f57c00;
+            font-size: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .streak-info p {
+            position: relative;
+            z-index: 1;
+            font-weight: 500;
         }
 
         .rewards-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 20px;
         }
 
         .reward-card {
             background: white;
-            border-radius: 15px;
+            border-radius: 20px;
             overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            border: 1px solid #f0f0f0;
         }
 
         .reward-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
         }
 
         .reward-image {
             width: 100%;
-            height: 100px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            height: 120px;
+            object-fit: cover;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .reward-image-placeholder {
+            width: 100%;
+            height: 120px;
+            background: linear-gradient(135deg, #FF6B35, #F7931E);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 40px;
+            color: white;
         }
 
         .reward-info {
-            padding: 15px;
+            padding: 20px;
         }
 
         .reward-title {
             font-weight: bold;
-            margin-bottom: 5px;
-            font-size: 14px;
+            margin-bottom: 8px;
+            font-size: 16px;
+            color: #333;
         }
 
         .reward-points {
-            color: #667eea;
+            color: #FF6B35;
             font-weight: bold;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
+            font-size: 14px;
         }
 
         .reward-stock {
             font-size: 12px;
             color: #6c757d;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
+        }
+
+        .reward-expire {
+            font-size: 11px;
+            color: #e74c3c;
+            margin-bottom: 12px;
+            font-weight: 500;
         }
 
         .reward-btn {
             width: 100%;
-            padding: 8px;
+            padding: 10px;
             border: none;
-            border-radius: 8px;
-            font-size: 12px;
+            border-radius: 12px;
+            font-size: 14px;
             font-weight: bold;
+            font-family: 'line_seed_sans_th';
             cursor: pointer;
             transition: all 0.3s ease;
         }
 
         .reward-btn.available {
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, #4CAF50, #45a049);
             color: white;
+        }
+
+        .reward-btn.available:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
         }
 
         .reward-btn.unavailable {
@@ -282,35 +379,44 @@
         }
 
         .admin-section {
-            background: #f8f9fa;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid #dee2e6;
         }
 
         .admin-title {
-            color: #667eea;
-            margin-bottom: 15px;
+            color: #FF6B35;
+            margin-bottom: 20px;
             font-weight: bold;
+            font-size: 18px;
         }
 
         .pending-list {
-            max-height: 300px;
+            max-height: 400px;
             overflow-y: auto;
         }
 
         .pending-item {
             background: white;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 10px;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 15px;
             display: flex;
-            justify-content: between;
+            justify-content: space-between;
             align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            border: 1px solid #f0f0f0;
         }
 
         .pending-info {
             flex: 1;
+        }
+
+        .pending-info strong {
+            color: #333;
+            font-size: 16px;
         }
 
         .pending-actions {
@@ -319,47 +425,186 @@
         }
 
         .approve-btn, .reject-btn {
-            padding: 5px 15px;
+            padding: 8px 16px;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             font-size: 12px;
+            font-weight: bold;
+            font-family: 'line_seed_sans_th';
             cursor: pointer;
+            transition: all 0.3s ease;
         }
 
         .approve-btn {
-            background: #28a745;
+            background: linear-gradient(135deg, #28a745, #20c997);
             color: white;
         }
 
+        .approve-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        }
+
         .reject-btn {
-            background: #dc3545;
+            background: linear-gradient(135deg, #dc3545, #e74c3c);
             color: white;
+        }
+
+        .reject-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
         }
 
         .loading {
             text-align: center;
-            padding: 40px;
+            padding: 50px;
             color: #6c757d;
+            font-size: 16px;
         }
 
-        .error {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
+        .loading::before {
+            content: '';
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #FF6B35;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
         }
 
-        .success {
-            background: #d4edda;
-            color: #155724;
-            padding: 15px;
-            border-radius: 10px;
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .message {
+            padding: 15px 20px;
+            border-radius: 12px;
             margin-bottom: 20px;
+            font-weight: 500;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .message.error {
+            background: linear-gradient(135deg, #ffebee, #ffcdd2);
+            color: #c62828;
+            border: 1px solid #ef5350;
+        }
+
+        .message.success {
+            background: linear-gradient(135deg, #e8f5e8, #c8e6c9);
+            color: #2e7d32;
+            border: 1px solid #66bb6a;
+        }
+
+        .message.info {
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            color: #1565c0;
+            border: 1px solid #42a5f5;
         }
 
         .hidden {
             display: none !important;
+        }
+
+        .day-name {
+            font-size: 11px;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        .day-number {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .check-mark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 20px;
+            color: white;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 480px) {
+            .container {
+                margin: 0;
+                border-radius: 0;
+            }
+            
+            .header {
+                padding: 15px;
+            }
+            
+            .profile-pic {
+                width: 60px;
+                height: 60px;
+            }
+            
+            .nav-tab {
+                padding: 15px 10px;
+                font-size: 13px;
+            }
+            
+            .checkin-calendar {
+                gap: 8px;
+                padding: 15px;
+            }
+            
+            .day-card {
+                font-size: 11px;
+            }
+            
+            .rewards-grid {
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+                gap: 15px;
+            }
+            
+            .reward-image, .reward-image-placeholder {
+                height: 100px;
+            }
+        }
+
+        /* Dark Mode Support */
+        @media (prefers-color-scheme: dark) {
+            .container {
+                background: #1a1a1a;
+                color: #e0e0e0;
+            }
+            
+            .nav-tabs {
+                background: #2d2d2d;
+                border-bottom-color: #404040;
+            }
+            
+            .nav-tab {
+                color: #b0b0b0;
+            }
+            
+            .nav-tab.active {
+                background: #1a1a1a;
+                color: #FF6B35;
+            }
+            
+            .reward-card, .pending-item {
+                background: #2d2d2d;
+                border-color: #404040;
+                color: #e0e0e0;
+            }
+            
+            .admin-section {
+                background: #2d2d2d;
+                border-color: #404040;
+            }
         }
     </style>
 </head>
@@ -367,27 +612,27 @@
     <div class="container">
         <div class="header">
             <div class="profile-section">
-                <img id="profilePic" class="profile-pic" src="https://via.placeholder.com/60x60/667eea/ffffff?text=U" alt="Profile">
+                <img id="profilePic" class="profile-pic" src="https://via.placeholder.com/70x70/FF6B35/ffffff?text=U" alt="Profile">
                 <div class="profile-info">
                     <h2 id="userName">กำลังโหลด...</h2>
                     <div class="points-display">
-                        คะแนน: <span id="userPoints">0</span> แต้ม
+                        💎 คะแนน: <span id="userPoints">0</span> แต้ม
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="nav-tabs">
-            <button class="nav-tab active" onclick="showTab('checkin')">เช็คอิน</button>
-            <button class="nav-tab" onclick="showTab('rewards')">รางวัล</button>
-            <button class="nav-tab hidden" id="adminTab" onclick="showTab('admin')">จัดการ</button>
+            <button class="nav-tab active" onclick="showTab('checkin')">🏠 เช็คอิน</button>
+            <button class="nav-tab" onclick="showTab('rewards')">🎁 รางวัล</button>
+            <button class="nav-tab hidden" id="adminTab" onclick="showTab('admin')">⚙️ จัดการ</button>
         </div>
 
         <div id="checkinTab" class="tab-content active">
             <div class="streak-info">
                 <h3>🔥 เช็คอินต่อเนื่อง</h3>
-                <p id="streakText">วันที่ <span id="streakCount">0</span> จาก 7 วัน</p>
-                <small>เช็คอินครบ 7 วันติดต่อกันรับ 1 แต้ม!</small>
+                <p>วันที่ <span id="streakCount">0</span> จาก 7 วัน</p>
+                <small>เช็คอินครบ 7 วันติดต่อกันรับ 1 แต้ม! วันปกติ 0.5 แต้ม</small>
             </div>
 
             <div id="checkinCalendar" class="checkin-calendar">
@@ -395,7 +640,7 @@
             </div>
 
             <button id="checkinBtn" class="checkin-btn" onclick="doCheckin()">
-                เช็คอินวันนี้
+                ✨ เช็คอินวันนี้
             </button>
 
             <div id="checkinMessage"></div>
@@ -409,7 +654,7 @@
 
         <div id="adminTab" class="tab-content">
             <div class="admin-section">
-                <h3 class="admin-title">คำขอแลกรางวัลรอการอนุมัติ</h3>
+                <h3 class="admin-title">📋 คำขอแลกรางวัลรอการอนุมัติ</h3>
                 <div id="pendingRequests" class="pending-list">
                     <!-- Pending requests will be loaded here -->
                 </div>
@@ -419,11 +664,14 @@
 
     <script>
         // Global variables
-        let liffId = '1656032875-GLpZe6By'; // Replace with your LIFF ID
+        const liffId = '1656032875-GLpZe6By';
         let userProfile = null;
         let userData = null;
         let rewardsData = [];
         const scriptUrl = 'https://script.google.com/macros/s/AKfycbxmTQ0knrfzI2puvfueSrjlTFKjA7KzG9aj1H356zyyUAwiCrP0HxkROceSsOVSdNgPHg/exec';
+
+        // Admin User IDs - แก้ไขตามต้องการ
+        const adminUsers = ['U4b7fb6e4d0ef4f9b6e4d0ef4f9b6e4d0']; // ใส่ LINE User ID ของแอดมิน
 
         // Initialize LIFF
         async function initLiff() {
@@ -435,7 +683,7 @@
                 } else {
                     userProfile = await liff.getProfile();
                     document.getElementById('userName').textContent = userProfile.displayName;
-                    document.getElementById('profilePic').src = userProfile.pictureUrl || 'https://via.placeholder.com/60x60/667eea/ffffff?text=U';
+                    document.getElementById('profilePic').src = userProfile.pictureUrl || 'https://via.placeholder.com/70x70/FF6B35/ffffff?text=U';
                     
                     // Check if user is admin
                     checkAdminStatus();
@@ -457,9 +705,6 @@
 
         // Check if user is admin
         function checkAdminStatus() {
-            // Add admin user IDs here
-            const adminUsers = ['YOUR_ADMIN_USER_ID']; // Replace with actual admin user IDs
-            
             if (adminUsers.includes(userProfile.userId)) {
                 document.getElementById('adminTab').classList.remove('hidden');
             }
@@ -473,14 +718,17 @@
         }
 
         // Make JSONP request
-        function makeRequest(params, callback) {
+        function makeRequest(params) {
             return new Promise((resolve, reject) => {
-                const callbackName = 'callback_' + Date.now();
-                window.currentCallback = (data) => {
+                const callbackName = 'callback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                
+                window[callbackName] = (data) => {
                     resolve(data);
                     // Cleanup
-                    delete window.currentCallback;
-                    document.head.removeChild(script);
+                    delete window[callbackName];
+                    if (script.parentNode) {
+                        document.head.removeChild(script);
+                    }
                 };
 
                 const script = document.createElement('script');
@@ -488,11 +736,13 @@
                     .map(key => encodeURIComponent(key) + '=' + encodeURIComponent(params[key]))
                     .join('&');
                 
-                script.src = `${scriptUrl}?${queryString}&callback=handleResponse`;
+                script.src = `${scriptUrl}?${queryString}&callback=${callbackName}`;
                 script.onerror = () => {
                     reject(new Error('Script loading failed'));
-                    delete window.currentCallback;
-                    document.head.removeChild(script);
+                    delete window[callbackName];
+                    if (script.parentNode) {
+                        document.head.removeChild(script);
+                    }
                 };
                 
                 document.head.appendChild(script);
@@ -502,6 +752,8 @@
         // Load user data
         async function loadUserData() {
             try {
+                showMessage('กำลังโหลดข้อมูล...', 'info');
+                
                 const response = await makeRequest({
                     action: 'getUserData',
                     userId: userProfile.userId
@@ -511,6 +763,7 @@
                     userData = response.data;
                     document.getElementById('userPoints').textContent = userData.points || 0;
                     document.getElementById('streakCount').textContent = userData.currentStreak || 0;
+                    clearMessage();
                 } else {
                     // Create new user if not exists
                     await createUser();
@@ -535,9 +788,11 @@
                     userData = response.data;
                     document.getElementById('userPoints').textContent = 0;
                     document.getElementById('streakCount').textContent = 0;
+                    clearMessage();
                 }
             } catch (error) {
                 console.error('Error creating user:', error);
+                showMessage('เกิดข้อผิดพลาดในการสร้างผู้ใช้', 'error');
             }
         }
 
@@ -554,6 +809,7 @@
                 }
             } catch (error) {
                 console.error('Error loading rewards:', error);
+                showMessage('เกิดข้อผิดพลาดในการโหลดรางวัล', 'error');
             }
         }
 
@@ -562,27 +818,53 @@
             const rewardsGrid = document.getElementById('rewardsGrid');
             rewardsGrid.innerHTML = '';
 
-            rewardsData.forEach(reward => {
-                if (reward.stock > 0 && new Date() <= new Date(reward.expireDate)) {
-                    const canRedeem = userData.points >= reward.points;
-                    
-                    const rewardCard = document.createElement('div');
-                    rewardCard.className = 'reward-card';
-                    rewardCard.innerHTML = `
-                        <div class="reward-image">${reward.emoji || '🎁'}</div>
-                        <div class="reward-info">
-                            <div class="reward-title">${reward.name}</div>
-                            <div class="reward-points">${reward.points} แต้ม</div>
-                            <div class="reward-stock">เหลือ ${reward.stock} ชิ้น</div>
-                            <button class="reward-btn ${canRedeem ? 'available' : 'unavailable'}" 
-                                    ${!canRedeem ? 'disabled' : ''} 
-                                    onclick="redeemReward('${reward.id}')">
-                                ${canRedeem ? 'แลกรางวัล' : 'แต้มไม่พอ'}
-                            </button>
-                        </div>
-                    `;
-                    rewardsGrid.appendChild(rewardCard);
-                }
+            const currentDate = new Date();
+            const filteredRewards = rewardsData.filter(reward => {
+                const expireDate = new Date(reward.expireDate);
+                return reward.stock > 0 && currentDate <= expireDate;
+            });
+
+            if (filteredRewards.length === 0) {
+                rewardsGrid.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #6c757d;">
+                        <div style="font-size: 48px; margin-bottom: 15px;">🎁</div>
+                        <div style="font-size: 18px; margin-bottom: 10px;">ไม่มีรางวัลในขณะนี้</div>
+                        <div style="font-size: 14px;">รอรางวัลใหม่ๆ เร็วๆ นี้!</div>
+                    </div>
+                `;
+                return;
+            }
+
+            filteredRewards.forEach(reward => {
+                const canRedeem = userData && userData.points >= reward.points;
+                const expireDate = new Date(reward.expireDate);
+                const expireDateStr = expireDate.toLocaleDateString('th-TH', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                
+                const rewardCard = document.createElement('div');
+                rewardCard.className = 'reward-card';
+                rewardCard.innerHTML = `
+                    ${reward.imageUrl ? 
+                        `<img src="${reward.imageUrl}" alt="${reward.name}" class="reward-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                         <div class="reward-image-placeholder" style="display:none;">🎁</div>` :
+                        `<div class="reward-image-placeholder">🎁</div>`
+                    }
+                    <div class="reward-info">
+                        <div class="reward-title">${reward.name}</div>
+                        <div class="reward-points">💎 ${reward.points} แต้ม</div>
+                        <div class="reward-stock">📦 เหลือ ${reward.stock} ชิ้น</div>
+                        <div class="reward-expire">⏰ หมดอายุ: ${expireDateStr}</div>
+                        <button class="reward-btn ${canRedeem ? 'available' : 'unavailable'}" 
+                                ${!canRedeem ? 'disabled' : ''} 
+                                onclick="redeemReward('${reward.id}')">
+                            ${canRedeem ? '🎁 แลกรางวัล' : '💎 แต้มไม่พอ'}
+                        </button>
+                    </div>
+                `;
+                rewardsGrid.appendChild(rewardCard);
             });
         }
 
@@ -624,9 +906,9 @@
                 }
 
                 dayCard.innerHTML = `
-                    <div>${days[i]}</div>
-                    <div>${dayDate.getDate()}</div>
-                    ${isChecked ? '<div>✓</div>' : ''}
+                    <div class="day-name">${days[i]}</div>
+                    <div class="day-number">${dayDate.getDate()}</div>
+                    ${isChecked ? '<div class="check-mark">✓</div>' : ''}
                 `;
 
                 calendar.appendChild(dayCard);
@@ -650,10 +932,10 @@
             const today = new Date().toISOString().split('T')[0];
             
             if (userData && userData.checkinDates && userData.checkinDates.includes(today)) {
-                checkinBtn.textContent = 'เช็คอินวันนี้แล้ว ✓';
+                checkinBtn.innerHTML = '✅ เช็คอินวันนี้แล้ว';
                 checkinBtn.disabled = true;
             } else {
-                checkinBtn.textContent = 'เช็คอินวันนี้';
+                checkinBtn.innerHTML = '✨ เช็คอินวันนี้';
                 checkinBtn.disabled = false;
             }
         }
@@ -676,11 +958,13 @@
                     generateCalendar();
                     
                     const earnedPoints = response.earnedPoints;
-                    showMessage(`เช็คอินสำเร็จ! ได้รับ ${earnedPoints} แต้ม`, 'success');
+                    let message = `🎉 เช็คอินสำเร็จ! ได้รับ ${earnedPoints} แต้ม`;
                     
                     if (userData.currentStreak === 7) {
-                        showMessage('🎉 เช็คอินครบ 7 วันติดต่อกัน! ได้รับโบนัส!', 'success');
+                        message += ' 🔥 ครบ 7 วันติดต่อกัน! ได้โบนัส!';
                     }
+                    
+                    showMessage(message, 'success');
                 } else {
                     showMessage(response.message || 'เกิดข้อผิดพลาด', 'error');
                 }
@@ -693,6 +977,8 @@
         // Redeem reward
         async function redeemReward(rewardId) {
             try {
+                showMessage('กำลังส่งคำขอแลกรางวัล...', 'info');
+                
                 const response = await makeRequest({
                     action: 'redeemReward',
                     userId: userProfile.userId,
@@ -700,7 +986,7 @@
                 });
 
                 if (response.success) {
-                    showMessage('ส่งคำขอแลกรางวัลแล้ว รอการอนุมัติจากแอดมิน', 'success');
+                    showMessage('✅ ส่งคำขอแลกรางวัลแล้ว รอการอนุมัติจากแอดมิน', 'success');
                 } else {
                     showMessage(response.message || 'เกิดข้อผิดพลาด', 'error');
                 }
@@ -729,6 +1015,8 @@
             // Load admin data if admin tab
             if (tabName === 'admin') {
                 loadPendingRequests();
+            } else if (tabName === 'rewards') {
+                loadRewards();
             }
         }
 
@@ -744,6 +1032,7 @@
                 }
             } catch (error) {
                 console.error('Error loading pending requests:', error);
+                showMessage('เกิดข้อผิดพลาดในการโหลดคำขอ', 'error');
             }
         }
 
@@ -753,22 +1042,37 @@
             pendingList.innerHTML = '';
 
             if (requests.length === 0) {
-                pendingList.innerHTML = '<p>ไม่มีคำขอรอการอนุมัติ</p>';
+                pendingList.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #6c757d;">
+                        <div style="font-size: 48px; margin-bottom: 15px;">📋</div>
+                        <div style="font-size: 16px;">ไม่มีคำขอรอการอนุมัติ</div>
+                    </div>
+                `;
                 return;
             }
 
             requests.forEach(request => {
+                const requestDate = new Date(request.requestDate);
+                const requestDateStr = requestDate.toLocaleDateString('th-TH', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
                 const requestItem = document.createElement('div');
                 requestItem.className = 'pending-item';
                 requestItem.innerHTML = `
                     <div class="pending-info">
                         <strong>${request.userName}</strong><br>
-                        ขอแลก: ${request.rewardName}<br>
-                        <small>${new Date(request.requestDate).toLocaleString('th-TH')}</small>
+                        🎁 ขอแลก: ${request.rewardName}<br>
+                        💎 ใช้แต้ม: ${request.points} แต้ม<br>
+                        <small>📅 ${requestDateStr}</small>
                     </div>
                     <div class="pending-actions">
-                        <button class="approve-btn" onclick="approveRequest('${request.id}')">อนุมัติ</button>
-                        <button class="reject-btn" onclick="rejectRequest('${request.id}')">ปฏิเสธ</button>
+                        <button class="approve-btn" onclick="approveRequest('${request.id}')">✅ อนุมัติ</button>
+                        <button class="reject-btn" onclick="rejectRequest('${request.id}')">❌ ปฏิเสธ</button>
                     </div>
                 `;
                 pendingList.appendChild(requestItem);
@@ -778,13 +1082,15 @@
         // Approve request
         async function approveRequest(requestId) {
             try {
+                showMessage('กำลังอนุมัติ...', 'info');
+                
                 const response = await makeRequest({
                     action: 'approveRequest',
                     requestId: requestId
                 });
 
                 if (response.success) {
-                    showMessage('อนุมัติการแลกรางวัลแล้ว', 'success');
+                    showMessage('✅ อนุมัติการแลกรางวัลแล้ว', 'success');
                     loadPendingRequests();
                     loadRewards();
                 } else {
@@ -799,13 +1105,15 @@
         // Reject request
         async function rejectRequest(requestId) {
             try {
+                showMessage('กำลังปฏิเสธ...', 'info');
+                
                 const response = await makeRequest({
                     action: 'rejectRequest',
                     requestId: requestId
                 });
 
                 if (response.success) {
-                    showMessage('ปฏิเสธการแลกรางวัลแล้ว', 'success');
+                    showMessage('❌ ปฏิเสธการแลกรางวัลแล้ว', 'success');
                     loadPendingRequests();
                 } else {
                     showMessage(response.message || 'เกิดข้อผิดพลาด', 'error');
@@ -819,17 +1127,33 @@
         // Show message
         function showMessage(message, type = 'info') {
             const messageDiv = document.getElementById('checkinMessage');
-            messageDiv.innerHTML = `<div class="${type}">${message}</div>`;
-            
-            setTimeout(() => {
-                messageDiv.innerHTML = '';
-            }, 5000);
+            messageDiv.innerHTML = `<div class="message ${type}">${message}</div>`;
+        }
+
+        // Clear message
+        function clearMessage() {
+            const messageDiv = document.getElementById('checkinMessage');
+            messageDiv.innerHTML = '';
         }
 
         // Initialize app
         window.addEventListener('load', () => {
             initLiff();
         });
+
+        // Auto clear messages after 5 seconds
+        setInterval(() => {
+            const messages = document.querySelectorAll('.message');
+            messages.forEach(msg => {
+                if (msg.textContent.includes('กำลัง') === false) {
+                    setTimeout(() => {
+                        if (msg.parentNode) {
+                            msg.remove();
+                        }
+                    }, 5000);
+                }
+            });
+        }, 1000);
     </script>
 </body>
 </html>
