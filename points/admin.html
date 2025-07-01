@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบจัดการแอดมิน</title>
+    <link href="https://cdn.jsdelivr.net/gh/maketline/goodday/font/stylesheet.min.css" rel="stylesheet">
+    <script src="https://static.line-scdn.net/liff/edge/versions/2.22.3/sdk.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'line_seed_sans_th', Arial, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ff6b6b, #feca57);
+            padding: 20px;
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="40" r="3" fill="rgba(255,255,255,0.1)"/><circle cx="40" cy="80" r="1" fill="rgba(255,255,255,0.1)"/></svg>');
+            animation: float 20s infinite linear;
+        }
+
+        @keyframes float {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .admin-section {
+            padding: 20px;
+        }
+
+        .admin-title {
+            color: #dc3545;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 24px;
+        }
+
+        .pending-exchanges {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .exchange-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .exchange-item:last-child {
+            border-bottom: none;
+        }
+
+        .approve-btn, .reject-btn {
+            padding: 5px 15px;
+            border: none;
+            border-radius: 15px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+
+        .approve-btn {
+            background: #28a745;
+            color: white;
+        }
+
+        .reject-btn {
+            background: #dc3545;
+            color: white;
+        }
+
+        .chat-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 300px;
+            height: 400px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: none;
+            flex-direction: column;
+            z-index: 1000;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            border-radius: 15px 15px 0 0;
+            font-weight: bold;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        .message {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .user-link {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .user-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .user-link a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 480px) {
+            .chat-container {
+                width: calc(100% - 40px);
+                right: 20px;
+                left: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="profile-section">
+                <img id="userAvatar" class="profile-avatar" src="https://via.placeholder.com/80" alt="Profile">
+                <div id="userName" class="user-name">กำลังโหลด...</div>
+                <div class="user-link">
+                    <a href="index.html">กลับไปหน้าผู้ใช้</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-section">
+            <div class="admin-title">🔧 ระบบจัดการแอดมิน</div>
+            <div class="pending-exchanges">
+                <h4>คำขอแลกรางวัลที่รอการอนุมัติ</h4>
+                <div id="pendingList">
+                    <!-- Pending exchanges will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="chatContainer" class="chat-container">
+        <div class="chat-header">
+            💬 การแจ้งเตือน
+            <button onclick="toggleChat()" style="float: right; background: none; border: none; color: white; cursor: pointer;">×</button>
+        </div>
+        <div id="chatMessages" class="chat-messages"></div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let isAdmin = false;
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxmTQ0knrfzI2puvfueSrjlTFKjA7KzG9aj1H356zyyUAwiCrP0HxkROceSsOVSdNgPHg/exec';
+        const LIFF_ID = '1656032875-GLpZe6By';
+
+        // Initialize LIFF
+        window.onload = function() {
+            liff.init({
+                liffId: LIFF_ID
+            }).then(() => {
+                if (liff.isLoggedIn()) {
+                    initializeApp();
+                } else {
+                    liff.login();
+                }
+            }).catch((err) => {
+                console.error('LIFF initialization failed:', err);
+                showMessage('ไม่สามารถเริ่มต้นระบบได้', 'error');
+            });
+        };
+
+        async function initializeApp() {
+            try {
+                const profile = await liff.getProfile();
+                currentUser = {
+                    userId: profile.userId,
+                    displayName: profile.displayName,
+                    pictureUrl: profile.pictureUrl
+                };
+
+                document.getElementById('userName').textContent = currentUser.displayName;
+                document.getElementById('userAvatar').src = currentUser.pictureUrl || 'https://via.placeholder.com/80';
+
+                // Check admin privileges
+                await checkAdminPrivileges();
+
+                if (!isAdmin) {
+                    showMessage('คุณไม่มีสิทธิ์เข้าถึงหน้านี้', 'error');
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 2000);
+                    return;
+                }
+
+                // Load pending exchanges
+                await loadPendingExchanges();
+                
+            } catch (error) {
+                console.error('Failed to initialize app:', error);
+                showMessage('เกิดข้อผิดพลาดในการเริ่มต้นระบบ', 'error');
+            }
+        }
+
+        async function checkAdminPrivileges() {
+            try {
+                const response = await makeRequest('registerUser', {
+                    userId: currentUser.userId,
+                    displayName: currentUser.displayName
+                });
+                isAdmin = response.isAdmin || false;
+            } catch (error) {
+                console.error('Failed to check admin privileges:', error);
+                showMessage('ไม่สามารถตรวจสอบสิทธิ์แอดมินได้', 'error');
+            }
+        }
+
+        async function loadPendingExchanges() {
+            try {
+                const response = await makeRequest('getPendingExchanges', {});
+                
+                if (response.success) {
+                    renderPendingExchanges(response.data);
+                } else {
+                    console.error('Failed to load pending exchanges:', response.message);
+                    showMessage('เกิดข้อผิดพลาดในการโหลดคำขอ', 'error');
+                }
+            } catch (error) {
+                console.error('Failed to load pending exchanges:', error);
+                showMessage('เกิดข้อผิดพลาดในการโหลดคำขอ', 'error');
+            }
+        }
+
+        function renderPendingExchanges(exchanges) {
+            const pendingList = document.getElementById('pendingList');
+            pendingList.innerHTML = '';
+            
+            if (exchanges.length === 0) {
+                pendingList.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">ไม่มีคำขอแลกรางวัลที่รอการอนุมัติ</div>';
+                return;
+            }
+            
+            exchanges.forEach(exchange => {
+                const item = document.createElement('div');
+                item.className = 'exchange-item';
+                item.innerHTML = `
+                    <div>
+                        <div style="font-weight: bold;">${exchange.displayName}</div>
+                        <div style="font-size: 12px; color: #666;">${exchange.rewardName}</div>
+                        <div style="font-size: 12px; color: #666;">${new Date(exchange.date).toLocaleString('th-TH')}</div>
+                    </div>
+                    <div>
+                        <button class="approve-btn" onclick="approveExchange('${exchange.id}')">อนุมัติ</button>
+                        <button class="reject-btn" onclick="rejectExchange('${exchange.id}')">ปฏิเสธ</button>
+                    </div>
+                `;
+                pendingList.appendChild(item);
+            });
+        }
+
+        async function approveExchange(exchangeId) {
+            try {
+                const response = await makeRequest('approveExchange', {
+                    exchangeId: exchangeId,
+                    adminId: currentUser.userId
+                });
+                
+                if (response.success) {
+                    liff.sendMessages([{
+                        type: 'flex',
+                        altText: 'การแลกรางวัลได้รับการอนุมัติ',
+                        contents: {
+                            type: 'bubble',
+                            body: {
+                                type: 'box',
+                                layout: 'vertical',
+                                contents: [
+                                    { type: 'text', text: 'การแลกรางวัลได้รับการอนุมัติ!', weight: 'bold', size: 'xl' },
+                                    { type: 'text', text: `รางวัล: ${response.data.rewardName}` },
+                                    { type: 'text', text: 'ขอบคุณที่เข้าร่วม!' }
+                                ]
+                            }
+                        }
+                    }]).then(() => {
+                        showMessage('อนุมัติการแลกรางวัลเรียบร้อย', 'success');
+                        loadPendingExchanges();
+                    });
+                } else {
+                    showMessage(response.message || 'เกิดข้อผิดพลาด', 'error');
+                }
+            } catch (error) {
+                console.error('Approve failed:', error);
+                showMessage('เกิดข้อผิดพลาด', 'error');
+            }
+        }
+
+        async function rejectExchange(exchangeId) {
+            try {
+                const response = await makeRequest('rejectExchange', {
+                    exchangeId: exchangeId,
+                    adminId: currentUser.userId
+                });
+                
+                if (response.success) {
+                    liff.sendMessages([{
+                        type: 'flex',
+                        altText: 'การแลกรางวัลถูกปฏิเสธ',
+                        contents: {
+                            type: 'bubble',
+                            body: {
+                                type: 'box',
+                                layout: 'vertical',
+                                contents: [
+                                    { type: 'text', text: 'การแลกรางวัลถูกปฏิเสธ', weight: 'bold', size: 'xl', color: '#dc3545' },
+                                    { type: 'text', text: `รางวัล: ${response.data.rewardName}` },
+                                    { type: 'text', text: 'กรุณาติดต่อแอดมินสำหรับข้อมูลเพิ่มเติม' }
+                                ]
+                            }
+                        }
+                    }]).then(() => {
+                        showMessage('ปฏิเสธการแลกรางวัลเรียบร้อย', 'success');
+                        loadPendingExchanges();
+                    });
+                } else {
+                    showMessage(response.message || 'เกิดข้อผิดพลาด', 'error');
+                }
+            } catch (error) {
+                console.error('Reject failed:', error);
+                showMessage('เกิดข้อผิดพลาด', 'error');
+            }
+        }
+
+        function toggleChat() {
+            const chatContainer = document.getElementById('chatContainer');
+            chatContainer.style.display = chatContainer.style.display === 'none' ? 'flex' : 'none';
+        }
+
+        function showMessage(message, type = 'info') {
+            const chatContainer = document.getElementById('chatContainer');
+            const chatMessages = document.getElementById('chatMessages');
+            
+            chatContainer.style.display = 'flex';
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+            
+            const bgColor = type === 'success' ? '#4CAF50' : type === 'error' ? '#f44336' : '#2196F3';
+            
+            messageDiv.innerHTML = `
+                <div style="background: ${bgColor}; color: white; padding: 10px; border-radius: 10px;">
+                    ${message}
+                </div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            setTimeout(() => {
+                if (chatMessages.children.length > 5) {
+                    chatMessages.removeChild(chatMessages.firstChild);
+                }
+            }, 5000);
+        }
+
+        function makeRequest(action, data) {
+            return new Promise((resolve, reject) => {
+                const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
+                
+                window[callbackName] = function(response) {
+                    delete window[callbackName];
+                    document.body.removeChild(script);
+                    resolve(response);
+                };
+                
+                const script = document.createElement('script');
+                const params = new URLSearchParams({
+                    action: action,
+                    callback: callbackName,
+                    data: JSON.stringify(data)
+                });
+                
+                script.src = `${SCRIPT_URL}?${params.toString()}`;
+                script.onerror = function() {
+                    delete window[callbackName];
+                    document.body.removeChild(script);
+                    reject(new Error('JSONP request failed'));
+                };
+                
+                document.body.appendChild(script);
+                
+                setTimeout(() => {
+                    if (window[callbackName]) {
+                        delete window[callbackName];
+                        document.body.removeChild(script);
+                        reject(new Error('Request timeout'));
+                    }
+                }, 30000);
+            });
+        }
+
+        setInterval(async () => {
+            if (currentUser && isAdmin) {
+                await loadPendingExchanges();
+            }
+        }, 30000);
+    </script>
+</body>
+</html>
