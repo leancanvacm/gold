@@ -3,300 +3,426 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Check-in & Rewards System</title>
+    <title>ระบบ Check-in รายวัน</title>
     <link href="https://cdn.jsdelivr.net/gh/maketline/goodday/font/stylesheet.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'line_seed_sans_th', sans-serif;
+            font-family: 'line_seed_sans_th', Arial, sans-serif;
         }
-        
+
         body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             color: #333;
         }
-        
+
         .container {
             max-width: 400px;
             margin: 0 auto;
-            padding: 20px;
-        }
-        
-        .header {
             background: white;
-            border-radius: 20px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            text-align: center;
+            min-height: 100vh;
+            position: relative;
+            overflow: hidden;
         }
-        
+
+        .header {
+            background: linear-gradient(135deg, #ff6b6b, #feca57);
+            padding: 20px;
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="40" r="3" fill="rgba(255,255,255,0.1)"/><circle cx="40" cy="80" r="1" fill="rgba(255,255,255,0.1)"/></svg>');
+            animation: float 20s infinite linear;
+        }
+
+        @keyframes float {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
         .profile-section {
+            position: relative;
+            z-index: 2;
             display: flex;
             align-items: center;
-            gap: 15px;
-            margin-bottom: 15px;
+            justify-content: center;
+            flex-direction: column;
         }
-        
-        .profile-img {
-            width: 60px;
-            height: 60px;
+
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
             border-radius: 50%;
-            border: 3px solid #667eea;
+            border: 3px solid rgba(255,255,255,0.3);
+            margin-bottom: 10px;
+            object-fit: cover;
         }
-        
-        .profile-info h3 {
-            color: #667eea;
+
+        .user-name {
             font-size: 18px;
-        }
-        
-        .points-display {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            color: white;
-            padding: 15px;
-            border-radius: 15px;
-            font-size: 24px;
             font-weight: bold;
+            margin-bottom: 5px;
         }
-        
-        .tab-container {
-            background: white;
+
+        .user-points {
+            font-size: 14px;
+            background: rgba(255,255,255,0.2);
+            padding: 5px 15px;
             border-radius: 20px;
-            overflow: hidden;
-            margin-bottom: 20px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
         }
-        
-        .tabs {
+
+        .nav-tabs {
             display: flex;
-            background: #f0f0f0;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
         }
-        
-        .tab {
+
+        .nav-tab {
             flex: 1;
             padding: 15px;
             text-align: center;
+            background: none;
+            border: none;
             cursor: pointer;
-            transition: all 0.3s;
-            font-weight: bold;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
         }
-        
-        .tab.active {
-            background: #667eea;
-            color: white;
+
+        .nav-tab.active {
+            background: white;
+            color: #667eea;
         }
-        
+
+        .nav-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
         .tab-content {
-            padding: 20px;
             display: none;
+            padding: 20px;
+            min-height: 400px;
         }
-        
+
         .tab-content.active {
             display: block;
         }
-        
-        .checkin-grid {
+
+        .checkin-section {
+            text-align: center;
+        }
+
+        .checkin-calendar {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
             gap: 10px;
             margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
         }
-        
-        .day-box {
-            aspect-ratio: 1;
-            border-radius: 10px;
+
+        .day-item {
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.3s;
-            position: relative;
+            padding: 10px 5px;
+            border-radius: 10px;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
         }
-        
-        .day-box.checked {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+        .day-item.checked {
+            background: linear-gradient(135deg, #48CAE4, #023E8A);
             color: white;
+            transform: scale(1.05);
         }
-        
-        .day-box.today {
-            border: 3px solid #667eea;
-            background: #f0f0ff;
+
+        .day-item.today {
+            border: 2px solid #feca57;
+            box-shadow: 0 0 10px rgba(254, 202, 87, 0.5);
         }
-        
-        .day-box.unchecked {
-            background: #f5f5f5;
-            color: #999;
+
+        .day-name {
+            font-size: 12px;
+            margin-bottom: 5px;
+            font-weight: 500;
         }
-        
-        .day-box .points {
+
+        .day-icon {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        .day-points {
             font-size: 10px;
-            margin-top: 2px;
+            opacity: 0.8;
         }
-        
+
         .checkin-btn {
-            width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #ff6b6b, #feca57);
             color: white;
             border: none;
-            border-radius: 15px;
-            font-size: 18px;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 16px;
             font-weight: bold;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
         }
-        
+
         .checkin-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.6);
         }
-        
+
         .checkin-btn:disabled {
             background: #ccc;
             cursor: not-allowed;
             transform: none;
+            box-shadow: none;
         }
-        
-        .reward-grid {
+
+        .streak-info {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            border-radius: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .streak-number {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .rewards-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 15px;
             margin-top: 20px;
         }
-        
+
         .reward-card {
-            background: #f8f8f8;
+            background: white;
             border-radius: 15px;
             padding: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
             text-align: center;
-            transition: all 0.3s;
-            position: relative;
-            overflow: hidden;
         }
-        
+
         .reward-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
         }
-        
-        .reward-img {
+
+        .reward-image {
             width: 80px;
             height: 80px;
-            object-fit: contain;
+            object-fit: cover;
+            border-radius: 10px;
             margin-bottom: 10px;
         }
-        
+
         .reward-name {
             font-weight: bold;
             margin-bottom: 5px;
+            font-size: 14px;
         }
-        
+
         .reward-points {
             color: #667eea;
-            font-size: 18px;
             font-weight: bold;
             margin-bottom: 10px;
         }
-        
-        .reward-stock {
+
+        .reward-quantity {
             font-size: 12px;
             color: #666;
             margin-bottom: 10px;
         }
-        
+
         .exchange-btn {
-            padding: 8px 20px;
-            background: #667eea;
+            background: linear-gradient(135deg, #48CAE4, #023E8A);
             color: white;
             border: none;
+            padding: 8px 20px;
             border-radius: 20px;
+            font-size: 12px;
             cursor: pointer;
-            font-size: 14px;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
+            width: 100%;
         }
-        
-        .exchange-btn:hover {
-            background: #764ba2;
-        }
-        
+
         .exchange-btn:disabled {
             background: #ccc;
             cursor: not-allowed;
         }
-        
-        .admin-tab {
-            display: none;
+
+        .exchange-btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(72, 202, 228, 0.4);
         }
-        
-        .admin-tab.show {
-            display: block;
+
+        .admin-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
         }
-        
-        .pending-list {
-            max-height: 400px;
-            overflow-y: auto;
+
+        .admin-title {
+            color: #dc3545;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
         }
-        
-        .pending-item {
-            background: #f8f8f8;
+
+        .pending-exchanges {
+            background: white;
             border-radius: 10px;
             padding: 15px;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .exchange-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
         }
-        
-        .approve-btn {
-            padding: 8px 15px;
-            background: #4caf50;
-            color: white;
+
+        .exchange-item:last-child {
+            border-bottom: none;
+        }
+
+        .approve-btn, .reject-btn {
+            padding: 5px 15px;
             border: none;
-            border-radius: 5px;
+            border-radius: 15px;
+            font-size: 12px;
             cursor: pointer;
+            margin-left: 5px;
         }
-        
+
+        .approve-btn {
+            background: #28a745;
+            color: white;
+        }
+
+        .reject-btn {
+            background: #dc3545;
+            color: white;
+        }
+
+        .chat-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 300px;
+            height: 400px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: none;
+            flex-direction: column;
+            z-index: 1000;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            border-radius: 15px 15px 0 0;
+            font-weight: bold;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        .message {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         .loading {
-            text-align: center;
-            padding: 20px;
-        }
-        
-        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
             border: 3px solid #f3f3f3;
-            border-radius: 50%;
             border-top: 3px solid #667eea;
-            width: 40px;
-            height: 40px;
+            border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin: 0 auto;
         }
-        
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        
-        .streak-indicator {
+
+        .expire-date {
             background: #fff3cd;
             color: #856404;
             padding: 10px;
             border-radius: 10px;
-            margin: 10px 0;
+            margin: 15px 0;
             text-align: center;
             font-size: 14px;
+            border: 1px solid #ffeaa7;
         }
-        
-        .expire-date {
-            font-size: 12px;
-            color: #ff6b6b;
-            margin-top: 5px;
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 480px) {
+            .rewards-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .chat-container {
+                width: calc(100% - 40px);
+                right: 20px;
+                left: 20px;
+            }
         }
     </style>
 </head>
@@ -304,244 +430,211 @@
     <div class="container">
         <div class="header">
             <div class="profile-section">
-                <img id="profilePic" class="profile-img" src="https://via.placeholder.com/60" alt="Profile">
-                <div class="profile-info">
-                    <h3 id="displayName">Loading...</h3>
-                    <div id="userId" style="font-size: 12px; color: #666;"></div>
-                </div>
-            </div>
-            <div class="points-display">
-                💎 คะแนนสะสม: <span id="totalPoints">0</span>
+                <img id="userAvatar" class="profile-avatar" src="https://via.placeholder.com/80" alt="Profile">
+                <div id="userName" class="user-name">กำลังโหลด...</div>
+                <div id="userPoints" class="user-points">คะแนน: 0</div>
             </div>
         </div>
-        
-        <div class="tab-container">
-            <div class="tabs">
-                <div class="tab active" onclick="switchTab('checkin')">เช็คอิน</div>
-                <div class="tab" onclick="switchTab('rewards')">แลกรางวัล</div>
-                <div class="tab admin-tab" id="adminTab" onclick="switchTab('admin')">จัดการ</div>
-            </div>
-            
-            <div id="checkinTab" class="tab-content active">
-                <h4 style="text-align: center; margin-bottom: 15px;">เช็คอินประจำวัน</h4>
-                <div class="streak-indicator" id="streakInfo">
-                    🔥 Streak: <span id="currentStreak">0</span> วัน
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="switchTab('checkin')">เช็คอิน</button>
+            <button class="nav-tab" onclick="switchTab('rewards')">แลกรางวัล</button>
+            <button id="adminTab" class="nav-tab hidden" onclick="switchTab('admin')">จัดการ</button>
+        </div>
+
+        <div id="checkinTab" class="tab-content active">
+            <div class="checkin-section">
+                <div class="streak-info">
+                    <div id="streakCount" class="streak-number">0</div>
+                    <div>วันต่อเนื่อง</div>
                 </div>
-                <div class="checkin-grid" id="checkinGrid">
-                    <!-- Days will be generated here -->
-                </div>
-                <button class="checkin-btn" id="checkinBtn" onclick="performCheckin()">
-                    เช็คอินวันนี้
-                </button>
-            </div>
-            
-            <div id="rewardsTab" class="tab-content">
-                <h4 style="text-align: center; margin-bottom: 15px;">แลกของรางวัล</h4>
-                <div class="reward-grid" id="rewardGrid">
-                    <div class="loading">
-                        <div class="spinner"></div>
-                        <p>กำลังโหลด...</p>
+
+                <div class="checkin-calendar">
+                    <div class="day-item" data-day="0">
+                        <div class="day-name">อา</div>
+                        <div class="day-icon">📅</div>
+                        <div class="day-points">0.5 แต้ม</div>
+                    </div>
+                    <div class="day-item" data-day="1">
+                        <div class="day-name">จ</div>
+                        <div class="day-icon">📅</div>
+                        <div class="day-points">0.5 แต้ม</div>
+                    </div>
+                    <div class="day-item" data-day="2">
+                        <div class="day-name">อ</div>
+                        <div class="day-icon">📅</div>
+                        <div class="day-points">0.5 แต้ม</div>
+                    </div>
+                    <div class="day-item" data-day="3">
+                        <div class="day-name">พ</div>
+                        <div class="day-icon">📅</div>
+                        <div class="day-points">0.5 แต้ม</div>
+                    </div>
+                    <div class="day-item" data-day="4">
+                        <div class="day-name">พฤ</div>
+                        <div class="day-icon">📅</div>
+                        <div class="day-points">0.5 แต้ม</div>
+                    </div>
+                    <div class="day-item" data-day="5">
+                        <div class="day-name">ศ</div>
+                        <div class="day-icon">📅</div>
+                        <div class="day-points">0.5 แต้ม</div>
+                    </div>
+                    <div class="day-item" data-day="6">
+                        <div class="day-name">ส</div>
+                        <div class="day-icon">📅</div>
+                        <div class="day-points">1 แต้ม</div>
                     </div>
                 </div>
+
+                <button id="checkinBtn" class="checkin-btn" onclick="doCheckin()">
+                    <span class="loading hidden"></span>
+                    <span id="checkinText">เช็คอินวันนี้</span>
+                </button>
             </div>
-            
-            <div id="adminTab" class="tab-content">
-                <h4 style="text-align: center; margin-bottom: 15px;">รายการรอการอนุมัติ</h4>
-                <div class="pending-list" id="pendingList">
-                    <div class="loading">
-                        <div class="spinner"></div>
-                        <p>กำลังโหลด...</p>
+        </div>
+
+        <div id="rewardsTab" class="tab-content">
+            <div class="expire-date">
+                <strong>⏰ หมดอายุการแลก:</strong> <span id="expireDate">31 กรกฎาคม 2568</span>
+            </div>
+            <div id="rewardsGrid" class="rewards-grid">
+                <!-- Rewards will be loaded here -->
+            </div>
+        </div>
+
+        <div id="adminTab" class="tab-content">
+            <div class="admin-section">
+                <div class="admin-title">🔧 ระบบจัดการแอดมิน</div>
+                <div class="pending-exchanges">
+                    <h4>คำขอแลกรางวัลที่รอการอนุมัติ</h4>
+                    <div id="pendingList">
+                        <!-- Pending exchanges will be loaded here -->
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    
+
+    <div id="chatContainer" class="chat-container">
+        <div class="chat-header">
+            💬 การแจ้งเตือน
+            <button onclick="toggleChat()" style="float: right; background: none; border: none; color: white; cursor: pointer;">×</button>
+        </div>
+        <div id="chatMessages" class="chat-messages">
+        </div>
+    </div>
+
     <script>
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxmTQ0knrfzI2puvfueSrjlTFKjA7KzG9aj1H356zyyUAwiCrP0HxkROceSsOVSdNgPHg/exec';
-        const LIFF_ID = '1656032875-GLpZe6By';
-        
-        let userProfile = {};
+        // Global variables
+        let currentUser = null;
         let userPoints = 0;
-        let currentStreak = 0;
-        let todayChecked = false;
+        let checkinStreak = 0;
+        let checkinData = [];
+        let rewardsData = [];
         let isAdmin = false;
         
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxmTQ0knrfzI2puvfueSrjlTFKjA7KzG9aj1H356zyyUAwiCrP0HxkROceSsOVSdNgPHg/exec';
+        const LIFF_ID = '1656032875-GLpZe6By';
+
         // Initialize LIFF
-        async function initializeLiff() {
-            try {
-                await liff.init({ liffId: LIFF_ID });
-                
-                if (!liff.isLoggedIn()) {
+        window.onload = function() {
+            liff.init({
+                liffId: LIFF_ID
+            }).then(() => {
+                if (liff.isLoggedIn()) {
+                    initializeApp();
+                } else {
                     liff.login();
-                    return;
                 }
-                
-                userProfile = await liff.getProfile();
-                document.getElementById('profilePic').src = userProfile.pictureUrl;
-                document.getElementById('displayName').textContent = userProfile.displayName;
-                document.getElementById('userId').textContent = `ID: ${userProfile.userId}`;
-                
+            }).catch((err) => {
+                console.error('LIFF initialization failed', err);
+                showMessage('ไม่สามารถเริ่มต้นระบบได้', 'error');
+            });
+        };
+
+        async function initializeApp() {
+            try {
+                // Get user profile
+                const profile = await liff.getProfile();
+                currentUser = {
+                    userId: profile.userId,
+                    displayName: profile.displayName,
+                    pictureUrl: profile.pictureUrl
+                };
+
+                // Update UI
+                document.getElementById('userName').textContent = currentUser.displayName;
+                document.getElementById('userAvatar').src = currentUser.pictureUrl || 'https://via.placeholder.com/80';
+
                 // Load user data
                 await loadUserData();
+                
+                // Update calendar
+                updateCheckinCalendar();
+                
+                // Load rewards
                 await loadRewards();
                 
+                // Check admin privileges
+                checkAdminPrivileges();
+                
             } catch (error) {
-                console.error('LIFF initialization failed', error);
-                alert('เกิดข้อผิดพลาดในการเริ่มต้นระบบ');
+                console.error('Failed to initialize app:', error);
+                showMessage('เกิดข้อผิดพลาดในการเริ่มต้นระบบ', 'error');
             }
         }
-        
-        // Load user data
+
         async function loadUserData() {
             try {
-                const response = await callGoogleScript({
-                    action: 'getUserData',
-                    userId: userProfile.userId
+                const response = await makeRequest('getUserData', {
+                    userId: currentUser.userId
                 });
                 
                 if (response.success) {
                     userPoints = response.data.points || 0;
-                    currentStreak = response.data.streak || 0;
-                    todayChecked = response.data.todayChecked || false;
-                    isAdmin = response.data.isAdmin || false;
+                    checkinStreak = response.data.streak || 0;
+                    checkinData = response.data.checkinData || [];
                     
-                    document.getElementById('totalPoints').textContent = userPoints;
-                    document.getElementById('currentStreak').textContent = currentStreak;
-                    
-                    if (isAdmin) {
-                        document.getElementById('adminTab').classList.add('show');
-                        loadPendingRequests();
-                    }
-                    
-                    updateCheckinGrid();
-                    updateCheckinButton();
+                    document.getElementById('userPoints').textContent = `คะแนน: ${userPoints}`;
+                    document.getElementById('streakCount').textContent = checkinStreak;
                 }
             } catch (error) {
-                console.error('Error loading user data:', error);
+                console.error('Failed to load user data:', error);
             }
         }
-        
-        // Update checkin grid
-        function updateCheckinGrid() {
-            const grid = document.getElementById('checkinGrid');
-            const days = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
-            const today = new Date().getDay();
-            
-            grid.innerHTML = '';
-            
-            days.forEach((day, index) => {
-                const dayBox = document.createElement('div');
-                dayBox.className = 'day-box';
-                
-                if (index === today) {
-                    dayBox.classList.add(todayChecked ? 'checked' : 'today');
-                } else if (currentStreak > 0 && index < today && (today - index) <= currentStreak) {
-                    dayBox.classList.add('checked');
-                } else {
-                    dayBox.classList.add('unchecked');
-                }
-                
-                const points = (index === 6 && currentStreak === 6) ? '1.0' : '0.5';
-                
-                dayBox.innerHTML = `
-                    <div>${day}</div>
-                    <div class="points">+${points}</div>
-                `;
-                
-                grid.appendChild(dayBox);
-            });
-        }
-        
-        // Update checkin button
-        function updateCheckinButton() {
-            const btn = document.getElementById('checkinBtn');
-            if (todayChecked) {
-                btn.textContent = 'เช็คอินแล้ววันนี้';
-                btn.disabled = true;
-            }
-        }
-        
-        // Perform checkin
-        async function performCheckin() {
-            if (todayChecked) return;
-            
-            try {
-                const btn = document.getElementById('checkinBtn');
-                btn.disabled = true;
-                btn.textContent = 'กำลังเช็คอิน...';
-                
-                const response = await callGoogleScript({
-                    action: 'checkin',
-                    userId: userProfile.userId,
-                    displayName: userProfile.displayName
-                });
-                
-                if (response.success) {
-                    todayChecked = true;
-                    userPoints = response.data.totalPoints;
-                    currentStreak = response.data.streak;
-                    
-                    document.getElementById('totalPoints').textContent = userPoints;
-                    document.getElementById('currentStreak').textContent = currentStreak;
-                    
-                    updateCheckinGrid();
-                    updateCheckinButton();
-                    
-                    // Send Flex Message
-                    if (response.data.flexMessage) {
-                        await liff.sendMessages([response.data.flexMessage]);
-                    }
-                    
-                    alert(`เช็คอินสำเร็จ! ได้รับ ${response.data.pointsEarned} คะแนน`);
-                } else {
-                    alert('เกิดข้อผิดพลาดในการเช็คอิน');
-                    btn.disabled = false;
-                    btn.textContent = 'เช็คอินวันนี้';
-                }
-            } catch (error) {
-                console.error('Checkin error:', error);
-                alert('เกิดข้อผิดพลาดในการเช็คอิน');
-            }
-        }
-        
-        // Load rewards
+
         async function loadRewards() {
             try {
-                const response = await callGoogleScript({
-                    action: 'getRewards'
-                });
+                const response = await makeRequest('getRewards', {});
                 
-                if (response.success && response.data) {
-                    displayRewards(response.data);
+                if (response.success) {
+                    rewardsData = response.data;
+                    renderRewards();
                 }
             } catch (error) {
-                console.error('Error loading rewards:', error);
+                console.error('Failed to load rewards:', error);
             }
         }
-        
-        // Display rewards
-        function displayRewards(rewards) {
-            const grid = document.getElementById('rewardGrid');
+
+        function renderRewards() {
+            const grid = document.getElementById('rewardsGrid');
             grid.innerHTML = '';
             
-            rewards.forEach(reward => {
-                if (reward.stock > 0 && new Date() <= new Date(reward.expireDate)) {
+            rewardsData.forEach(reward => {
+                if (reward.quantity > 0 && isRewardActive(reward)) {
                     const card = document.createElement('div');
                     card.className = 'reward-card';
                     
                     const canExchange = userPoints >= reward.points;
                     
                     card.innerHTML = `
-                        <img src="${reward.image}" alt="${reward.name}" class="reward-img">
+                        <img class="reward-image" src="${reward.image}" alt="${reward.name}">
                         <div class="reward-name">${reward.name}</div>
-                        <div class="reward-points">${reward.points} คะแนน</div>
-                        <div class="reward-stock">คงเหลือ: ${reward.stock}</div>
-                        <div class="expire-date">หมดอายุ: ${formatDate(reward.expireDate)}</div>
-                        <button class="exchange-btn" 
-                                onclick="exchangeReward('${reward.id}', '${reward.name}', ${reward.points})"
-                                ${!canExchange ? 'disabled' : ''}>
-                            ${canExchange ? 'แลกรางวัล' : 'คะแนนไม่พอ'}
+                        <div class="reward-points">${reward.points} แต้ม</div>
+                        <div class="reward-quantity">เหลือ ${reward.quantity} ชิ้น</div>
+                        <button class="exchange-btn" ${!canExchange ? 'disabled' : ''} onclick="exchangeReward('${reward.id}')">
+                            ${canExchange ? 'แลกเลย' : 'แต้มไม่เพียงพอ'}
                         </button>
                     `;
                     
@@ -549,169 +642,396 @@
                 }
             });
         }
-        
-        // Exchange reward
-        async function exchangeReward(rewardId, rewardName, requiredPoints) {
-            if (userPoints < requiredPoints) {
-                alert('คะแนนไม่เพียงพอ');
-                return;
+
+        function isRewardActive(reward) {
+            const now = new Date();
+            const startDate = new Date(reward.startDate);
+            const endDate = new Date(reward.endDate);
+            return now >= startDate && now <= endDate;
+        }
+
+        function updateCheckinCalendar() {
+            const today = new Date().getDay();
+            const dayItems = document.querySelectorAll('.day-item');
+            
+            // Reset all days
+            dayItems.forEach(item => {
+                item.classList.remove('checked', 'today');
+            });
+            
+            // Mark today
+            dayItems[today].classList.add('today');
+            
+            // Mark checked days based on streak
+            const startDay = (today - checkinStreak + 7) % 7;
+            for (let i = 0; i < checkinStreak; i++) {
+                const dayIndex = (startDay + i) % 7;
+                dayItems[dayIndex].classList.add('checked');
             }
             
-            if (!confirm(`ต้องการแลก ${rewardName} ด้วย ${requiredPoints} คะแนนใช่หรือไม่?`)) {
-                return;
+            // Check if already checked in today
+            const todayDate = new Date().toDateString();
+            const checkedToday = checkinData.some(entry => 
+                new Date(entry.date).toDateString() === todayDate
+            );
+            
+            const checkinBtn = document.getElementById('checkinBtn');
+            const checkinText = document.getElementById('checkinText');
+            
+            if (checkedToday) {
+                checkinBtn.disabled = true;
+                checkinText.textContent = 'เช็คอินแล้ววันนี้';
+            } else {
+                checkinBtn.disabled = false;
+                checkinText.textContent = 'เช็คอินวันนี้';
             }
+        }
+
+        async function doCheckin() {
+            const checkinBtn = document.getElementById('checkinBtn');
+            const checkinText = document.getElementById('checkinText');
+            const loading = checkinBtn.querySelector('.loading');
+            
+            // Show loading
+            loading.classList.remove('hidden');
+            checkinText.textContent = 'กำลังเช็คอิน...';
+            checkinBtn.disabled = true;
             
             try {
-                const response = await callGoogleScript({
-                    action: 'exchangeReward',
-                    userId: userProfile.userId,
-                    displayName: userProfile.displayName,
-                    rewardId: rewardId,
-                    rewardName: rewardName,
-                    points: requiredPoints
+                const response = await makeRequest('doCheckin', {
+                    userId: currentUser.userId,
+                    displayName: currentUser.displayName
                 });
                 
                 if (response.success) {
-                    userPoints = response.data.remainingPoints;
-                    document.getElementById('totalPoints').textContent = userPoints;
+                    // Update local data
+                    userPoints = response.data.points;
+                    checkinStreak = response.data.streak;
+                    checkinData = response.data.checkinData;
                     
-                    alert('แลกรางวัลสำเร็จ! รอการอนุมัติจากแอดมิน');
-                    await loadRewards();
+                    // Update UI
+                    document.getElementById('userPoints').textContent = `คะแนน: ${userPoints}`;
+                    document.getElementById('streakCount').textContent = checkinStreak;
+                    updateCheckinCalendar();
+                    
+                    // Show success message
+                    showCheckinMessage(response.data.pointsEarned, response.data.streak);
+                    
                 } else {
-                    alert(response.message || 'เกิดข้อผิดพลาดในการแลกรางวัล');
+                    showMessage(response.message || 'เกิดข้อผิดพลาดในการเช็คอิน', 'error');
                 }
+                
             } catch (error) {
-                console.error('Exchange error:', error);
-                alert('เกิดข้อผิดพลาดในการแลกรางวัล');
+                console.error('Checkin failed:', error);
+                showMessage('เกิดข้อผิดพลาดในการเช็คอิน', 'error');
+            } finally {
+                loading.classList.add('hidden');
+                checkinText.textContent = 'เช็คอินแล้ววันนี้';
             }
         }
-        
-        // Load pending requests (Admin)
-        async function loadPendingRequests() {
-            if (!isAdmin) return;
+
+        function showCheckinMessage(pointsEarned, streak) {
+            const isBonus = streak === 7;
+            const message = {
+                type: "flex",
+                altText: "เช็คอินสำเร็จ!",
+                contents: {
+                    type: "bubble",
+                    hero: {
+                        type: "image",
+                        url: "https://via.placeholder.com/400x200/4CAF50/FFFFFF?text=CHECK+IN+SUCCESS",
+                        size: "full",
+                        aspectRatio: "20:13",
+                        aspectMode: "cover"
+                    },
+                    body: {
+                        type: "box",
+                        layout: "vertical",
+                        contents: [
+                            {
+                                type: "text",
+                                text: "🎉 เช็คอินสำเร็จ!",
+                                weight: "bold",
+                                size: "xl",
+                                color: "#4CAF50"
+                            },
+                            {
+                                type: "text",
+                                text: `ได้รับ ${pointsEarned} แต้ม`,
+                                size: "lg",
+                                color: "#333333",
+                                margin: "md"
+                            },
+                            {
+                                type: "text",
+                                text: `เช็คอินต่อเนื่อง ${streak} วัน`,
+                                size: "sm",
+                                color: "#666666",
+                                margin: "sm"
+                            }
+                        ]
+                    },
+                    footer: {
+                        type: "box",
+                        layout: "vertical",
+                        contents: [
+                            {
+                                type: "text",
+                                text: isBonus ? "🏆 โบนัสครบ 7 วัน!" : "💪 เช็คอินต่อไปเรื่อย ๆ!",
+                                size: "sm",
+                                color: isBonus ? "#FF9800" : "#2196F3",
+                                weight: "bold",
+                                align: "center"
+                            }
+                        ]
+                    }
+                }
+            };
             
+            displayFlexMessage(message);
+        }
+
+        function displayFlexMessage(flexMessage) {
+            const chatContainer = document.getElementById('chatContainer');
+            const chatMessages = document.getElementById('chatMessages');
+            
+            // Show chat
+            chatContainer.style.display = 'flex';
+            
+            // Create message element
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+            messageDiv.innerHTML = `
+                <div style="background: #4CAF50; color: white; padding: 15px; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 18px; margin-bottom: 10px;">${flexMessage.contents.body.contents[0].text}</div>
+                    <div style="font-size: 16px; margin-bottom: 5px;">${flexMessage.contents.body.contents[1].text}</div>
+                    <div style="font-size: 14px; opacity: 0.9;">${flexMessage.contents.body.contents[2].text}</div>
+                    <div style="margin-top: 10px; font-size: 14px; font-weight: bold;">
+                        ${flexMessage.contents.footer.contents[0].text}
+                    </div>
+                </div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // Auto hide after 5 seconds
+            setTimeout(() => {
+                chatContainer.style.display = 'none';
+            }, 5000);
+        }
+
+        async function exchangeReward(rewardId) {
             try {
-                const response = await callGoogleScript({
-                    action: 'getPendingRequests'
+                const response = await makeRequest('exchangeReward', {
+                    userId: currentUser.userId,
+                    displayName: currentUser.displayName,
+                    rewardId: rewardId
                 });
                 
-                if (response.success && response.data) {
-                    displayPendingRequests(response.data);
+                if (response.success) {
+                    showMessage('ส่งคำขอแลกรางวัลเรียบร้อย รอการอนุมัติจากแอดมิน', 'success');
+                    await loadRewards(); // Refresh rewards
+                } else {
+                    showMessage(response.message || 'เกิดข้อผิดพลาดในการแลกรางวัล', 'error');
                 }
+                
             } catch (error) {
-                console.error('Error loading pending requests:', error);
+                console.error('Exchange failed:', error);
+                showMessage('เกิดข้อผิดพลาดในการแลกรางวัล', 'error');
             }
         }
-        
-        // Display pending requests
-        function displayPendingRequests(requests) {
-            const list = document.getElementById('pendingList');
-            list.innerHTML = '';
+
+        function checkAdminPrivileges() {
+            // Check if current user is admin (you can modify this logic)
+            const adminUsers = ['Uf8d0b5c0e5c1d7a9b5c3f2e8d0b5c0e5c1d7a9']; // Add admin user IDs here
             
-            if (requests.length === 0) {
-                list.innerHTML = '<p style="text-align: center; color: #666;">ไม่มีรายการรอการอนุมัติ</p>';
+            if (adminUsers.includes(currentUser.userId)) {
+                isAdmin = true;
+                document.getElementById('adminTab').classList.remove('hidden');
+                loadPendingExchanges();
+            }
+        }
+
+        async function loadPendingExchanges() {
+            try {
+                const response = await makeRequest('getPendingExchanges', {});
+                
+                if (response.success) {
+                    renderPendingExchanges(response.data);
+                }
+            } catch (error) {
+                console.error('Failed to load pending exchanges:', error);
+            }
+        }
+
+        function renderPendingExchanges(exchanges) {
+            const pendingList = document.getElementById('pendingList');
+            pendingList.innerHTML = '';
+            
+            if (exchanges.length === 0) {
+                pendingList.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">ไม่มีคำขอแลกรางวัลที่รอการอนุมัติ</div>';
                 return;
             }
             
-            requests.forEach(request => {
+            exchanges.forEach(exchange => {
                 const item = document.createElement('div');
-                item.className = 'pending-item';
-                
+                item.className = 'exchange-item';
                 item.innerHTML = `
                     <div>
-                        <div style="font-weight: bold;">${request.displayName}</div>
-                        <div style="font-size: 14px; color: #666;">${request.rewardName}</div>
-                        <div style="font-size: 12px; color: #999;">${formatDate(request.timestamp)}</div>
+                        <div style="font-weight: bold;">${exchange.displayName}</div>
+                        <div style="font-size: 12px; color: #666;">${exchange.rewardName}</div>
+                        <div style="font-size: 12px; color: #666;">${new Date(exchange.date).toLocaleDateString('th-TH')}</div>
                     </div>
-                    <button class="approve-btn" onclick="approveRequest('${request.id}')">
-                        อนุมัติ
-                    </button>
+                    <div>
+                        <button class="approve-btn" onclick="approveExchange('${exchange.id}')">อนุมัติ</button>
+                        <button class="reject-btn" onclick="rejectExchange('${exchange.id}')">ปฏิเสธ</button>
+                    </div>
                 `;
-                
-                list.appendChild(item);
+                pendingList.appendChild(item);
             });
         }
-        
-        // Approve request
-        async function approveRequest(requestId) {
-            if (!confirm('ยืนยันการอนุมัติรางวัลนี้?')) return;
-            
+
+        async function approveExchange(exchangeId) {
             try {
-                const response = await callGoogleScript({
-                    action: 'approveRequest',
-                    requestId: requestId
+                const response = await makeRequest('approveExchange', {
+                    exchangeId: exchangeId,
+                    adminId: currentUser.userId
                 });
                 
                 if (response.success) {
-                    alert('อนุมัติรางวัลสำเร็จ');
-                    await loadPendingRequests();
+                    showMessage('อนุมัติการแลกรางวัลเรียบร้อย', 'success');
+                    await loadPendingExchanges();
                 } else {
-                    alert('เกิดข้อผิดพลาดในการอนุมัติ');
+                    showMessage(response.message || 'เกิดข้อผิดพลาด', 'error');
                 }
             } catch (error) {
-                console.error('Approve error:', error);
-                alert('เกิดข้อผิดพลาดในการอนุมัติ');
+                console.error('Approve failed:', error);
+                showMessage('เกิดข้อผิดพลาด', 'error');
             }
         }
-        
-        // Switch tab
+
+        async function rejectExchange(exchangeId) {
+            try {
+                const response = await makeRequest('rejectExchange', {
+                    exchangeId: exchangeId,
+                    adminId: currentUser.userId
+                });
+                
+                if (response.success) {
+                    showMessage('ปฏิเสธการแลกรางวัลเรียบร้อย', 'success');
+                    await loadPendingExchanges();
+                } else {
+                    showMessage(response.message || 'เกิดข้อผิดพลาด', 'error');
+                }
+            } catch (error) {
+                console.error('Reject failed:', error);
+                showMessage('เกิดข้อผิดพลาด', 'error');
+            }
+        }
+
         function switchTab(tabName) {
-            const tabs = document.querySelectorAll('.tab');
-            const contents = document.querySelectorAll('.tab-content');
+            // Remove active class from all tabs and contents
+            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
             
-            tabs.forEach(tab => tab.classList.remove('active'));
-            contents.forEach(content => content.classList.remove('active'));
-            
+            // Add active class to selected tab and content
             event.target.classList.add('active');
             document.getElementById(tabName + 'Tab').classList.add('active');
             
+            // Load data for specific tabs
             if (tabName === 'admin' && isAdmin) {
-                loadPendingRequests();
+                loadPendingExchanges();
             }
         }
-        
-        // Call Google Script via JSONP
-        function callGoogleScript(data) {
+
+        function toggleChat() {
+            const chatContainer = document.getElementById('chatContainer');
+            chatContainer.style.display = chatContainer.style.display === 'none' ? 'flex' : 'none';
+        }
+
+        function showMessage(message, type = 'info') {
+            const chatContainer = document.getElementById('chatContainer');
+            const chatMessages = document.getElementById('chatMessages');
+            
+            chatContainer.style.display = 'flex';
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+            
+            const bgColor = type === 'success' ? '#4CAF50' : type === 'error' ? '#f44336' : '#2196F3';
+            
+            messageDiv.innerHTML = `
+                <div style="background: ${bgColor}; color: white; padding: 10px; border-radius: 10px;">
+                    ${message}
+                </div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            setTimeout(() => {
+                if (chatMessages.children.length > 5) {
+                    chatMessages.removeChild(chatMessages.firstChild);
+                }
+            }, 5000);
+        }
+
+        // JSONP request function
+        function makeRequest(action, data) {
             return new Promise((resolve, reject) => {
-                const callbackName = 'callback_' + Math.random().toString(36).substring(7);
-                const script = document.createElement('script');
+                const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
                 
+                // Create callback function
                 window[callbackName] = function(response) {
                     delete window[callbackName];
                     document.body.removeChild(script);
                     resolve(response);
                 };
                 
+                // Create script element
+                const script = document.createElement('script');
                 const params = new URLSearchParams({
-                    ...data,
-                    callback: callbackName
+                    action: action,
+                    callback: callbackName,
+                    data: JSON.stringify(data)
                 });
                 
-                script.src = `${SCRIPT_URL}?${params}`;
-                script.onerror = () => {
+                script.src = `${SCRIPT_URL}?${params.toString()}`;
+                script.onerror = function() {
                     delete window[callbackName];
                     document.body.removeChild(script);
-                    reject(new Error('Script loading failed'));
+                    reject(new Error('JSONP request failed'));
                 };
                 
                 document.body.appendChild(script);
+                
+                // Timeout after 30 seconds
+                setTimeout(() => {
+                    if (window[callbackName]) {
+                        delete window[callbackName];
+                        document.body.removeChild(script);
+                        reject(new Error('Request timeout'));
+                    }
+                }, 30000);
             });
         }
-        
-        // Format date
-        function formatDate(dateString) {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('th-TH', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric'
-            });
-        }
-        
-        // Initialize on load
-        window.onload = function() {
-            initializeLiff();
-        };
+
+        // Auto-refresh data every 30 seconds
+        setInterval(async () => {
+            if (currentUser) {
+                await loadUserData();
+                updateCheckinCalendar();
+                
+                if (document.getElementById('rewardsTab').classList.contains('active')) {
+                    await loadRewards();
+                }
+                
+                if (document.getElementById('adminTab').classList.contains('active') && isAdmin) {
+                    await loadPendingExchanges();
+                }
+            }
+        }, 30000);
     </script>
 </body>
 </html>
