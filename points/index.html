@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ระบบ Check-in รายวัน</title>
     <link href="https://cdn.jsdelivr.net/gh/maketline/goodday/font/stylesheet.min.css" rel="stylesheet">
-    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/versions/2.21.0/sdk.js"></script>
+    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
         * {
             margin: 0;
@@ -458,6 +458,15 @@
         .hidden {
             display: none;
         }
+
+        code {
+            background: #f1f3f4;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            color: #d63384;
+        }
     </style>
 </head>
 <body>
@@ -590,12 +599,25 @@
                     console.log('LIFF initialized successfully');
                     addMessage('✅ ระบบ', 'เชื่อมต่อ LINE สำเร็จ!');
                     
-                    // Log LIFF information
-                    console.log('LIFF OS:', liff.getOS());
-                    console.log('LIFF Version:', liff.getVersion());
-                    console.log('LIFF Language:', liff.getLanguage());
-                    console.log('Send Messages API available:', liff.isApiAvailable('sendMessages'));
-                    console.log('Open Window API available:', liff.isApiAvailable('openWindow'));
+                    // Log LIFF information safely
+                    try {
+                        console.log('LIFF OS:', liff.getOS());
+                        console.log('LIFF Version:', liff.getVersion());
+                        console.log('LIFF Language:', liff.getLanguage());
+                        
+                        // Check API availability safely
+                        setTimeout(() => {
+                            try {
+                                console.log('Send Messages API available:', liff.isApiAvailable('sendMessages'));
+                                console.log('Open Window API available:', liff.isApiAvailable('openWindow'));
+                            } catch (apiError) {
+                                console.warn('Error checking API availability:', apiError);
+                            }
+                        }, 100);
+                        
+                    } catch (infoError) {
+                        console.warn('Error getting LIFF info:', infoError);
+                    }
                     
                     if (liff.isLoggedIn()) {
                         console.log('User is logged in');
@@ -1149,7 +1171,17 @@
                     return;
                 }
                 
-                if (liff.isApiAvailable('sendMessages')) {
+                // Check API availability safely
+                let canSendMessages = false;
+                try {
+                    canSendMessages = liff.isApiAvailable('sendMessages');
+                } catch (apiError) {
+                    console.warn('Error checking sendMessages API:', apiError);
+                    addMessage('⚠️ ระบบ', 'ไม่สามารถตรวจสอบสิทธิ์การส่งข้อความได้');
+                    return;
+                }
+                
+                if (canSendMessages) {
                     try {
                         await liff.sendMessages([{
                             type: 'flex',
@@ -1196,12 +1228,17 @@
                     } catch (flexError) {
                         console.warn('Flex message failed, trying text message:', flexError);
                         
-                        // Fallback to simple text message
-                        await liff.sendMessages([{
-                            type: 'text',
-                            text: `🎉 ระบบ Check-in รายวัน\n\n${message}`
-                        }]);
-                        addMessage('✅ ส่งข้อความ LINE', 'ส่งข้อความธรรมดาเรียบร้อย');
+                        try {
+                            // Fallback to simple text message
+                            await liff.sendMessages([{
+                                type: 'text',
+                                text: `🎉 ระบบ Check-in รายวัน\n\n${message}`
+                            }]);
+                            addMessage('✅ ส่งข้อความ LINE', 'ส่งข้อความธรรมดาเรียบร้อย');
+                        } catch (textError) {
+                            console.error('Text message also failed:', textError);
+                            addMessage('❌ ระบบ', 'ไม่สามารถส่งข้อความได้');
+                        }
                     }
                 } else {
                     console.warn('Send messages API not available');
