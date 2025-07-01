@@ -464,7 +464,7 @@
     <div class="container">
         <div class="header">
             <div class="profile-section">
-                <img id="profilePic" src="https://cdn.pixabay.com/animation/2022/12/05/10/47/10-47-58-930_512.gif" alt="Profile" class="profile-pic">
+                <img id="profilePic" src="" alt="Profile" class="profile-pic">
                 <div class="profile-info">
                     <h2 id="displayName">กำลังโหลด...</h2>
                     <div class="points-display">
@@ -502,6 +502,10 @@
                 <div class="message">
                     <div class="message-time">ระบบ</div>
                     <div>ยินดีต้อนรับสู่ระบบเช็คอินรายวัน! เช็คอินทุกวันเพื่อรับคะแนนสะสม</div>
+                </div>
+                <div class="message">
+                    <div class="message-time">💡 คำแนะนำ</div>
+                    <div>หากพบปัญหา กรุณาเปิดผ่าน LINE App และตรวจสอบการเชื่อมต่ออินเทอร์เน็ต</div>
                 </div>
             </div>
         </div>
@@ -549,30 +553,44 @@
 
         // Initialize LIFF
         document.addEventListener('DOMContentLoaded', function() {
-            // Check if LIFF is available
-            if (typeof liff === 'undefined') {
-                console.error('LIFF SDK not loaded');
-                addMessage('❌ ระบบ', 'ไม่สามารถโหลด LIFF SDK ได้ กรุณาตรวจสอบการเชื่อมต่อ');
-                return;
-            }
-
-            // Initialize LIFF with retry mechanism
-            initializeLiff();
+            // Wait for page to fully load
+            setTimeout(() => {
+                initializeLiff();
+            }, 500);
         });
 
         async function initializeLiff() {
+            // Check if LIFF SDK is loaded
+            if (typeof liff === 'undefined') {
+                console.error('LIFF SDK not loaded');
+                addMessage('❌ ระบบ', 'ไม่สามารถโหลด LIFF SDK ได้');
+                
+                // Try to reload LIFF SDK
+                await loadLiffSDK();
+                
+                if (typeof liff === 'undefined') {
+                    addMessage('💡 แนะนำ', 'กรุณาเปิดใน LINE App หรือรีเฟรชหน้าเว็บ');
+                    initializeWithoutLiff();
+                    return;
+                }
+            }
+
             const maxRetries = 3;
             let retryCount = 0;
 
             while (retryCount < maxRetries) {
                 try {
                     console.log(`Initializing LIFF (attempt ${retryCount + 1}/${maxRetries})`);
+                    addMessage('🔄 ระบบ', `กำลังเชื่อมต่อ LINE (ครั้งที่ ${retryCount + 1})`);
                     
                     await liff.init({
                         liffId: liffId
                     });
 
                     console.log('LIFF initialized successfully');
+                    addMessage('✅ ระบบ', 'เชื่อมต่อ LINE สำเร็จ!');
+                    
+                    // Log LIFF information
                     console.log('LIFF OS:', liff.getOS());
                     console.log('LIFF Version:', liff.getVersion());
                     console.log('LIFF Language:', liff.getLanguage());
@@ -584,6 +602,7 @@
                         await initializeApp();
                     } else {
                         console.log('User not logged in, redirecting to login');
+                        addMessage('🔐 ระบบ', 'กำลังไปยังหน้าเข้าสู่ระบบ...');
                         liff.login();
                     }
                     
@@ -592,39 +611,77 @@
                 } catch (err) {
                     retryCount++;
                     console.error(`LIFF Initialization failed (attempt ${retryCount}):`, err);
+                    addMessage('⚠️ ระบบ', `การเชื่อมต่อล้มเหลว (ครั้งที่ ${retryCount}): ${err.message}`);
                     
                     if (retryCount >= maxRetries) {
-                        addMessage('❌ ระบบ', `เกิดข้อผิดพลาดในการเชื่อมต่อ LINE: ${err.message}`);
-                        addMessage('💡 แนะนำ', 'กรุณาลองรีเฟรชหน้าเว็บหรือเปิดใน LINE App');
+                        addMessage('❌ ระบบ', 'ไม่สามารถเชื่อมต่อ LINE ได้หลังจากพยายาม 3 ครั้ง');
+                        addMessage('💡 แนะนำ', 'กรุณาลองวิธีดังนี้:');
+                        addMessage('📱 วิธีที่ 1', 'ปิดแล้วเปิด LINE App ใหม่');
+                        addMessage('🔄 วิธีที่ 2', 'รีเฟรชหน้าเว็บ');
+                        addMessage('📶 วิธีที่ 3', 'ตรวจสอบสัญญาณอินเทอร์เน็ต');
                         
                         // Try to initialize with minimal functionality for testing
                         initializeWithoutLiff();
                         return;
                     }
                     
-                    // Wait before retry
-                    await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+                    // Wait before retry (exponential backoff)
+                    const waitTime = 1000 * Math.pow(2, retryCount - 1);
+                    addMessage('⏳ ระบบ', `รอ ${waitTime/1000} วินาที แล้วลองใหม่...`);
+                    await new Promise(resolve => setTimeout(resolve, waitTime));
                 }
             }
+        }
+
+        // Function to load LIFF SDK dynamically
+        function loadLiffSDK() {
+            return new Promise((resolve) => {
+                // Remove existing script if any
+                const existingScript = document.querySelector('script[src*="liff"]');
+                if (existingScript) {
+                    existingScript.remove();
+                }
+
+                // Create new script element
+                const script = document.createElement('script');
+                script.charset = 'utf-8';
+                script.src = 'https://static.line-scdn.net/liff/edge/2/sdk.js';
+                
+                script.onload = () => {
+                    console.log('LIFF SDK loaded successfully');
+                    addMessage('📥 ระบบ', 'โหลด LIFF SDK สำเร็จ');
+                    resolve();
+                };
+                
+                script.onerror = () => {
+                    console.error('Failed to load LIFF SDK');
+                    addMessage('❌ ระบบ', 'ไม่สามารถโหลด LIFF SDK ได้');
+                    resolve();
+                };
+                
+                document.head.appendChild(script);
+            });
         }
 
         // Fallback initialization without LIFF for testing
         function initializeWithoutLiff() {
             console.log('Initializing without LIFF for testing purposes');
+            addMessage('⚠️ ระบบ', 'เข้าสู่โหมดทดสอบ (ไม่ได้เชื่อมต่อ LINE)');
             
             // Mock user data for testing
             currentUser = {
                 userId: 'TEST_USER_' + Date.now(),
                 displayName: 'ผู้ใช้ทดสอบ',
-                pictureUrl: 'https://via.placeholder.com/60/4CAF50/ffffff?text=U'
+                pictureUrl: 'https://cdn.pixabay.com/animation/2022/12/05/10/47/10-47-58-930_512.gif'
             };
 
             // Update UI with mock profile info
             document.getElementById('displayName').textContent = currentUser.displayName;
             document.getElementById('profilePic').src = currentUser.pictureUrl;
 
-            addMessage('⚠️ ระบบ', 'กำลังทำงานในโหมดทดสอบ (ไม่ได้เชื่อมต่อ LINE)');
-            addMessage('💡 แนะนำ', 'เพื่อใช้งานจริง กรุณาเปิดผ่าน LINE App');
+            addMessage('🧪 โหมดทดสอบ', 'ข้อมูลนี้เป็นการทดสอบเท่านั้น');
+            addMessage('📱 สำหรับใช้งานจริง', 'กรุณาเปิดผ่าน LINE App');
+            addMessage('🔗 ตรวจสอบ', 'LIFF ID: ' + liffId);
 
             // Initialize app functionality
             initializeAppFunctionality();
@@ -680,6 +737,8 @@
         // Load user data from Google Sheets
         async function loadUserData() {
             try {
+                addMessage('🔄 ระบบ', 'กำลังโหลดข้อมูลผู้ใช้...');
+                
                 const response = await sendToAppScript('getUserData', {
                     userId: currentUser.userId
                 });
@@ -699,23 +758,41 @@
                     
                     console.log('User ID:', currentUser.userId);
                     console.log('Is Admin:', isAdmin);
+                    console.log('Points:', userPoints);
+                    console.log('Streak:', streakCount);
+                    
+                    addMessage('✅ ระบบ', 'โหลดข้อมูลผู้ใช้เรียบร้อย');
+                } else {
+                    addMessage('❌ ระบบ', `เกิดข้อผิดพลาด: ${response.message}`);
                 }
             } catch (error) {
                 console.error('Error loading user data:', error);
+                addMessage('❌ ระบบ', `ไม่สามารถโหลดข้อมูลผู้ใช้ได้: ${error.message}`);
             }
         }
 
         // Load rewards from Google Sheets
         async function loadRewards() {
             try {
+                addMessage('🎁 ระบบ', 'กำลังโหลดรายการรางวัล...');
+                
                 const response = await sendToAppScript('getRewards', {});
                 
-                if (response.success) {
-                    rewards = response.data;
+                if (response && response.success) {
+                    rewards = response.data || [];
+                    displayRewards();
+                    addMessage('✅ ระบบ', `โหลดรางวัล ${rewards.length} รายการเรียบร้อย`);
+                } else {
+                    console.error('Invalid rewards response:', response);
+                    addMessage('❌ ระบบ', 'ไม่สามารถโหลดรายการรางวัลได้');
+                    rewards = [];
                     displayRewards();
                 }
             } catch (error) {
                 console.error('Error loading rewards:', error);
+                addMessage('❌ ระบบ', `ไม่สามารถโหลดรางวัลได้: ${error.message}`);
+                rewards = [];
+                displayRewards();
             }
         }
 
@@ -738,7 +815,7 @@
             return new Promise((resolve, reject) => {
                 // Add timeout handling
                 const timeout = setTimeout(() => {
-                    reject(new Error('Request timeout - Google Apps Script may be unavailable'));
+                    reject(new Error('หมดเวลาการเชื่อมต่อ - Google Apps Script อาจไม่พร้อมใช้งาน'));
                 }, 30000); // 30 seconds timeout
 
                 const callbackName = 'callback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
@@ -747,9 +824,15 @@
                     clearTimeout(timeout);
                     delete window[callbackName];
                     if (script && script.parentNode) {
-                        document.head.removeChild(script);
+                        script.parentNode.removeChild(script);
                     }
-                    resolve(response);
+                    
+                    // Validate response
+                    if (typeof response === 'object' && response !== null) {
+                        resolve(response);
+                    } else {
+                        reject(new Error('ได้รับข้อมูลที่ไม่ถูกต้องจากเซิร์ฟเวอร์'));
+                    }
                 };
 
                 const params = new URLSearchParams({
@@ -764,12 +847,12 @@
                     clearTimeout(timeout);
                     delete window[callbackName];
                     if (script && script.parentNode) {
-                        document.head.removeChild(script);
+                        script.parentNode.removeChild(script);
                     }
-                    reject(new Error('Script loading failed - Check Google Apps Script URL'));
+                    reject(new Error('ไม่สามารถเชื่อมต่อ Google Apps Script ได้ - ตรวจสอบ URL และการตั้งค่า'));
                 };
                 
-                console.log('Sending request to:', script.src);
+                console.log('📡 Sending request:', action, 'to:', appScriptUrl);
                 document.head.appendChild(script);
             });
         }
@@ -861,6 +944,17 @@
             const rewardsGrid = document.getElementById('rewardsGrid');
             rewardsGrid.innerHTML = '';
             
+            if (rewards.length === 0) {
+                rewardsGrid.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #666;">
+                        <div style="font-size: 48px; margin-bottom: 15px;">🎁</div>
+                        <div style="font-size: 18px; font-weight: bold; margin-bottom: 8px;">ไม่มีรางวัลในขณะนี้</div>
+                        <div style="font-size: 14px;">รอรางวัลใหม่เร็วๆ นี้!</div>
+                    </div>
+                `;
+                return;
+            }
+            
             rewards.forEach((reward, index) => {
                 if (reward.quantity > 0) { // Only show available rewards
                     const rewardCard = document.createElement('div');
@@ -869,7 +963,8 @@
                     const canExchange = userPoints >= reward.points;
                     
                     rewardCard.innerHTML = `
-                        <img src="${reward.image}" alt="${reward.name}" class="reward-image" onerror="this.src='https://via.placeholder.com/80/ff6b6b/ffffff?text=Gift'">
+                        <img src="${reward.image}" alt="${reward.name}" class="reward-image" 
+                             onerror="this.src='https://via.placeholder.com/80/ff6b6b/ffffff?text=🎁'">
                         <div class="reward-name">${reward.name}</div>
                         <div class="reward-points">${reward.points} แต้ม</div>
                         <div class="reward-quantity">เหลือ: ${reward.quantity} ชิ้น</div>
@@ -882,6 +977,17 @@
                     rewardsGrid.appendChild(rewardCard);
                 }
             });
+            
+            // Show message if no available rewards
+            if (rewardsGrid.children.length === 0) {
+                rewardsGrid.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #666;">
+                        <div style="font-size: 48px; margin-bottom: 15px;">📦</div>
+                        <div style="font-size: 18px; font-weight: bold; margin-bottom: 8px;">รางวัลหมดแล้ว</div>
+                        <div style="font-size: 14px;">รอรางวัลใหม่เร็วๆ นี้!</div>
+                    </div>
+                `;
+            }
         }
 
         // Exchange reward
