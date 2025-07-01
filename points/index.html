@@ -3,271 +3,1765 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบ Check-in รายวัน</title>
+    <title>ระบบสะสมคะแนน | LINE LIFF</title>
     <link href="https://cdn.jsdelivr.net/gh/maketline/goodday/font/stylesheet.min.css" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/versions/2.22.3/sdk.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <style>
-        body { font-family: 'line_seed_sans_th', sans-serif; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .card { background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); padding: 20px; margin-bottom: 20px; }
-        .btn { background: linear-gradient(to right, #ff7e5f, #feb47b); color: white; padding: 12px 24px; border-radius: 8px; text-align: center; cursor: pointer; }
-        .btn-disabled { background: #ccc; cursor: not-allowed; }
-        .nav { display: flex; justify-content: space-around; background: #fff; padding: 10px; position: sticky; top: 0; z-index: 10; }
-        .reward-img { width: 100px; height: 100px; object-fit: cover; border-radius: 8px; }
+        :root {
+            --primary-color: #FF2D55;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --info-color: #17a2b8;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --gradient-start: #FF416C;
+            --gradient-end: #FF4B2B;
+        }
+        
+        body {
+            font-family: 'line_seed_sans_th', sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            background-image: linear-gradient(135deg, #f5f7fa 0%, #f0f2f5 100%);
+            min-height: 100vh;
+        }
+        
+        .navbar {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 0 0 15px 15px;
+        }
+        
+        .navbar-brand {
+            font-weight: bold;
+            color: var(--primary-color) !important;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .navbar-brand i {
+            font-size: 1.8rem;
+            margin-right: 10px;
+        }
+        
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 25px;
+            border: none;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            font-weight: bold;
+            font-size: 1.2rem;
+            padding: 15px 20px;
+            border: none;
+        }
+        
+        .card-header i {
+            margin-right: 10px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            border: none;
+            border-radius: 50px;
+            padding: 10px 25px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 10px rgba(255, 45, 85, 0.3);
+            transition: all 0.3s;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #E91E63, #F44336);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(255, 45, 85, 0.4);
+        }
+        
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+        
+        .checkin-day {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 45px;
+            height: 45px;
+            line-height: 45px;
+            text-align: center;
+            border-radius: 50%;
+            margin: 5px;
+            background-color: #e9ecef;
+            font-weight: bold;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .checked {
+            background: linear-gradient(135deg, var(--success-color), #5cb85c);
+            color: white;
+            box-shadow: 0 4px 10px rgba(40, 167, 69, 0.3);
+        }
+        
+        .today {
+            border: 3px solid var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(255, 45, 85, 0.2);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 45, 85, 0.4);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(255, 45, 85, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 45, 85, 0);
+            }
+        }
+        
+        .reward-card {
+            transition: all 0.3s;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .reward-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+        }
+        
+        .reward-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .reward-img {
+            height: 150px;
+            object-fit: contain;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+        
+        .reward-card:hover .reward-img {
+            transform: scale(1.05);
+        }
+        
+        .disabled-reward {
+            opacity: 0.7;
+        }
+        
+        .disabled-reward .reward-card {
+            filter: grayscale(70%);
+        }
+        
+        .tab-content {
+            padding: 20px 0;
+        }
+        
+        .nav-tabs {
+            border-bottom: 2px solid rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+        }
+        
+        .nav-tabs .nav-link {
+            border: none;
+            color: var(--secondary-color);
+            font-weight: 500;
+            padding: 12px 20px;
+            border-radius: 10px 10px 0 0;
+            margin-right: 5px;
+            transition: all 0.3s;
+        }
+        
+        .nav-tabs .nav-link:hover {
+            color: var(--primary-color);
+            background-color: rgba(255, 45, 85, 0.1);
+        }
+        
+        .nav-tabs .nav-link.active {
+            color: var(--primary-color);
+            font-weight: bold;
+            background-color: rgba(255, 45, 85, 0.1);
+            border-bottom: 3px solid var(--primary-color);
+        }
+        
+        .points-badge {
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            font-size: 1rem;
+            padding: 8px 15px;
+            border-radius: 50px;
+            color: white;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(255, 45, 85, 0.2);
+        }
+        
+        .admin-badge {
+            background: linear-gradient(135deg, #6f42c1, #9c27b0);
+        }
+        
+        .streak-fire {
+            color: #FF9500;
+            animation: flame 1.5s infinite alternate;
+        }
+        
+        @keyframes flame {
+            0% {
+                text-shadow: 0 0 5px #FF9500, 0 0 10px #FF9500;
+            }
+            100% {
+                text-shadow: 0 0 10px #FF9500, 0 0 20px #FF9500, 0 0 30px #FF9500;
+            }
+        }
+        
+        .table {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .table th {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 500;
+        }
+        
+        .table td {
+            vertical-align: middle;
+        }
+        
+        .badge {
+            font-weight: 500;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+        }
+        
+        .modal-content {
+            border-radius: 15px;
+            overflow: hidden;
+            border: none;
+        }
+        
+        .modal-header {
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            color: white;
+        }
+        
+        .toast {
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border: none;
+        }
+        
+        .progress {
+            height: 10px;
+            border-radius: 5px;
+        }
+        
+        .progress-bar {
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            border-radius: 5px;
+        }
+        
+        .floating-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 5px 20px rgba(255, 45, 85, 0.4);
+            z-index: 100;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .floating-btn:hover {
+            transform: scale(1.1) translateY(-5px);
+            box-shadow: 0 8px 25px rgba(255, 45, 85, 0.5);
+            color: white;
+        }
+        
+        .watermark {
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: rgba(0, 0, 0, 0.3);
+            font-size: 0.9rem;
+        }
+        
+        /* Animation classes */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .shake {
+            animation: shake 0.5s;
+        }
+        
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .navbar-brand {
+                font-size: 1.2rem;
+            }
+            
+            .points-badge {
+                font-size: 0.9rem;
+                padding: 6px 12px;
+            }
+            
+            .checkin-day {
+                width: 38px;
+                height: 38px;
+                font-size: 1rem;
+            }
+            
+            .reward-img {
+                height: 120px;
+            }
+            
+            .floating-btn {
+                width: 50px;
+                height: 50px;
+                font-size: 1.3rem;
+                bottom: 20px;
+                right: 20px;
+            }
+        }
     </style>
 </head>
-<body class="bg-gray-100">
-    <div class="container">
-        <!-- Navigation -->
-        <div class="nav card">
-            <button class="btn" onclick="showSection('checkin')">Check-in</button>
-            <button class="btn" onclick="showSection('rewards')">แลกของรางวัล</button>
-            <button class="btn" id="adminBtn" style="display: none;" onclick="showSection('admin')">จัดการ (Admin)</button>
-        </div>
+<body>
+    <div class="container" id="app">
+        <!-- Navbar -->
+        <nav class="navbar navbar-expand-lg navbar-light mb-4">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">
+                    <i class="fas fa-crown"></i>สะสมแต้ม
+                </a>
+                <div class="d-flex align-items-center">
+                    <span class="points-badge me-2">
+                        <i class="fas fa-coins me-1"></i>
+                        <span id="userPoints">0</span> แต้ม
+                    </span>
+                    <span class="points-badge admin-badge d-none" id="adminBadge">
+                        <i class="fas fa-user-shield me-1"></i> Admin
+                    </span>
+                </div>
+            </div>
+        </nav>
 
-        <!-- User Profile -->
-        <div class="card" id="profileSection">
-            <img id="userPicture" class="rounded-full w-16 h-16 mx-auto" src="" alt="Profile">
-            <h2 id="userName" class="text-center text-xl font-bold mt-2"></h2>
-            <p class="text-center text-gray-600">คะแนนสะสม: <span id="userPoints">0</span> คะแนน</p>
-        </div>
+        <!-- Tabs -->
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="checkin-tab" data-bs-toggle="tab" data-bs-target="#checkin" type="button" role="tab">
+                    <i class="fas fa-calendar-check me-1"></i>เช็คอิน
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="rewards-tab" data-bs-toggle="tab" data-bs-target="#rewards" type="button" role="tab">
+                    <i class="fas fa-gift me-1"></i>แลกรางวัล
+                </button>
+            </li>
+            <li class="nav-item d-none" id="adminTabItem" role="presentation">
+                <button class="nav-link" id="admin-tab" data-bs-toggle="tab" data-bs-target="#admin" type="button" role="tab">
+                    <i class="fas fa-user-cog me-1"></i>จัดการ
+                </button>
+            </li>
+        </ul>
 
-        <!-- Check-in Section -->
-        <div id="checkinSection" class="card">
-            <h2 class="text-2xl font-bold text-center mb-4">Check-in รายวัน</h2>
-            <p class="text-center text-gray-600 mb-4">Check-in ทุกวันรับ 0.5 คะแนน ครบ 7 วันรับ 1 คะแนน!</p>
-            <p class="text-center text-gray-600 mb-4">สตรีคปัจจุบัน: <span id="currentStreak">0</span> วัน</p>
-            <button id="checkinBtn" class="btn w-full" onclick="checkIn()">Check-in วันนี้</button>
+        <!-- Tab Content -->
+        <div class="tab-content" id="myTabContent">
+            <!-- Check-in Tab -->
+            <div class="tab-pane fade show active" id="checkin" role="tabpanel">
+                <!-- Check-in Card -->
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <i class="fas fa-calendar-day"></i>เช็คอินรายวัน
+                    </div>
+                    <div class="card-body text-center">
+                        <h5 class="card-title">สะสมแต้มทุกวัน รับรางวัลพิเศษ!</h5>
+                        <p class="card-text text-muted">เช็คอินครบ 7 วัน รับ 1 แต้ม, เช็คอินปกติรับ 0.5 แต้ม</p>
+                        
+                        <!-- Progress Bar -->
+                        <div class="progress mt-4 mb-3">
+                            <div id="streakProgress" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                        </div>
+                        <p class="small text-muted mb-4" id="streakText">เริ่มเช็คอินวันนี้เพื่อสะสมแต้ม!</p>
+                        
+                        <!-- Check-in Days -->
+                        <div class="my-4" id="checkinDays">
+                            <!-- Days will be populated by JavaScript -->
+                        </div>
+                        
+                        <!-- Check-in Button -->
+                        <button class="btn btn-primary btn-lg px-5" id="checkinBtn">
+                            <i class="fas fa-check-circle me-2"></i>เช็คอินวันนี้
+                        </button>
+                        
+                        <!-- Streak Info -->
+                        <div class="mt-4" id="streakInfo">
+                            <!-- Streak info will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- History Card -->
+                <div class="card mt-4 fade-in">
+                    <div class="card-header">
+                        <i class="fas fa-history"></i>ประวัติการเช็คอิน
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>วันที่</th>
+                                        <th>แต้มที่ได้รับ</th>
+                                        <th>สถานะ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="checkinHistory">
+                                    <!-- History will be populated by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Rewards Tab -->
+            <div class="tab-pane fade" id="rewards" role="tabpanel">
+                <!-- Reward Period Info -->
+                <div class="alert alert-info fade-in">
+                    <i class="fas fa-clock me-2"></i> 
+                    ระยะเวลาแลกรางวัล: <strong><span id="rewardPeriod"></span></strong>
+                </div>
+                
+                <!-- Filter Buttons -->
+                <div class="d-flex mb-4 overflow-auto pb-2">
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button type="button" class="btn btn-outline-primary active" data-filter="all">ทั้งหมด</button>
+                        <button type="button" class="btn btn-outline-primary" data-filter="available">แลกได้</button>
+                        <button type="button" class="btn btn-outline-primary" data-filter="unavailable">แลกไม่ได้</button>
+                    </div>
+                </div>
+                
+                <!-- Rewards Grid -->
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="rewardsContainer">
+                    <!-- Rewards will be populated by JavaScript -->
+                    <div class="col-12 text-center py-5" id="rewardsLoading">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-3 text-muted">กำลังโหลดข้อมูลรางวัล...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Admin Tab -->
+            <div class="tab-pane fade" id="admin" role="tabpanel">
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <i class="fas fa-tasks"></i>จัดการคำขอแลกรางวัล
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ผู้ใช้</th>
+                                        <th>รางวัล</th>
+                                        <th>วันที่ขอ</th>
+                                        <th>สถานะ</th>
+                                        <th>การดำเนินการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="rewardRequests">
+                                    <tr>
+                                        <td colspan="5" class="text-center py-5">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                            <p class="mt-3 text-muted">กำลังโหลดข้อมูลคำขอ...</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-
-        <!-- Rewards Section -->
-        <div id="rewardsSection" class="card" style="display: none;">
-            <h2 class="text-2xl font-bold text-center mb-4">แลกของรางวัล</h2>
-            <div id="rewardsList"></div>
-        </div>
-
-        <!-- Admin Section -->
-        <div id="adminSection" class="card" style="display: none;">
-            <h2 class="text-2xl font-bold text-center mb-4">จัดการการแลกของรางวัล (Admin)</h2>
-            <div id="redemptionsList"></div>
+        
+        <!-- Floating Action Button -->
+        <div class="floating-btn d-none" id="refreshBtn">
+            <i class="fas fa-sync-alt"></i>
         </div>
     </div>
 
-    <script>
-        let userProfile = null;
-        let isAdmin = false;
+    <!-- Reward Modal -->
+    <div class="modal fade" id="rewardModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="rewardModalTitle">แลกรางวัล</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="rewardModalBody">
+                    <!-- Modal content will be populated by JavaScript -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+                    <button type="button" class="btn btn-primary" id="confirmRedeemBtn">ยืนยันการแลก</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        // Initialize LINE LIFF
-        async function initializeLIFF() {
+    <!-- Success Toast -->
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+        <div id="successToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header bg-success text-white">
+                <strong class="me-auto"><i class="fas fa-check-circle me-2"></i>สำเร็จ</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="successToastBody">
+                การดำเนินการสำเร็จแล้ว
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Toast -->
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+        <div id="errorToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header bg-danger text-white">
+                <strong class="me-auto"><i class="fas fa-exclamation-circle me-2"></i>เกิดข้อผิดพลาด</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="errorToastBody">
+                เกิดข้อผิดพลาดในการดำเนินการ
+            </div>
+        </div>
+    </div>
+
+    <!-- Watermark -->
+    <div class="watermark">
+        © 2023 ระบบสะสมแต้ม | LINE LIFF
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Global variables
+        let userProfile = null;
+        let userData = null;
+        let rewardsData = [];
+        let checkinData = [];
+        let rewardRequests = [];
+        let isAdmin = false;
+        let currentFilter = 'all';
+
+        // Initialize LIFF app
+        async function initializeLiff() {
             try {
                 await liff.init({ liffId: '1656032875-GLpZe6By' });
+                
                 if (!liff.isLoggedIn()) {
                     liff.login();
-                    return;
-                }
-                userProfile = await liff.getProfile();
-                document.getElementById('userPicture').src = userProfile.pictureUrl;
-                document.getElementById('userName').innerText = userProfile.displayName;
-
-                // Register user and get profile
-                await jsonpRequest('registerUser', {
-                    uid: userProfile.userId,
-                    displayName: userProfile.displayName
-                }, (response) => {
-                    document.getElementById('userPoints').innerText = response.totalPoints || 0;
-                    isAdmin = response.isAdmin || false;
+                } else {
+                    await loadUserProfile();
+                    await checkAdminStatus();
+                    await loadUserData();
+                    await loadRewardsData();
+                    await loadCheckinHistory();
+                    
                     if (isAdmin) {
-                        document.getElementById('adminBtn').style.display = 'block';
+                        await loadRewardRequests();
                     }
-                    loadRewards();
-                    loadRedemptions();
-                    loadCheckInStatus();
-                });
+                    
+                    renderUI();
+                    setupEventListeners();
+                    
+                    // Hide loading spinner
+                    document.getElementById('rewardsLoading').classList.add('d-none');
+                    
+                    // Show refresh button
+                    document.getElementById('refreshBtn').classList.remove('d-none');
+                }
             } catch (error) {
-                console.error('LIFF Initialization failed:', error);
-                alert('เกิดข้อผิดพลาดในการโหลด LINE LIFF');
+                console.error('LIFF initialization failed:', error);
+                showErrorAlert('ไม่สามารถเชื่อมต่อกับ LINE ได้', 'กรุณาลองใหม่อีกครั้งหรือติดต่อผู้ดูแลระบบ');
             }
         }
 
-        // JSONP Request Function
-        function jsonpRequest(action, data, callback) {
-            const script = document.createElement('script');
-            const callbackName = 'jsonp_' + Math.round(100000 * Math.random());
-            window[callbackName] = (response) => {
-                delete window[callbackName];
-                document.body.removeChild(script);
-                callback(response);
-            };
-            const url = `https://script.google.com/macros/s/AKfycbxmTQ0knrfzI2puvfueSrjlTFKjA7KzG9aj1H356zyyUAwiCrP0HxkROceSsOVSdNgPHg/exec?action=${action}&data=${encodeURIComponent(JSON.stringify(data))}&callback=${callbackName}`;
-            script.src = url;
-            document.body.appendChild(script);
+        // Load user profile from LINE
+        async function loadUserProfile() {
+            try {
+                userProfile = await liff.getProfile();
+                
+                // Update UI with profile picture and name (optional)
+                // document.getElementById('userAvatar').src = userProfile.pictureUrl;
+                // document.getElementById('userName').textContent = userProfile.displayName;
+            } catch (error) {
+                console.error('Error loading user profile:', error);
+                throw error;
+            }
         }
 
-        // Show Section
-        function showSection(section) {
-            document.getElementById('checkinSection').style.display = section === 'checkin' ? 'block' : 'none';
-            document.getElementById('rewardsSection').style.display = section === 'rewards' ? 'block' : 'none';
-            document.getElementById('adminSection').style.display = section === 'admin' && isAdmin ? 'block' : 'none';
+        // Check if user is admin
+        async function checkAdminStatus() {
+            try {
+                const response = await fetchGoogleScript('checkAdmin', { userId: userProfile.userId });
+                isAdmin = response.isAdmin;
+                
+                if (isAdmin) {
+                    document.getElementById('adminBadge').classList.remove('d-none');
+                    document.getElementById('adminTabItem').classList.remove('d-none');
+                }
+            } catch (error) {
+                console.error('Error checking admin status:', error);
+                showToast('error', 'ไม่สามารถตรวจสอบสิทธิ์ผู้ดูแลระบบได้');
+            }
         }
 
-        // Check-in
-        function checkIn() {
-            jsonpRequest('checkIn', { uid: userProfile.userId }, (response) => {
-                if (response.success) {
-                    document.getElementById('userPoints').innerText = response.totalPoints;
-                    document.getElementById('currentStreak').innerText = response.streak;
-                    document.getElementById('checkinBtn').classList.add('btn-disabled');
-                    document.getElementById('checkinBtn').disabled = true;
-                    liff.sendMessages([{
-                        type: 'flex',
-                        altText: 'Check-in สำเร็จ',
-                        contents: {
-                            type: 'bubble',
-                            body: {
-                                type: 'box',
-                                layout: 'vertical',
-                                contents: [
-                                    { type: 'text', text: 'Check-in สำเร็จ!', weight: 'bold', size: 'xl' },
-                                    { type: 'text', text: `คุณได้รับ ${response.pointsEarned} คะแนน` },
-                                    { type: 'text', text: `สตรีค: ${response.streak} วัน` },
-                                    { type: 'text', text: `คะแนนรวม: ${response.totalPoints} คะแนน` }
-                                ]
-                            }
+        // Load user data
+        async function loadUserData() {
+            try {
+                const response = await fetchGoogleScript('getUserData', { userId: userProfile.userId });
+                userData = response.userData;
+                updatePointsDisplay();
+                updateStreakProgress();
+            } catch (error) {
+                console.error('Error loading user data:', error);
+                showToast('error', 'ไม่สามารถโหลดข้อมูลผู้ใช้ได้');
+            }
+        }
+
+        // Load rewards data
+        async function loadRewardsData() {
+            try {
+                const response = await fetchGoogleScript('getRewards');
+                rewardsData = response.rewards;
+                
+                // Format reward period
+                const startDate = new Date(response.rewardPeriod.start);
+                const endDate = new Date(response.rewardPeriod.end);
+                const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                const rewardPeriodText = `${startDate.toLocaleDateString('th-TH', options)} - ${endDate.toLocaleDateString('th-TH', options)}`;
+                document.getElementById('rewardPeriod').textContent = rewardPeriodText;
+            } catch (error) {
+                console.error('Error loading rewards data:', error);
+                showToast('error', 'ไม่สามารถโหลดข้อมูลรางวัลได้');
+            }
+        }
+
+        // Load check-in history
+        async function loadCheckinHistory() {
+            try {
+                const response = await fetchGoogleScript('getCheckinHistory', { userId: userProfile.userId });
+                checkinData = response.checkinHistory;
+            } catch (error) {
+                console.error('Error loading check-in history:', error);
+                showToast('error', 'ไม่สามารถโหลดประวัติการเช็คอินได้');
+            }
+        }
+
+        // Load reward requests (admin only)
+        async function loadRewardRequests() {
+            try {
+                const response = await fetchGoogleScript('getRewardRequests');
+                rewardRequests = response.requests;
+            } catch (error) {
+                console.error('Error loading reward requests:', error);
+                showToast('error', 'ไม่สามารถโหลดคำขอแลกรางวัลได้');
+            }
+        }
+
+        // Render UI components
+        function renderUI() {
+            renderCheckinDays();
+            renderStreakInfo();
+            renderCheckinHistory();
+            renderRewards();
+            
+            if (isAdmin) {
+                renderRewardRequests();
+            }
+        }
+
+        // Render check-in days
+        function renderCheckinDays() {
+            const daysContainer = document.getElementById('checkinDays');
+            daysContainer.innerHTML = '';
+            
+            const days = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
+            const today = new Date().getDay(); // 0 (Sunday) to 6 (Saturday)
+            
+            days.forEach((day, index) => {
+                const dayElement = document.createElement('div');
+                dayElement.className = 'checkin-day';
+                dayElement.textContent = day;
+                
+                // Highlight today
+                if (index === today) {
+                    dayElement.classList.add('today');
+                }
+                
+                // Check if user has checked in this day in the current week
+                if (userData && userData.lastCheckin) {
+                    const lastCheckinDate = new Date(userData.lastCheckin);
+                    const todayDate = new Date();
+                    
+                    // Check if it's the same week
+                    if (isSameWeek(lastCheckinDate, todayDate) {
+                        if (userData.checkinDays.includes(index)) {
+                            dayElement.classList.add('checked');
+                            
+                            // Add check icon
+                            const checkIcon = document.createElement('i');
+                            checkIcon.className = 'fas fa-check position-absolute';
+                            checkIcon.style.fontSize = '0.7rem';
+                            checkIcon.style.bottom = '5px';
+                            checkIcon.style.right = '5px';
+                            dayElement.appendChild(checkIcon);
                         }
-                    }]).then(() => {
-                        alert('Check-in สำเร็จ! ตรวจสอบข้อความใน LINE');
-                    });
+                    }
+                }
+                
+                daysContainer.appendChild(dayElement);
+            });
+        }
+
+        // Update streak progress bar
+        function updateStreakProgress() {
+            const progressBar = document.getElementById('streakProgress');
+            const streakText = document.getElementById('streakText');
+            
+            if (userData && userData.currentStreak > 0) {
+                const progress = (userData.currentStreak / 7) * 100;
+                progressBar.style.width = `${progress}%`;
+                
+                if (userData.currentStreak === 6) {
+                    streakText.innerHTML = '<i class="fas fa-fire streak-fire me-1"></i> อีก 1 วันจะได้รับ 1 แต้ม!';
                 } else {
-                    alert(response.message || 'เกิดข้อผิดพลาดในการ Check-in');
+                    streakText.textContent = `เช็คอินติดต่อกัน ${userData.currentStreak} วัน`;
                 }
+            } else {
+                progressBar.style.width = '0%';
+                streakText.textContent = 'เริ่มเช็คอินวันนี้เพื่อสะสมแต้ม!';
+            }
+        }
+
+        // Render streak info
+        function renderStreakInfo() {
+            const streakInfoContainer = document.getElementById('streakInfo');
+            
+            if (userData && userData.currentStreak > 0) {
+                streakInfoContainer.innerHTML = `
+                    <div class="alert alert-success animate__animated animate__fadeIn">
+                        <i class="fas fa-fire streak-fire me-2"></i>
+                        คุณมีสถิติการเช็คอินติดต่อกัน <strong>${userData.currentStreak} วัน</strong>
+                        ${userData.currentStreak === 6 ? '<div class="mt-2">เช็คอินอีก 1 วันเพื่อรับ 1 แต้ม!</div>' : ''}
+                    </div>
+                `;
+            } else {
+                streakInfoContainer.innerHTML = `
+                    <div class="alert alert-warning animate__animated animate__fadeIn">
+                        <i class="fas fa-info-circle me-2"></i>
+                        เริ่มเช็คอินวันนี้เพื่อสะสมแต้ม!
+                    </div>
+                `;
+            }
+        }
+
+        // Render check-in history
+        function renderCheckinHistory() {
+            const historyContainer = document.getElementById('checkinHistory');
+            historyContainer.innerHTML = '';
+            
+            if (checkinData.length === 0) {
+                historyContainer.innerHTML = `
+                    <tr>
+                        <td colspan="3" class="text-center text-muted py-5">ยังไม่มีประวัติการเช็คอิน</td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            checkinData.forEach(entry => {
+                const date = new Date(entry.date);
+                const row = document.createElement('tr');
+                row.className = 'animate__animated animate__fadeIn';
+                row.innerHTML = `
+                    <td>${date.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+                    <td>
+                        <span class="badge bg-primary bg-opacity-10 text-primary">
+                            <i class="fas fa-coins me-1"></i> ${entry.points} แต้ม
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge ${entry.isStreak ? 'bg-success' : 'bg-primary'}">
+                            ${entry.isStreak ? 'ครบ 7 วัน' : 'ปกติ'}
+                        </span>
+                    </td>
+                `;
+                historyContainer.appendChild(row);
             });
         }
 
-        // Load Check-in Status
-        function loadCheckInStatus() {
-            jsonpRequest('getCheckInStatus', { uid: userProfile.userId }, (response) => {
-                document.getElementById('currentStreak').innerText = response.streak || 0;
-                if (response.hasCheckedInToday) {
-                    document.getElementById('checkinBtn').classList.add('btn-disabled');
-                    document.getElementById('checkinBtn').disabled = true;
-                }
-            });
-        }
-
-        // Load Rewards
-        function loadRewards() {
-            jsonpRequest('getRewards', {}, (response) => {
-                const rewardsList = document.getElementById('rewardsList');
-                rewardsList.innerHTML = '';
-                response.rewards.forEach(reward => {
-                    if (reward.stock > 0 && new Date(reward.expiryDate) >= new Date()) {
-                        const rewardDiv = document.createElement('div');
-                        rewardDiv.className = 'card mb-4 flex items-center';
-                        rewardDiv.innerHTML = `
-                            <img src="${reward.imageUrl}" class="reward-img mr-4">
-                            <div class="flex-1">
-                                <h3 class="text-lg font-bold">${reward.name}</h3>
-                                <p>คะแนนที่ใช้: ${reward.pointsRequired}</p>
-                                <p>คงเหลือ: ${reward.stock}</p>
-                                <p>หมดอายุ: ${new Date(reward.expiryDate).toLocaleDateString('th-TH')}</p>
+        // Render rewards
+        function renderRewards() {
+            const rewardsContainer = document.getElementById('rewardsContainer');
+            
+            // Clear existing rewards except loading spinner
+            const rewardsLoading = document.getElementById('rewardsLoading');
+            rewardsContainer.innerHTML = '';
+            rewardsContainer.appendChild(rewardsLoading);
+            
+            if (rewardsData.length === 0) {
+                rewardsLoading.innerHTML = `
+                    <div class="col-12 text-center text-muted py-5">
+                        <i class="fas fa-gift fa-3x mb-3"></i>
+                        <p>ไม่มีรางวัลในขณะนี้</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Filter rewards based on current filter
+            let filteredRewards = rewardsData;
+            if (currentFilter === 'available') {
+                filteredRewards = rewardsData.filter(reward => 
+                    reward.stock > 0 && 
+                    userData.points >= reward.pointsRequired && 
+                    new Date(reward.endDate) >= new Date()
+                );
+            } else if (currentFilter === 'unavailable') {
+                filteredRewards = rewardsData.filter(reward => 
+                    reward.stock <= 0 || 
+                    userData.points < reward.pointsRequired || 
+                    new Date(reward.endDate) < new Date()
+                );
+            }
+            
+            if (filteredRewards.length === 0) {
+                rewardsLoading.innerHTML = `
+                    <div class="col-12 text-center text-muted py-5">
+                        <i class="fas fa-search fa-3x mb-3"></i>
+                        <p>ไม่พบรางวัลที่ตรงกับเงื่อนไข</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Hide loading spinner
+            rewardsLoading.classList.add('d-none');
+            
+            // Add rewards to container
+            filteredRewards.forEach((reward, index) => {
+                const isAvailable = reward.stock > 0;
+                const canRedeem = userData.points >= reward.pointsRequired;
+                const isExpired = new Date(reward.endDate) < new Date();
+                
+                const rewardCard = document.createElement('div');
+                rewardCard.className = `col ${!isAvailable || isExpired ? 'disabled-reward' : ''}`;
+                rewardCard.innerHTML = `
+                    <div class="card reward-card h-100 animate__animated animate__fadeIn" style="animation-delay: ${index * 0.1}s">
+                        <img src="${reward.imageUrl || 'https://via.placeholder.com/300x200?text=No+Image'}" class="card-img-top reward-img" alt="${reward.name}">
+                        <div class="card-body">
+                            <h5 class="card-title">${reward.name}</h5>
+                            <p class="card-text text-muted">${reward.description}</p>
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <span class="badge bg-primary bg-opacity-10 text-primary">
+                                    <i class="fas fa-coins me-1"></i> ${reward.pointsRequired}
+                                </span>
+                                <span class="badge ${isAvailable ? 'bg-success bg-opacity-10 text-success' : 'bg-secondary bg-opacity-10 text-secondary'}">
+                                    <i class="fas fa-box-open me-1"></i> ${isAvailable ? reward.stock + ' ชิ้น' : 'หมด'}
+                                </span>
                             </div>
-                            <button class="btn ${userProfile.totalPoints < reward.pointsRequired ? 'btn-disabled' : ''}" 
-                                    ${userProfile.totalPoints < reward.pointsRequired ? 'disabled' : ''} 
-                                    onclick="redeemReward('${reward.rewardId}', ${reward.pointsRequired})">
-                                แลก
+                            ${isExpired ? `
+                                <div class="mt-2 text-center">
+                                    <span class="badge bg-danger bg-opacity-10 text-danger">
+                                        <i class="fas fa-clock me-1"></i> หมดอายุ
+                                    </span>
+                                </div>
+                            ` : ''}
+                        </div>
+                        <div class="card-footer bg-transparent border-0 pt-0">
+                            <button class="btn btn-primary w-100 ${!isAvailable || !canRedeem || isExpired ? 'disabled' : ''}" 
+                                    data-reward-id="${reward.id}" 
+                                    onclick="openRewardModal('${reward.id}')">
+                                <i class="fas fa-gift me-2"></i>แลกรางวัล
                             </button>
-                        `;
-                        rewardsList.appendChild(rewardDiv);
+                        </div>
+                    </div>
+                `;
+                rewardsContainer.appendChild(rewardCard);
+            });
+        }
+
+        // Render reward requests (admin only)
+        function renderRewardRequests() {
+            const requestsContainer = document.getElementById('rewardRequests');
+            requestsContainer.innerHTML = '';
+            
+            if (rewardRequests.length === 0) {
+                requestsContainer.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-5">ไม่มีคำขอแลกรางวัลในขณะนี้</td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            rewardRequests.forEach((request, index) => {
+                const reward = rewardsData.find(r => r.id === request.rewardId);
+                const requestDate = new Date(request.requestDate);
+                
+                const row = document.createElement('tr');
+                row.className = `animate__animated animate__fadeIn`;
+                row.style.animationDelay = `${index * 0.05}s`;
+                row.innerHTML = `
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-user-circle fa-lg text-secondary"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-2">
+                                ${request.userName}
+                                <div class="text-muted small">${request.userId.substring(0, 8)}...</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>${reward ? reward.name : 'รางวัลไม่พบ'}</td>
+                    <td>${requestDate.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })}</td>
+                    <td>
+                        <span class="badge ${request.status === 'approved' ? 'bg-success' : request.status === 'rejected' ? 'bg-danger' : 'bg-warning'}">
+                            ${request.status === 'pending' ? 'รออนุมัติ' : request.status === 'approved' ? 'อนุมัติแล้ว' : 'ปฏิเสธ'}
+                        </span>
+                    </td>
+                    <td>
+                        ${request.status === 'pending' ? `
+                            <div class="btn-group btn-group-sm" role="group">
+                                <button class="btn btn-sm btn-success" onclick="processRewardRequest('${request.requestId}', 'approved')">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="processRewardRequest('${request.requestId}', 'rejected')">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        ` : ''}
+                    </td>
+                `;
+                requestsContainer.appendChild(row);
+            });
+        }
+
+        // Open reward modal
+        function openRewardModal(rewardId) {
+            const reward = rewardsData.find(r => r.id === rewardId);
+            if (!reward) return;
+            
+            const modalTitle = document.getElementById('rewardModalTitle');
+            const modalBody = document.getElementById('rewardModalBody');
+            const confirmBtn = document.getElementById('confirmRedeemBtn');
+            
+            modalTitle.textContent = `แลกรางวัล: ${reward.name}`;
+            
+            const isExpired = new Date(reward.endDate) < new Date();
+            const canRedeem = userData.points >= reward.pointsRequired && reward.stock > 0 && !isExpired;
+            
+            modalBody.innerHTML = `
+                <div class="row">
+                    <div class="col-md-5 text-center">
+                        <img src="${reward.imageUrl || 'https://via.placeholder.com/300x200?text=No+Image'}" 
+                             class="img-fluid rounded mb-3" alt="${reward.name}"
+                             style="max-height: 200px; width: auto;">
+                             
+                        ${isExpired ? `
+                            <div class="alert alert-danger mb-0">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                รางวัลนี้หมดอายุแล้ว
+                            </div>
+                        ` : reward.stock <= 0 ? `
+                            <div class="alert alert-danger mb-0">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                รางวัลนี้หมดแล้ว
+                            </div>
+                        ` : !canRedeem ? `
+                            <div class="alert alert-warning mb-0">
+                                <i class="fas fa-exclamation-circle me-2"></i>
+                                แต้มของคุณไม่เพียงพอ
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div class="col-md-7">
+                        <h5>${reward.name}</h5>
+                        <p class="text-muted">${reward.description}</p>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>แต้มที่ต้องการ:</span>
+                                <strong>${reward.pointsRequired} แต้ม</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>จำนวนคงเหลือ:</span>
+                                <strong>${reward.stock} ชิ้น</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>ระยะเวลา:</span>
+                                <strong>
+                                    ${new Date(reward.startDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })} - 
+                                    ${new Date(reward.endDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })}
+                                </strong>
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>แต้มของคุณ:</span>
+                                <strong>${userData.points} แต้ม</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>แต้มที่ใช้:</span>
+                                <strong class="${canRedeem ? 'text-success' : 'text-danger'}">${reward.pointsRequired} แต้ม</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>คงเหลือ:</span>
+                                <strong class="${canRedeem ? 'text-success' : 'text-danger'}">${userData.points - reward.pointsRequired} แต้ม</strong>
+                            </div>
+                        </div>
+                        
+                        ${canRedeem ? `
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                หลังจากแลกรางวัลแล้ว กรุณารอการอนุมัติจาก Admin
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+            
+            confirmBtn.disabled = !canRedeem;
+            confirmBtn.onclick = canRedeem ? () => redeemReward(rewardId) : null;
+            
+            const modal = new bootstrap.Modal(document.getElementById('rewardModal'));
+            modal.show();
+        }
+
+        // Process check-in
+        async function processCheckin() {
+            try {
+                const btn = document.getElementById('checkinBtn');
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>กำลังดำเนินการ...';
+                
+                const response = await fetchGoogleScript('processCheckin', { userId: userProfile.userId });
+                
+                if (response.success) {
+                    userData = response.userData;
+                    checkinData.unshift(response.checkinEntry);
+                    
+                    updatePointsDisplay();
+                    renderCheckinDays();
+                    updateStreakProgress();
+                    renderStreakInfo();
+                    renderCheckinHistory();
+                    
+                    showToast('success', `เช็คอินสำเร็จ! คุณได้รับ ${response.checkinEntry.points} แต้ม`);
+                    
+                    // Send flex message to user
+                    try {
+                        await liff.sendMessages([{
+                            type: 'flex',
+                            altText: 'เช็คอินสำเร็จ',
+                            contents: createCheckinSuccessFlex(response.checkinEntry)
+                        }]);
+                    } catch (error) {
+                        console.error('Error sending flex message:', error);
+                    }
+                    
+                    // Add celebration effect
+                    document.getElementById('checkinBtn').classList.add('animate__animated', 'animate__tada');
+                    setTimeout(() => {
+                        document.getElementById('checkinBtn').classList.remove('animate__animated', 'animate__tada');
+                    }, 1000);
+                } else {
+                    showToast('error', response.message || 'ไม่สามารถเช็คอินได้');
+                    document.getElementById('checkinBtn').classList.add('shake');
+                    setTimeout(() => {
+                        document.getElementById('checkinBtn').classList.remove('shake');
+                    }, 500);
+                }
+            } catch (error) {
+                console.error('Error processing checkin:', error);
+                showToast('error', 'เกิดข้อผิดพลาดในการเช็คอิน');
+            } finally {
+                const btn = document.getElementById('checkinBtn');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check-circle me-2"></i>เช็คอินวันนี้';
+            }
+        }
+
+        // Redeem reward
+        async function redeemReward(rewardId) {
+            try {
+                const btn = document.getElementById('confirmRedeemBtn');
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>กำลังดำเนินการ...';
+                
+                const response = await fetchGoogleScript('redeemReward', { 
+                    userId: userProfile.userId,
+                    rewardId: rewardId,
+                    userName: userProfile.displayName
+                });
+                
+                if (response.success) {
+                    userData.points -= response.reward.pointsRequired;
+                    updatePointsDisplay();
+                    
+                    // Update rewards data
+                    const rewardIndex = rewardsData.findIndex(r => r.id === rewardId);
+                    if (rewardIndex !== -1) {
+                        rewardsData[rewardIndex].stock = response.reward.stock;
+                    }
+                    
+                    // Close modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('rewardModal'));
+                    modal.hide();
+                    
+                    showToast('success', 'ส่งคำขอแลกรางวัลสำเร็จ รอการอนุมัติจาก Admin');
+                    
+                    // Reload rewards and requests (if admin)
+                    await loadRewardsData();
+                    renderRewards();
+                    
+                    if (isAdmin) {
+                        await loadRewardRequests();
+                        renderRewardRequests();
+                    }
+                    
+                    // Send flex message to user
+                    try {
+                        await liff.sendMessages([{
+                            type: 'flex',
+                            altText: 'คำขอแลกรางวัล',
+                            contents: createRewardRequestFlex(response.reward)
+                        }]);
+                    } catch (error) {
+                        console.error('Error sending flex message:', error);
+                    }
+                } else {
+                    showToast('error', response.message || 'ไม่สามารถแลกรางวัลได้');
+                }
+            } catch (error) {
+                console.error('Error redeeming reward:', error);
+                showToast('error', 'เกิดข้อผิดพลาดในการแลกรางวัล');
+            } finally {
+                const btn = document.getElementById('confirmRedeemBtn');
+                btn.disabled = false;
+                btn.innerHTML = 'ยืนยันการแลก';
+            }
+        }
+
+        // Process reward request (admin only)
+        async function processRewardRequest(requestId, action) {
+            try {
+                const result = await Swal.fire({
+                    title: 'ยืนยันการดำเนินการ',
+                    text: `คุณต้องการ${action === 'approved' ? 'อนุมัติ' : 'ปฏิเสธ'}คำขอนี้ใช่หรือไม่?`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'ยืนยัน',
+                    cancelButtonText: 'ยกเลิก',
+                    confirmButtonColor: action === 'approved' ? '#28a745' : '#dc3545'
+                });
+                
+                if (!result.isConfirmed) return;
+                
+                const response = await fetchGoogleScript('processRewardRequest', { 
+                    requestId: requestId,
+                    action: action,
+                    adminId: userProfile.userId
+                });
+                
+                if (response.success) {
+                    showToast('success', `ดำเนินการ${action === 'approved' ? 'อนุมัติ' : 'ปฏิเสธ'}คำขอสำเร็จ`);
+                    
+                    // Reload data
+                    await loadRewardsData();
+                    await loadRewardRequests();
+                    await loadUserData();
+                    
+                    renderRewards();
+                    renderRewardRequests();
+                    updatePointsDisplay();
+                    
+                    // Send flex message to user
+                    if (response.userId && response.userId !== userProfile.userId) {
+                        try {
+                            await liff.sendMessages([{
+                                type: 'flex',
+                                altText: 'สถานะคำขอแลกรางวัล',
+                                contents: createRewardStatusFlex(response.request, action)
+                            }]);
+                        } catch (error) {
+                            console.error('Error sending flex message:', error);
+                        }
+                    }
+                } else {
+                    showToast('error', response.message || 'ไม่สามารถดำเนินการได้');
+                }
+            } catch (error) {
+                console.error('Error processing reward request:', error);
+                showToast('error', 'เกิดข้อผิดพลาดในการดำเนินการ');
+            }
+        }
+
+        // Fetch data from Google Apps Script
+        async function fetchGoogleScript(action, data = {}) {
+            const url = 'https://script.google.com/macros/s/AKfycbxmTQ0knrfzI2puvfueSrjlTFKjA7KzG9aj1H356zyyUAwiCrP0HxkROceSsOVSdNgPHg/exec';
+            
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: action,
+                        data: data,
+                        userId: userProfile ? userProfile.userId : null
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                throw error;
+            }
+        }
+
+        // Update points display
+        function updatePointsDisplay() {
+            const pointsElement = document.getElementById('userPoints');
+            
+            // Animate points change
+            if (pointsElement.textContent !== userData.points.toString()) {
+                pointsElement.classList.add('animate__animated', 'animate__rubberBand');
+                setTimeout(() => {
+                    pointsElement.classList.remove('animate__animated', 'animate__rubberBand');
+                }, 1000);
+            }
+            
+            pointsElement.textContent = userData.points;
+        }
+
+        // Show toast message
+        function showToast(type, message) {
+            const toastElement = type === 'success' ? 
+                document.getElementById('successToast') : 
+                document.getElementById('errorToast');
+            
+            const toastBody = type === 'success' ? 
+                document.getElementById('successToastBody') : 
+                document.getElementById('errorToastBody');
+            
+            toastBody.innerHTML = message;
+            const toast = new bootstrap.Toast(toastElement);
+            toast.show();
+        }
+
+        // Show error alert
+        function showErrorAlert(title, message) {
+            Swal.fire({
+                title: title,
+                text: message,
+                icon: 'error',
+                confirmButtonText: 'ตกลง',
+                confirmButtonColor: '#FF2D55'
+            });
+        }
+
+        // Check if two dates are in the same week
+        function isSameWeek(date1, date2) {
+            const oneDay = 24 * 60 * 60 * 1000;
+            const diffDays = Math.abs((date1 - date2) / oneDay);
+            return diffDays < 7 && date1.getDay() !== date2.getDay();
+        }
+
+        // Create check-in success flex message
+        function createCheckinSuccessFlex(checkinEntry) {
+            return {
+                type: "bubble",
+                size: "mega",
+                header: {
+                    type: "box",
+                    layout: "vertical",
+                    contents: [
+                        {
+                            type: "text",
+                            text: "เช็คอินสำเร็จ!",
+                            weight: "bold",
+                            size: "xl",
+                            color: "#FFFFFF",
+                            align: "center"
+                        }
+                    ],
+                    backgroundColor: "#FF2D55",
+                    paddingAll: "20px"
+                },
+                body: {
+                    type: "box",
+                    layout: "vertical",
+                    contents: [
+                        {
+                            type: "box",
+                            layout: "horizontal",
+                            contents: [
+                                {
+                                    type: "text",
+                                    text: `คุณได้รับ ${checkinEntry.points} แต้ม`,
+                                    size: "lg",
+                                    align: "center",
+                                    weight: "bold",
+                                    color: "#FF2D55"
+                                }
+                            ],
+                            justifyContent: "center",
+                            margin: "md"
+                        },
+                        {
+                            type: "separator",
+                            margin: "lg"
+                        },
+                        {
+                            type: "box",
+                            layout: "horizontal",
+                            contents: [
+                                {
+                                    type: "text",
+                                    text: "แต้มรวม",
+                                    size: "sm",
+                                    color: "#777777",
+                                    flex: 2
+                                },
+                                {
+                                    type: "text",
+                                    text: `${userData.points} แต้ม`,
+                                    size: "sm",
+                                    color: "#111111",
+                                    align: "end",
+                                    flex: 1
+                                }
+                            ],
+                            margin: "lg"
+                        },
+                        {
+                            type: "box",
+                            layout: "horizontal",
+                            contents: [
+                                {
+                                    type: "text",
+                                    text: "สถิติติดต่อกัน",
+                                    size: "sm",
+                                    color: "#777777",
+                                    flex: 2
+                                },
+                                {
+                                    type: "text",
+                                    text: `${userData.currentStreak} วัน`,
+                                    size: "sm",
+                                    color: "#111111",
+                                    align: "end",
+                                    flex: 1
+                                }
+                            ],
+                            margin: "lg"
+                        }
+                    ],
+                    paddingAll: "20px"
+                },
+                footer: {
+                    type: "box",
+                    layout: "vertical",
+                    contents: [
+                        {
+                            type: "button",
+                            action: {
+                                type: "uri",
+                                label: "ดูรางวัล",
+                                uri: "line://app/1656032875-GLpZe6By#rewards"
+                            },
+                            style: "primary",
+                            color: "#FF2D55"
+                        }
+                    ],
+                    paddingAll: "15px"
+                }
+            };
+        }
+
+        // Create reward request flex message
+        function createRewardRequestFlex(reward) {
+            return {
+                type: "bubble",
+                size: "mega",
+                header: {
+                    type: "box",
+                    layout: "vertical",
+                    contents: [
+                        {
+                            type: "text",
+                            text: "คำขอแลกรางวัล",
+                            weight: "bold",
+                            size: "xl",
+                            color: "#FFFFFF",
+                            align: "center"
+                        }
+                    ],
+                    backgroundColor: "#FF2D55",
+                    paddingAll: "20px"
+                },
+                body: {
+                    type: "box",
+                    layout: "vertical",
+                    contents: [
+                        {
+                            type: "box",
+                            layout: "horizontal",
+                            contents: [
+                                {
+                                    type: "text",
+                                    text: "คุณได้ส่งคำขอแลกรางวัลต่อไปนี้",
+                                    size: "md",
+                                    align: "center",
+                                    color: "#666666"
+                                }
+                            ],
+                            justifyContent: "center",
+                            margin: "md"
+                        },
+                        {
+                            type: "box",
+                            layout: "horizontal",
+                            contents: [
+                                {
+                                    type: "text",
+                                    text: reward.name,
+                                    weight: "bold",
+                                    size: "lg",
+                                    align: "center",
+                                    color: "#FF2D55"
+                                }
+                            ],
+                            justifyContent: "center",
+                            margin: "lg"
+                        },
+                        {
+                            type: "separator",
+                            margin: "lg"
+                        },
+                        {
+                            type: "box",
+                            layout: "horizontal",
+                            contents: [
+                                {
+                                    type: "text",
+                                    text: "ใช้แต้ม",
+                                    size: "sm",
+                                    color: "#777777",
+                                    flex: 2
+                                },
+                                {
+                                    type: "text",
+                                    text: `${reward.pointsRequired} แต้ม`,
+                                    size: "sm",
+                                    color: "#111111",
+                                    align: "end",
+                                    flex: 1
+                                }
+                            ],
+                            margin: "lg"
+                        },
+                        {
+                            type: "box",
+                            layout: "horizontal",
+                            contents: [
+                                {
+                                    type: "text",
+                                    text: "คงเหลือ",
+                                    size: "sm",
+                                    color: "#777777",
+                                    flex: 2
+                                },
+                                {
+                                    type: "text",
+                                    text: `${userData.points - reward.pointsRequired} แต้ม`,
+                                    size: "sm",
+                                    color: "#111111",
+                                    align: "end",
+                                    flex: 1
+                                }
+                            ],
+                            margin: "lg"
+                        }
+                    ],
+                    paddingAll: "20px"
+                },
+                footer: {
+                    type: "box",
+                    layout: "vertical",
+                    contents: [
+                        {
+                            type: "text",
+                            text: "กรุณารอการอนุมัติจาก Admin",
+                            size: "sm",
+                            color: "#777777",
+                            align: "center",
+                            margin: "md"
+                        }
+                    ],
+                    paddingAll: "10px"
+                }
+            };
+        }
+
+        // Create reward status flex message
+        function createRewardStatusFlex(request, status) {
+            const reward = rewardsData.find(r => r.id === request.rewardId) || { name: 'รางวัล' };
+            
+            return {
+                type: "bubble",
+                size: "mega",
+                header: {
+                    type: "box",
+                    layout: "vertical",
+                    contents: [
+                        {
+                            type: "text",
+                            text: status === 'approved' ? "อนุมัติคำขอแลกรางวัล" : "ปฏิเสธคำขอแลกรางวัล",
+                            weight: "bold",
+                            size: "xl",
+                            color: "#FFFFFF",
+                            align: "center"
+                        }
+                    ],
+                    backgroundColor: status === 'approved' ? "#28a745" : "#dc3545",
+                    paddingAll: "20px"
+                },
+                body: {
+                    type: "box",
+                    layout: "vertical",
+                    contents: [
+                        {
+                            type: "box",
+                            layout: "horizontal",
+                            contents: [
+                                {
+                                    type: "text",
+                                    text: status === 'approved' ? 
+                                        "คำขอแลกรางวัลของคุณได้รับการอนุมัติแล้ว" : 
+                                        "คำขอแลกรางวัลของคุณถูกปฏิเสธ",
+                                    size: "md",
+                                    align: "center",
+                                    color: "#666666"
+                                }
+                            ],
+                            justifyContent: "center",
+                            margin: "md"
+                        },
+                        {
+                            type: "box",
+                            layout: "horizontal",
+                            contents: [
+                                {
+                                    type: "text",
+                                    text: reward.name,
+                                    weight: "bold",
+                                    size: "lg",
+                                    align: "center",
+                                    color: status === 'approved' ? "#28a745" : "#dc3545"
+                                }
+                            ],
+                            justifyContent: "center",
+                            margin: "lg"
+                        },
+                        {
+                            type: "separator",
+                            margin: "lg"
+                        },
+                        {
+                            type: "box",
+                            layout: "horizontal",
+                            contents: [
+                                {
+                                    type: "text",
+                                    text: "วันที่ขอ",
+                                    size: "sm",
+                                    color: "#777777",
+                                    flex: 2
+                                },
+                                {
+                                    type: "text",
+                                    text: new Date(request.requestDate).toLocaleDateString('th-TH'),
+                                    size: "sm",
+                                    color: "#111111",
+                                    align: "end",
+                                    flex: 1
+                                }
+                            ],
+                            margin: "lg"
+                        },
+                        {
+                            type: "box",
+                            layout: "horizontal",
+                            contents: [
+                                {
+                                    type: "text",
+                                    text: "สถานะ",
+                                    size: "sm",
+                                    color: "#777777",
+                                    flex: 2
+                                },
+                                {
+                                    type: "text",
+                                    text: status === 'approved' ? "อนุมัติแล้ว" : "ปฏิเสธ",
+                                    size: "sm",
+                                    color: status === 'approved' ? "#28a745" : "#dc3545",
+                                    align: "end",
+                                    flex: 1
+                                }
+                            ],
+                            margin: "lg"
+                        }
+                    ],
+                    paddingAll: "20px"
+                }
+            };
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Check-in button
+            document.getElementById('checkinBtn').addEventListener('click', processCheckin);
+            
+            // Filter buttons
+            document.querySelectorAll('[data-filter]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    currentFilter = this.getAttribute('data-filter');
+                    
+                    // Update active state
+                    document.querySelectorAll('[data-filter]').forEach(b => {
+                        b.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                    
+                    // Re-render rewards
+                    renderRewards();
+                });
+            });
+            
+            // Refresh button
+            document.getElementById('refreshBtn').addEventListener('click', async function() {
+                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                
+                try {
+                    await loadUserData();
+                    await loadRewardsData();
+                    await loadCheckinHistory();
+                    
+                    if (isAdmin) {
+                        await loadRewardRequests();
+                    }
+                    
+                    renderUI();
+                    showToast('success', 'รีเฟรชข้อมูลสำเร็จ');
+                } catch (error) {
+                    console.error('Error refreshing data:', error);
+                    showToast('error', 'ไม่สามารถรีเฟรชข้อมูลได้');
+                } finally {
+                    this.innerHTML = '<i class="fas fa-sync-alt"></i>';
+                }
+            });
+            
+            // Tab change events
+            const tabEls = document.querySelectorAll('button[data-bs-toggle="tab"]');
+            tabEls.forEach(tabEl => {
+                tabEl.addEventListener('shown.bs.tab', function(event) {
+                    if (event.target.id === 'rewards-tab') {
+                        renderRewards();
+                    } else if (event.target.id === 'admin-tab' && isAdmin) {
+                        renderRewardRequests();
                     }
                 });
             });
         }
 
-        // Redeem Reward
-        function redeemReward(rewardId, pointsRequired) {
-            jsonpRequest('redeemReward', { uid: userProfile.userId, rewardId, pointsRequired }, (response) => {
-                if (response.success) {
-                    document.getElementById('userPoints').innerText = response.newPoints;
-                    userProfile.totalPoints = response.newPoints;
-                    loadRewards();
-                    liff.sendMessages([{
-                        type: 'flex',
-                        altText: 'ส่งคำขอแลกของรางวัล',
-                        contents: {
-                            type: 'bubble',
-                            body: {
-                                type: 'box',
-                                layout: 'vertical',
-                                contents: [
-                                    { type: 'text', text: 'ส่งคำขอแลกของรางวัลสำเร็จ!', weight: 'bold', size: 'xl' },
-                                    { type: 'text', text: `รางวัล: ${response.rewardName}` },
-                                    { type: 'text', text: `สถานะ: รอการอนุมัติ` }
-                                ]
-                            }
-                        }
-                    }]).then(() => {
-                        alert('ส่งคำขอแลกของรางวัลสำเร็จ! ตรวจสอบข้อความใน LINE');
-                    });
-                } else {
-                    alert(response.message || 'เกิดข้อผิดพลาดในการแลกของรางวัล');
-                }
-            });
-        }
+        // Initialize the app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initializeLiff);
 
-        // Load Redemptions (Admin)
-        function loadRedemptions() {
-            if (!isAdmin) return;
-            jsonpRequest('getRedemptions', {}, (response) => {
-                const redemptionsList = document.getElementById('redemptionsList');
-                redemptionsList.innerHTML = '';
-                response.redemptions.forEach(redemption => {
-                    if (redemption.status === 'Pending') {
-                        const redemptionDiv = document.createElement('div');
-                        redemptionDiv.className = 'card mb-4';
-                        redemptionDiv.innerHTML = `
-                            <p><strong>UID:</strong> ${redemption.uid}</p>
-                            <p><strong>รางวัล:</strong> ${redemption.rewardName}</p>
-                            <p><strong>เวลา:</strong> ${new Date(redemption.timestamp).toLocaleString('th-TH')}</p>
-                            <button class="btn" onclick="approveRedemption('${redemption.uid}', '${redemption.rewardId}')">อนุมัติ</button>
-                        `;
-                        redemptionsList.appendChild(redemptionDiv);
-                    }
-                });
-            });
-        }
-
-        // Approve Redemption (Admin)
-        function approveRedemption(uid, rewardId) {
-            jsonpRequest('approveRedemption', { uid, rewardId }, (response) => {
-                if (response.success) {
-                    loadRedemptions();
-                    liff.sendMessages([{
-                        type: 'flex',
-                        altText: 'การแลกของรางวัลได้รับการอนุมัติ',
-                        contents: {
-                            type: 'bubble',
-                            body: {
-                                type: 'box',
-                                layout: 'vertical',
-                                contents: [
-                                    { type: 'text', text: 'การแลกของรางวัลได้รับการอนุมัติ!', weight: 'bold', size: 'xl' },
-                                    { type: 'text', text: `รางวัล: ${response.rewardName}` },
-                                    { type: 'text', text: 'ขอบคุณที่เข้าร่วม!' }
-                                ]
-                            }
-                        }
-                    }]).then(() => {
-                        alert('อนุมัติสำเร็จ! ผู้ใช้ได้รับแจ้งใน LINE');
-                    });
-                } else {
-                    alert(response.message || 'เกิดข้อผิดพลาดในการอนุมัติ');
-                }
-            });
-        }
-
-        // Initialize
-        initializeLIFF();
+        // Make functions available globally for HTML onclick attributes
+        window.openRewardModal = openRewardModal;
+        window.processRewardRequest = processRewardRequest;
     </script>
 </body>
 </html>
