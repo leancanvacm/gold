@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ระบบ Check-in รายวัน</title>
     <link href="https://cdn.jsdelivr.net/gh/maketline/goodday/font/stylesheet.min.css" rel="stylesheet">
-    <script src="https://static.line-scdn.net/liff/edge/versions/2.21.0/sdk.js"></script>
+    <script src="https://static.line-scdn.net/liff/edge/versions/2.22.3/sdk.js"></script>
     <style>
         * {
             margin: 0;
@@ -290,56 +290,15 @@
             box-shadow: 0 4px 10px rgba(72, 202, 228, 0.4);
         }
 
-        .admin-section {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 15px;
-            margin-top: 20px;
-        }
-
-        .admin-title {
-            color: #dc3545;
-            font-weight: bold;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-
-        .pending-exchanges {
-            background: white;
+        .expire-date {
+            background: #fff3cd;
+            color: #856404;
+            padding: 10px;
             border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 15px;
-        }
-
-        .exchange-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #eee;
-        }
-
-        .exchange-item:last-child {
-            border-bottom: none;
-        }
-
-        .approve-btn, .reject-btn {
-            padding: 5px 15px;
-            border: none;
-            border-radius: 15px;
-            font-size: 12px;
-            cursor: pointer;
-            margin-left: 5px;
-        }
-
-        .approve-btn {
-            background: #28a745;
-            color: white;
-        }
-
-        .reject-btn {
-            background: #dc3545;
-            color: white;
+            margin: 15px 0;
+            text-align: center;
+            font-size: 14px;
+            border: 1px solid #ffeaa7;
         }
 
         .chat-container {
@@ -398,15 +357,19 @@
             100% { transform: rotate(360deg); }
         }
 
-        .expire-date {
-            background: #fff3cd;
-            color: #856404;
-            padding: 10px;
-            border-radius: 10px;
-            margin: 15px 0;
+        .admin-link {
             text-align: center;
-            font-size: 14px;
-            border: 1px solid #ffeaa7;
+            margin-top: 10px;
+        }
+
+        .admin-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .admin-link a:hover {
+            text-decoration: underline;
         }
 
         .hidden {
@@ -417,7 +380,7 @@
             .rewards-grid {
                 grid-template-columns: 1fr;
             }
-            
+
             .chat-container {
                 width: calc(100% - 40px);
                 right: 20px;
@@ -433,13 +396,15 @@
                 <img id="userAvatar" class="profile-avatar" src="https://via.placeholder.com/80" alt="Profile">
                 <div id="userName" class="user-name">กำลังโหลด...</div>
                 <div id="userPoints" class="user-points">คะแนน: 0</div>
+                <div id="adminLink" class="admin-link hidden">
+                    <a href="admin.html">ไปที่หน้าจัดการ (Admin)</a>
+                </div>
             </div>
         </div>
 
         <div class="nav-tabs">
             <button class="nav-tab active" onclick="switchTab('checkin')">เช็คอิน</button>
             <button class="nav-tab" onclick="switchTab('rewards')">แลกรางวัล</button>
-            <button id="adminTab" class="nav-tab hidden" onclick="switchTab('admin')">จัดการ</button>
         </div>
 
         <div id="checkinTab" class="tab-content active">
@@ -502,18 +467,6 @@
                 <!-- Rewards will be loaded here -->
             </div>
         </div>
-
-        <div id="adminTabContent" class="tab-content">
-            <div class="admin-section">
-                <div class="admin-title">🔧 ระบบจัดการแอดมิน</div>
-                <div class="pending-exchanges">
-                    <h4>คำขอแลกรางวัลที่รอการอนุมัติ</h4>
-                    <div id="pendingList">
-                        <!-- Pending exchanges will be loaded here -->
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 
     <div id="chatContainer" class="chat-container">
@@ -521,8 +474,7 @@
             💬 การแจ้งเตือน
             <button onclick="toggleChat()" style="float: right; background: none; border: none; color: white; cursor: pointer;">×</button>
         </div>
-        <div id="chatMessages" class="chat-messages">
-        </div>
+        <div id="chatMessages" class="chat-messages"></div>
     </div>
 
     <script>
@@ -539,15 +491,12 @@
 
         // Initialize LIFF
         window.onload = function() {
-            console.log('Initializing LIFF with ID:', LIFF_ID);
             liff.init({
                 liffId: LIFF_ID
             }).then(() => {
-                console.log('LIFF initialized successfully');
                 if (liff.isLoggedIn()) {
                     initializeApp();
                 } else {
-                    console.log('User not logged in, redirecting to login');
                     liff.login();
                 }
             }).catch((err) => {
@@ -558,9 +507,7 @@
 
         async function initializeApp() {
             try {
-                console.log('Starting app initialization');
                 const profile = await liff.getProfile();
-                console.log('User Profile:', profile);
                 currentUser = {
                     userId: profile.userId,
                     displayName: profile.displayName,
@@ -581,7 +528,7 @@
                 await loadRewards();
                 
                 // Check admin privileges
-                checkAdminPrivileges();
+                await checkAdminPrivileges();
                 
             } catch (error) {
                 console.error('Failed to initialize app:', error);
@@ -591,7 +538,6 @@
 
         async function loadUserData() {
             try {
-                console.log('Loading user data for userId:', currentUser.userId);
                 const response = await makeRequest('getUserData', {
                     userId: currentUser.userId
                 });
@@ -600,10 +546,13 @@
                     userPoints = response.data.points || 0;
                     checkinStreak = response.data.streak || 0;
                     checkinData = response.data.checkinData || [];
+                    isAdmin = response.data.isAdmin || false;
                     
                     document.getElementById('userPoints').textContent = `คะแนน: ${userPoints}`;
                     document.getElementById('streakCount').textContent = checkinStreak;
-                    console.log('User data loaded:', { points: userPoints, streak: checkinStreak });
+                    if (isAdmin) {
+                        document.getElementById('adminLink').classList.remove('hidden');
+                    }
                 } else {
                     console.error('Failed to load user data:', response.message);
                 }
@@ -614,13 +563,11 @@
 
         async function loadRewards() {
             try {
-                console.log('Loading rewards');
                 const response = await makeRequest('getRewards', {});
                 
                 if (response.success) {
                     rewardsData = response.data;
                     renderRewards();
-                    console.log('Rewards loaded:', rewardsData);
                 } else {
                     console.error('Failed to load rewards:', response.message);
                 }
@@ -663,7 +610,6 @@
         }
 
         function updateCheckinCalendar() {
-            console.log('Updating check-in calendar');
             const today = new Date().getDay();
             const dayItems = document.querySelectorAll('.day-item');
             
@@ -706,7 +652,6 @@
             checkinBtn.disabled = true;
             
             try {
-                console.log('Performing check-in for user:', currentUser.userId);
                 const response = await makeRequest('doCheckin', {
                     userId: currentUser.userId,
                     displayName: currentUser.displayName
@@ -722,9 +667,7 @@
                     updateCheckinCalendar();
                     
                     showCheckinMessage(response.data.pointsEarned, response.data.streak);
-                    console.log('Check-in successful:', response.data);
                 } else {
-                    console.error('Check-in failed:', response.message);
                     showMessage(response.message || 'เกิดข้อผิดพลาดในการเช็คอิน', 'error');
                 }
                 
@@ -738,64 +681,81 @@
         }
 
         function showCheckinMessage(pointsEarned, streak) {
-            const isBonus = streak === 7;
-            const message = {
-                type: "flex",
-                altText: "เช็คอินสำเร็จ!",
+            liff.sendMessages([{
+                type: 'flex',
+                altText: 'เช็คอินสำเร็จ!',
                 contents: {
-                    type: "bubble",
+                    type: 'bubble',
                     hero: {
-                        type: "image",
-                        url: "https://via.placeholder.com/400x200/4CAF50/FFFFFF?text=CHECK+IN+SUCCESS",
-                        size: "full",
-                        aspectRatio: "20:13",
-                        aspectMode: "cover"
+                        type: 'image',
+                        url: 'https://via.placeholder.com/400x200/4CAF50/FFFFFF?text=CHECK+IN+SUCCESS',
+                        size: 'full',
+                        aspectRatio: '20:13',
+                        aspectMode: 'cover'
                     },
                     body: {
-                        type: "box",
-                        layout: "vertical",
+                        type: 'box',
+                        layout: 'vertical',
                         contents: [
                             {
-                                type: "text",
-                                text: "🎉 เช็คอินสำเร็จ!",
-                                weight: "bold",
-                                size: "xl",
-                                color: "#4CAF50"
+                                type: 'text',
+                                text: '🎉 เช็คอินสำเร็จ!',
+                                weight: 'bold',
+                                size: 'xl',
+                                color: '#4CAF50'
                             },
                             {
-                                type: "text",
+                                type: 'text',
                                 text: `ได้รับ ${pointsEarned} แต้ม`,
-                                size: "lg",
-                                color: "#333333",
-                                margin: "md"
+                                size: 'lg',
+                                color: '#333333',
+                                margin: 'md'
                             },
                             {
-                                type: "text",
+                                type: 'text',
                                 text: `เช็คอินต่อเนื่อง ${streak} วัน`,
-                                size: "sm",
-                                color: "#666666",
-                                margin: "sm"
+                                size: 'sm',
+                                color: '#666666',
+                                margin: 'sm'
                             }
                         ]
                     },
                     footer: {
-                        type: "box",
-                        layout: "vertical",
+                        type: 'box',
+                        layout: 'vertical',
                         contents: [
                             {
-                                type: "text",
-                                text: isBonus ? "🏆 โบนัสครบ 7 วัน!" : "💪 เช็คอินต่อไปเรื่อย ๆ!",
-                                size: "sm",
-                                color: isBonus ? "#FF9800" : "#2196F3",
-                                weight: "bold",
-                                align: "center"
+                                type: 'text',
+                                text: streak === 7 ? '🏆 โบนัสครบ 7 วัน!' : '💪 เช็คอินต่อไปเรื่อย ๆ!',
+                                size: 'sm',
+                                color: streak === 7 ? '#FF9800' : '#2196F3',
+                                weight: 'bold',
+                                align: 'center'
                             }
                         ]
                     }
                 }
-            };
-            
-            displayFlexMessage(message);
+            }]).then(() => {
+                displayFlexMessage({
+                    contents: {
+                        body: {
+                            contents: [
+                                { text: '🎉 เช็คอินสำเร็จ!' },
+                                { text: `ได้รับ ${pointsEarned} แต้ม` },
+                                { text: `เช็คอินต่อเนื่อง ${streak} วัน` }
+                            ]
+                        },
+                        footer: {
+                            contents: [
+                                { text: streak === 7 ? '🏆 โบนัสครบ 7 วัน!' : '💪 เช็คอินต่อไปเรื่อย ๆ!' }
+                            ]
+                        }
+                    }
+                });
+            }).catch((err) => {
+                console.error('Failed to send LINE message:', err);
+                showMessage('ไม่สามารถส่งข้อความแจ้งเตือนใน LINE ได้', 'error');
+            });
         }
 
         function displayFlexMessage(flexMessage) {
@@ -827,7 +787,6 @@
 
         async function exchangeReward(rewardId) {
             try {
-                console.log('Exchanging reward:', rewardId);
                 const response = await makeRequest('exchangeReward', {
                     userId: currentUser.userId,
                     displayName: currentUser.displayName,
@@ -835,11 +794,28 @@
                 });
                 
                 if (response.success) {
-                    showMessage('ส่งคำขอแลกรางวัลเรียบร้อย รอการอนุมัติจากแอดมิน', 'success');
+                    userPoints = response.data.points;
+                    document.getElementById('userPoints').textContent = `คะแนน: ${userPoints}`;
                     await loadRewards();
-                    console.log('Reward exchange successful');
+                    liff.sendMessages([{
+                        type: 'flex',
+                        altText: 'ส่งคำขอแลกรางวัล',
+                        contents: {
+                            type: 'bubble',
+                            body: {
+                                type: 'box',
+                                layout: 'vertical',
+                                contents: [
+                                    { type: 'text', text: 'ส่งคำขอแลกรางวัลสำเร็จ!', weight: 'bold', size: 'xl' },
+                                    { type: 'text', text: `รางวัล: ${response.data.rewardName}` },
+                                    { type: 'text', text: 'สถานะ: รอการอนุมัติ' }
+                                ]
+                            }
+                        }
+                    }]).then(() => {
+                        showMessage('ส่งคำขอแลกรางวัลเรียบร้อย รอการอนุมัติจากแอดมิน', 'success');
+                    });
                 } else {
-                    console.error('Reward exchange failed:', response.message);
                     showMessage(response.message || 'เกิดข้อผิดพลาดในการแลกรางวัล', 'error');
                 }
                 
@@ -849,129 +825,31 @@
             }
         }
 
-        function checkAdminPrivileges() {
-            console.log('Checking admin privileges for user:', currentUser?.userId);
-            const adminUsers = ['Uf8d0b5c0e5c1d7a9b5c3f2e8d0b5c0e5c1d7a9']; // Add admin user IDs here
-            
-            if (!currentUser || !currentUser.userId) {
-                console.error('No user ID available for admin check');
+        async function checkAdminPrivileges() {
+            try {
+                const response = await makeRequest('registerUser', {
+                    userId: currentUser.userId,
+                    displayName: currentUser.displayName
+                });
+                isAdmin = response.isAdmin || false;
+                if (isAdmin) {
+                    document.getElementById('adminLink').classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Failed to check admin privileges:', error);
                 showMessage('ไม่สามารถตรวจสอบสิทธิ์แอดมินได้', 'error');
-                return;
-            }
-            
-            if (adminUsers.includes(currentUser.userId)) {
-                console.log('User is admin, showing admin tab');
-                isAdmin = true;
-                const adminTab = document.getElementById('adminTab');
-                if (adminTab) {
-                    adminTab.classList.remove('hidden');
-                    loadPendingExchanges();
-                } else {
-                    console.error('Admin tab element not found');
-                    showMessage('ไม่พบองค์ประกอบแท็บแอดมิน', 'error');
-                }
-            } else {
-                console.log('User is not admin');
-            }
-        }
-
-        async function loadPendingExchanges() {
-            try {
-                console.log('Loading pending exchanges');
-                const response = await makeRequest('getPendingExchanges', {});
-                
-                if (response.success) {
-                    renderPendingExchanges(response.data);
-                    console.log('Pending exchanges loaded:', response.data);
-                } else {
-                    console.error('Failed to load pending exchanges:', response.message);
-                }
-            } catch (error) {
-                console.error('Failed to load pending exchanges:', error);
-            }
-        }
-
-        function renderPendingExchanges(exchanges) {
-            const pendingList = document.getElementById('pendingList');
-            pendingList.innerHTML = '';
-            
-            if (exchanges.length === 0) {
-                pendingList.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">ไม่มีคำขอแลกรางวัลที่รอการอนุมัติ</div>';
-                return;
-            }
-            
-            exchanges.forEach(exchange => {
-                const item = document.createElement('div');
-                item.className = 'exchange-item';
-                item.innerHTML = `
-                    <div>
-                        <div style="font-weight: bold;">${exchange.displayName}</div>
-                        <div style="font-size: 12px; color: #666;">${exchange.rewardName}</div>
-                        <div style="font-size: 12px; color: #666;">${new Date(exchange.date).toLocaleDateString('th-TH')}</div>
-                    </div>
-                    <div>
-                        <button class="approve-btn" onclick="approveExchange('${exchange.id}')">อนุมัติ</button>
-                        <button class="reject-btn" onclick="rejectExchange('${exchange.id}')">ปฏิเสธ</button>
-                    </div>
-                `;
-                pendingList.appendChild(item);
-            });
-        }
-
-        async function approveExchange(exchangeId) {
-            try {
-                console.log('Approving exchange:', exchangeId);
-                const response = await makeRequest('approveExchange', {
-                    exchangeId: exchangeId,
-                    adminId: currentUser.userId
-                });
-                
-                if (response.success) {
-                    showMessage('อนุมัติการแลกรางวัลเรียบร้อย', 'success');
-                    await loadPendingExchanges();
-                    console.log('Exchange approved');
-                } else {
-                    console.error('Approve failed:', response.message);
-                    showMessage(response.message || 'เกิดข้อผิดพลาด', 'error');
-                }
-            } catch (error) {
-                console.error('Approve failed:', error);
-                showMessage('เกิดข้อผิดพลาด', 'error');
-            }
-        }
-
-        async function rejectExchange(exchangeId) {
-            try {
-                console.log('Rejecting exchange:', exchangeId);
-                const response = await makeRequest('rejectExchange', {
-                    exchangeId: exchangeId,
-                    adminId: currentUser.userId
-                });
-                
-                if (response.success) {
-                    showMessage('ปฏิเสธการแลกรางวัลเรียบร้อย', 'success');
-                    await loadPendingExchanges();
-                    console.log('Exchange rejected');
-                } else {
-                    console.error('Reject failed:', response.message);
-                    showMessage(response.message || 'เกิดข้อผิดพลาด', 'error');
-                }
-            } catch (error) {
-                console.error('Reject failed:', error);
-                showMessage('เกิดข้อผิดพลาด', 'error');
             }
         }
 
         function switchTab(tabName) {
-            console.log('Switching to tab:', tabName);
             document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
             
             document.querySelector(`.nav-tab[onclick="switchTab('${tabName}')"]`).classList.add('active');
-            document.getElementById(tabName + (tabName === 'admin' ? 'TabContent' : 'Tab')).classList.add('active');
+            document.getElementById(`${tabName}Tab`).classList.add('active');
             
-            if (tabName === 'admin' && isAdmin) {
-                loadPendingExchanges();
+            if (tabName === 'rewards') {
+                loadRewards();
             }
         }
 
@@ -1014,7 +892,6 @@
                 window[callbackName] = function(response) {
                     delete window[callbackName];
                     document.body.removeChild(script);
-                    console.log(`Request ${action} response:`, response);
                     resolve(response);
                 };
                 
@@ -1029,7 +906,6 @@
                 script.onerror = function() {
                     delete window[callbackName];
                     document.body.removeChild(script);
-                    console.error(`JSONP request failed for action: ${action}`);
                     reject(new Error('JSONP request failed'));
                 };
                 
@@ -1039,7 +915,6 @@
                     if (window[callbackName]) {
                         delete window[callbackName];
                         document.body.removeChild(script);
-                        console.error(`Request timeout for action: ${action}`);
                         reject(new Error('Request timeout'));
                     }
                 }, 30000);
@@ -1048,16 +923,10 @@
 
         setInterval(async () => {
             if (currentUser) {
-                console.log('Auto-refreshing data');
                 await loadUserData();
                 updateCheckinCalendar();
-                
                 if (document.getElementById('rewardsTab').classList.contains('active')) {
                     await loadRewards();
-                }
-                
-                if (document.getElementById('adminTabContent').classList.contains('active') && isAdmin) {
-                    await loadPendingExchanges();
                 }
             }
         }, 30000);
