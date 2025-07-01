@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบเช็คอินรายวัน</title>
-    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <title>ระบบ Check-in รายวัน</title>
     <link href="https://cdn.jsdelivr.net/gh/maketline/goodday/font/stylesheet.min.css" rel="stylesheet">
+    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
         * {
             margin: 0;
@@ -14,28 +14,26 @@
         }
 
         body {
-            font-family: 'line_seed_sans_th', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'line_seed_sans_th', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             color: #333;
-            line-height: 1.6;
         }
 
         .container {
-            max-width: 400px;
+            max-width: 480px;
             margin: 0 auto;
             background: white;
             min-height: 100vh;
             position: relative;
-            overflow: hidden;
-            box-shadow: 0 0 30px rgba(0, 0, 0, 0.2);
+            overflow-x: hidden;
         }
 
         .header {
-            background: linear-gradient(135deg, #FF6B35, #F7931E);
+            background: linear-gradient(135deg, #ff6b6b, #ffd93d);
+            color: white;
             padding: 20px;
             text-align: center;
-            color: white;
             position: relative;
             overflow: hidden;
         }
@@ -47,163 +45,160 @@
             left: -50%;
             width: 200%;
             height: 200%;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="3" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="30" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="30" cy="70" r="2.5" fill="rgba(255,255,255,0.1)"/><circle cx="70" cy="80" r="1.5" fill="rgba(255,255,255,0.1)"/></svg>');
-            animation: float 20s ease-in-out infinite;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: shimmer 3s ease-in-out infinite;
         }
 
-        @keyframes float {
-            0%, 100% { transform: translate(0, 0) rotate(0deg); }
-            33% { transform: translate(30px, -30px) rotate(120deg); }
-            66% { transform: translate(-20px, 20px) rotate(240deg); }
+        @keyframes shimmer {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(180deg); }
         }
 
         .profile-section {
             display: flex;
             align-items: center;
             gap: 15px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             position: relative;
-            z-index: 1;
+            z-index: 2;
         }
 
         .profile-pic {
-            width: 70px;
-            height: 70px;
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
-            border: 4px solid rgba(255, 255, 255, 0.3);
+            border: 3px solid rgba(255,255,255,0.3);
             object-fit: cover;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
 
         .profile-info h2 {
-            font-size: 22px;
-            margin-bottom: 8px;
-            font-weight: 600;
+            font-size: 20px;
+            margin-bottom: 5px;
         }
 
         .points-display {
-            background: rgba(255, 255, 255, 0.25);
-            backdrop-filter: blur(10px);
-            padding: 10px 20px;
-            border-radius: 25px;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
             font-weight: bold;
-            font-size: 16px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
         .nav-tabs {
             display: flex;
             background: #f8f9fa;
             border-bottom: 1px solid #e9ecef;
-            position: sticky;
-            top: 0;
-            z-index: 100;
         }
 
         .nav-tab {
             flex: 1;
-            padding: 18px 15px;
+            padding: 15px;
             text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: none;
             background: none;
-            font-size: 15px;
-            font-weight: 600;
-            font-family: 'line_seed_sans_th';
-            color: #666;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            position: relative;
         }
 
         .nav-tab.active {
             background: white;
-            color: #FF6B35;
-            border-bottom: 3px solid #FF6B35;
-            transform: translateY(-2px);
+            color: #ff6b6b;
+            font-weight: bold;
+        }
+
+        .nav-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, #ff6b6b, #ffd93d);
         }
 
         .tab-content {
             display: none;
-            padding: 25px 20px;
-            min-height: 500px;
+            padding: 20px;
+            animation: fadeIn 0.3s ease;
         }
 
         .tab-content.active {
             display: block;
-            animation: fadeIn 0.5s ease-in-out;
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
+            from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
         .checkin-calendar {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 12px;
-            margin-bottom: 30px;
+            background: white;
+            border-radius: 15px;
             padding: 20px;
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            border-radius: 20px;
-            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
         }
 
-        .day-card {
+        .calendar-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .calendar-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .calendar-day {
             aspect-ratio: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            border-radius: 15px;
-            font-size: 13px;
-            font-weight: 600;
+            border-radius: 12px;
+            font-size: 12px;
             position: relative;
-            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-            cursor: pointer;
+            transition: all 0.3s ease;
         }
 
-        .day-card.past {
-            background: #f1f3f4;
-            color: #9aa0a6;
+        .day-label {
+            font-weight: bold;
+            color: #666;
+            margin-bottom: 5px;
         }
 
-        .day-card.checked {
+        .day-number {
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .calendar-day.checked {
             background: linear-gradient(135deg, #4CAF50, #45a049);
             color: white;
-            transform: scale(1.1);
-            box-shadow: 0 8px 25px rgba(76, 175, 80, 0.3);
+            transform: scale(1.05);
         }
 
-        .day-card.today {
-            background: linear-gradient(135deg, #FF6B35, #F7931E);
+        .calendar-day.today {
+            background: linear-gradient(135deg, #ff6b6b, #ffd93d);
             color: white;
             animation: pulse 2s infinite;
-            box-shadow: 0 5px 20px rgba(255, 107, 53, 0.4);
         }
 
-        .day-card.future {
-            background: #e8eaed;
-            color: #9aa0a6;
-        }
-
-        .day-card.bonus {
-            background: linear-gradient(135deg, #9C27B0, #E91E63);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .day-card.bonus::after {
-            content: '🎁';
-            position: absolute;
-            top: 3px;
-            right: 3px;
-            font-size: 12px;
-            animation: sparkle 1.5s ease-in-out infinite;
-        }
-
-        @keyframes sparkle {
-            0%, 100% { transform: scale(1) rotate(0deg); }
-            50% { transform: scale(1.2) rotate(180deg); }
+        .calendar-day.unchecked {
+            background: #f5f5f5;
+            color: #999;
         }
 
         @keyframes pulse {
@@ -211,267 +206,196 @@
             50% { transform: scale(1.05); }
         }
 
-        .checkin-btn {
+        .checkin-button {
             width: 100%;
-            padding: 18px;
-            background: linear-gradient(135deg, #FF6B35, #F7931E);
+            padding: 15px;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
             color: white;
             border: none;
-            border-radius: 30px;
+            border-radius: 25px;
             font-size: 18px;
             font-weight: bold;
-            font-family: 'line_seed_sans_th';
             cursor: pointer;
             transition: all 0.3s ease;
-            margin-bottom: 25px;
-            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+            font-family: inherit;
         }
 
-        .checkin-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(255, 107, 53, 0.4);
+        .checkin-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(76, 175, 80, 0.3);
         }
 
-        .checkin-btn:disabled {
-            background: linear-gradient(135deg, #dee2e6, #adb5bd);
-            color: #6c757d;
+        .checkin-button:disabled {
+            background: #ccc;
             cursor: not-allowed;
             transform: none;
-            box-shadow: none;
         }
 
-        .streak-info {
-            background: linear-gradient(135deg, #fff3e0, #ffe0b2);
-            padding: 25px;
-            border-radius: 20px;
+        .rewards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .reward-card {
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             text-align: center;
-            margin-bottom: 25px;
-            border: 2px solid #ffcc02;
+            transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
         }
 
-        .streak-info::before {
+        .reward-card::before {
             content: '';
             position: absolute;
             top: 0;
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 204, 2, 0.2), transparent);
-            animation: shimmer 3s infinite;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: left 0.5s ease;
         }
 
-        @keyframes shimmer {
-            0% { left: -100%; }
-            100% { left: 100%; }
-        }
-
-        .streak-info h3 {
-            margin-bottom: 12px;
-            color: #f57c00;
-            font-size: 20px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .streak-info p {
-            position: relative;
-            z-index: 1;
-            font-weight: 500;
-        }
-
-        .rewards-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 20px;
-        }
-
-        .reward-card {
-            background: white;
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
-            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-            border: 1px solid #f0f0f0;
+        .reward-card:hover::before {
+            left: 100%;
         }
 
         .reward-card:hover {
-            transform: translateY(-8px) scale(1.02);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
         }
 
         .reward-image {
-            width: 100%;
-            height: 120px;
+            width: 80px;
+            height: 80px;
             object-fit: cover;
-            border-bottom: 1px solid #f0f0f0;
+            border-radius: 10px;
+            margin: 0 auto 10px;
+            display: block;
         }
 
-        .reward-image-placeholder {
-            width: 100%;
-            height: 120px;
-            background: linear-gradient(135deg, #FF6B35, #F7931E);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 40px;
-            color: white;
-        }
-
-        .reward-info {
-            padding: 20px;
-        }
-
-        .reward-title {
+        .reward-name {
+            font-size: 14px;
             font-weight: bold;
-            margin-bottom: 8px;
-            font-size: 16px;
+            margin-bottom: 5px;
             color: #333;
         }
 
         .reward-points {
-            color: #FF6B35;
+            color: #ff6b6b;
             font-weight: bold;
-            margin-bottom: 8px;
-            font-size: 14px;
+            margin-bottom: 5px;
         }
 
-        .reward-stock {
+        .reward-quantity {
             font-size: 12px;
-            color: #6c757d;
-            margin-bottom: 8px;
+            color: #666;
+            margin-bottom: 10px;
         }
 
-        .reward-expire {
-            font-size: 11px;
-            color: #e74c3c;
-            margin-bottom: 12px;
-            font-weight: 500;
-        }
-
-        .reward-btn {
+        .exchange-button {
             width: 100%;
-            padding: 10px;
+            padding: 8px;
+            background: linear-gradient(135deg, #ff6b6b, #ffd93d);
+            color: white;
             border: none;
-            border-radius: 12px;
-            font-size: 14px;
+            border-radius: 15px;
+            font-size: 12px;
             font-weight: bold;
-            font-family: 'line_seed_sans_th';
             cursor: pointer;
             transition: all 0.3s ease;
+            font-family: inherit;
         }
 
-        .reward-btn.available {
-            background: linear-gradient(135deg, #4CAF50, #45a049);
-            color: white;
-        }
-
-        .reward-btn.available:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
-        }
-
-        .reward-btn.unavailable {
-            background: #dee2e6;
-            color: #6c757d;
+        .exchange-button:disabled {
+            background: #ccc;
             cursor: not-allowed;
         }
 
-        .admin-section {
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            border-radius: 20px;
-            padding: 25px;
-            margin-bottom: 25px;
-            border: 1px solid #dee2e6;
+        .exchange-button:hover:not(:disabled) {
+            transform: scale(1.05);
         }
 
-        .admin-title {
-            color: #FF6B35;
-            margin-bottom: 20px;
-            font-weight: bold;
-            font-size: 18px;
-        }
-
-        .pending-list {
-            max-height: 400px;
-            overflow-y: auto;
-        }
-
-        .pending-item {
+        .admin-panel {
             background: white;
-            padding: 20px;
             border-radius: 15px;
-            margin-bottom: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .admin-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .pending-exchanges {
+            margin-top: 20px;
+        }
+
+        .exchange-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-            border: 1px solid #f0f0f0;
         }
 
-        .pending-info {
+        .exchange-info {
             flex: 1;
         }
 
-        .pending-info strong {
-            color: #333;
-            font-size: 16px;
-        }
-
-        .pending-actions {
+        .exchange-actions {
             display: flex;
             gap: 10px;
         }
 
         .approve-btn, .reject-btn {
-            padding: 8px 16px;
+            padding: 8px 15px;
             border: none;
-            border-radius: 8px;
+            border-radius: 5px;
+            cursor: pointer;
             font-size: 12px;
             font-weight: bold;
-            font-family: 'line_seed_sans_th';
-            cursor: pointer;
-            transition: all 0.3s ease;
+            font-family: inherit;
         }
 
         .approve-btn {
-            background: linear-gradient(135deg, #28a745, #20c997);
+            background: #4CAF50;
             color: white;
-        }
-
-        .approve-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
         }
 
         .reject-btn {
-            background: linear-gradient(135deg, #dc3545, #e74c3c);
+            background: #f44336;
             color: white;
         }
 
-        .reject-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
-        }
-
         .loading {
+            display: none;
             text-align: center;
-            padding: 50px;
-            color: #6c757d;
-            font-size: 16px;
+            padding: 20px;
         }
 
-        .loading::before {
-            content: '';
-            display: inline-block;
-            width: 30px;
-            height: 30px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #FF6B35;
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #ff6b6b;
             border-radius: 50%;
+            width: 40px;
+            height: 40px;
             animation: spin 1s linear infinite;
-            margin-bottom: 15px;
+            margin: 0 auto 10px;
         }
 
         @keyframes spin {
@@ -479,132 +403,56 @@
             100% { transform: rotate(360deg); }
         }
 
-        .message {
-            padding: 15px 20px;
-            border-radius: 12px;
+        .streak-info {
+            background: linear-gradient(135deg, #ffd93d, #ff6b6b);
+            color: white;
+            padding: 15px;
+            border-radius: 15px;
+            text-align: center;
             margin-bottom: 20px;
-            font-weight: 500;
-            animation: slideIn 0.3s ease-out;
         }
 
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
+        .streak-number {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
         }
 
-        .message.error {
-            background: linear-gradient(135deg, #ffebee, #ffcdd2);
-            color: #c62828;
-            border: 1px solid #ef5350;
+        .expires-info {
+            background: #ffe6e6;
+            color: #d63384;
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 14px;
         }
 
-        .message.success {
-            background: linear-gradient(135deg, #e8f5e8, #c8e6c9);
-            color: #2e7d32;
-            border: 1px solid #66bb6a;
+        .chat-messages {
+            max-height: 200px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
         }
 
-        .message.info {
-            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
-            color: #1565c0;
-            border: 1px solid #42a5f5;
+        .message {
+            background: white;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .message-time {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
         }
 
         .hidden {
-            display: none !important;
-        }
-
-        .day-name {
-            font-size: 11px;
-            margin-bottom: 4px;
-            font-weight: 500;
-        }
-
-        .day-number {
-            font-size: 16px;
-            font-weight: bold;
-        }
-
-        .check-mark {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 20px;
-            color: white;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 480px) {
-            .container {
-                margin: 0;
-                border-radius: 0;
-            }
-            
-            .header {
-                padding: 15px;
-            }
-            
-            .profile-pic {
-                width: 60px;
-                height: 60px;
-            }
-            
-            .nav-tab {
-                padding: 15px 10px;
-                font-size: 13px;
-            }
-            
-            .checkin-calendar {
-                gap: 8px;
-                padding: 15px;
-            }
-            
-            .day-card {
-                font-size: 11px;
-            }
-            
-            .rewards-grid {
-                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-                gap: 15px;
-            }
-            
-            .reward-image, .reward-image-placeholder {
-                height: 100px;
-            }
-        }
-
-        /* Dark Mode Support */
-        @media (prefers-color-scheme: dark) {
-            .container {
-                background: #1a1a1a;
-                color: #e0e0e0;
-            }
-            
-            .nav-tabs {
-                background: #2d2d2d;
-                border-bottom-color: #404040;
-            }
-            
-            .nav-tab {
-                color: #b0b0b0;
-            }
-            
-            .nav-tab.active {
-                background: #1a1a1a;
-                color: #FF6B35;
-            }
-            
-            .reward-card, .pending-item {
-                background: #2d2d2d;
-                border-color: #404040;
-                color: #e0e0e0;
-            }
-            
-            .admin-section {
-                background: #2d2d2d;
-                border-color: #404040;
-            }
+            display: none;
         }
     </style>
 </head>
@@ -612,204 +460,301 @@
     <div class="container">
         <div class="header">
             <div class="profile-section">
-                <img id="profilePic" class="profile-pic" src="https://via.placeholder.com/70x70/FF6B35/ffffff?text=U" alt="Profile">
+                <img id="profilePic" src="" alt="Profile" class="profile-pic">
                 <div class="profile-info">
-                    <h2 id="userName">กำลังโหลด...</h2>
+                    <h2 id="displayName">กำลังโหลด...</h2>
                     <div class="points-display">
-                        💎 คะแนน: <span id="userPoints">0</span> แต้ม
+                        คะแนนสะสม: <span id="userPoints">0</span> แต้ม
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="nav-tabs">
-            <button class="nav-tab active" onclick="showTab('checkin')">🏠 เช็คอิน</button>
-            <button class="nav-tab" onclick="showTab('rewards')">🎁 รางวัล</button>
-            <button class="nav-tab hidden" id="adminTab" onclick="showTab('admin')">⚙️ จัดการ</button>
+            <button class="nav-tab active" onclick="showTab('checkin')">เช็คอิน</button>
+            <button class="nav-tab" onclick="showTab('rewards')">แลกรางวัล</button>
+            <button class="nav-tab hidden" id="adminTab" onclick="showTab('admin')">จัดการ</button>
         </div>
 
         <div id="checkinTab" class="tab-content active">
             <div class="streak-info">
-                <h3>🔥 เช็คอินต่อเนื่อง</h3>
-                <p>วันที่ <span id="streakCount">0</span> จาก 7 วัน</p>
-                <small>เช็คอินครบ 7 วันติดต่อกันรับ 1 แต้ม! วันปกติ 0.5 แต้ม</small>
+                <div class="streak-number" id="streakCount">0</div>
+                <div>วันติดต่อกัน</div>
             </div>
 
-            <div id="checkinCalendar" class="checkin-calendar">
-                <!-- Calendar will be generated by JavaScript -->
+            <div class="checkin-calendar">
+                <div class="calendar-header">
+                    <div class="calendar-title">ปฏิทินเช็คอิน (7 วัน)</div>
+                </div>
+                <div class="calendar-grid" id="calendarGrid">
+                    <!-- Calendar days will be generated here -->
+                </div>
+                <button id="checkinBtn" class="checkin-button" onclick="performCheckin()">
+                    เช็คอินวันนี้
+                </button>
             </div>
 
-            <button id="checkinBtn" class="checkin-btn" onclick="doCheckin()">
-                ✨ เช็คอินวันนี้
-            </button>
-
-            <div id="checkinMessage"></div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="message">
+                    <div class="message-time">ระบบ</div>
+                    <div>ยินดีต้อนรับสู่ระบบเช็คอินรายวัน! เช็คอินทุกวันเพื่อรับคะแนนสะสม</div>
+                </div>
+            </div>
         </div>
 
         <div id="rewardsTab" class="tab-content">
-            <div id="rewardsGrid" class="rewards-grid">
+            <div class="expires-info">
+                โปรแกรมแลกรางวัลสิ้นสุด: <span id="expireDate">31 กรกฎาคม 2568</span>
+            </div>
+            <div class="rewards-grid" id="rewardsGrid">
                 <!-- Rewards will be loaded here -->
             </div>
         </div>
 
         <div id="adminTab" class="tab-content">
-            <div class="admin-section">
-                <h3 class="admin-title">📋 คำขอแลกรางวัลรอการอนุมัติ</h3>
-                <div id="pendingRequests" class="pending-list">
-                    <!-- Pending requests will be loaded here -->
+            <div class="admin-panel">
+                <div class="admin-header">
+                    <h3>🔧 แผงควบคุมผู้ดูแลระบบ</h3>
+                </div>
+                
+                <div class="pending-exchanges" id="pendingExchanges">
+                    <!-- Pending exchanges will be loaded here -->
                 </div>
             </div>
+        </div>
+
+        <div class="loading" id="loadingDiv">
+            <div class="spinner"></div>
+            <div>กำลังโหลด...</div>
         </div>
     </div>
 
     <script>
-        // Global variables
-        const liffId = '1656032875-GLpZe6By';
-        let userProfile = null;
-        let userData = null;
-        let rewardsData = [];
-        const scriptUrl = 'https://script.google.com/macros/s/AKfycbxmTQ0knrfzI2puvfueSrjlTFKjA7KzG9aj1H356zyyUAwiCrP0HxkROceSsOVSdNgPHg/exec';
+        let currentUser = null;
+        let userPoints = 0;
+        let streakCount = 0;
+        let lastCheckinDate = null;
+        let checkinHistory = [];
+        let rewards = [];
+        let pendingExchanges = [];
+        let isAdmin = false;
 
-        // Admin User IDs - แก้ไขตามต้องการ
-        const adminUsers = ['U4b7fb6e4d0ef4f9b6e4d0ef4f9b6e4d0']; // ใส่ LINE User ID ของแอดมิน
+        // LIFF Configuration
+        const liffId = '1656032875-GLpZe6By';
+        const appScriptUrl = 'https://script.google.com/macros/s/AKfycbxmTQ0knrfzI2puvfueSrjlTFKjA7KzG9aj1H356zyyUAwiCrP0HxkROceSsOVSdNgPHg/exec';
 
         // Initialize LIFF
-        async function initLiff() {
-            try {
-                await liff.init({ liffId: liffId });
-                
-                if (!liff.isLoggedIn()) {
-                    liff.login();
+        document.addEventListener('DOMContentLoaded', function() {
+            liff.init({
+                liffId: liffId
+            }).then(() => {
+                if (liff.isLoggedIn()) {
+                    initializeApp();
                 } else {
-                    userProfile = await liff.getProfile();
-                    document.getElementById('userName').textContent = userProfile.displayName;
-                    document.getElementById('profilePic').src = userProfile.pictureUrl || 'https://via.placeholder.com/70x70/FF6B35/ffffff?text=U';
+                    liff.login();
+                }
+            }).catch((err) => {
+                console.error('LIFF Initialization failed', err);
+                addMessage('ระบบ', 'เกิดข้อผิดพลาดในการเชื่อมต่อ LINE');
+            });
+        });
+
+        // Initialize Application
+        async function initializeApp() {
+            try {
+                showLoading(true);
+                
+                // Get user profile
+                const profile = await liff.getProfile();
+                currentUser = {
+                    userId: profile.userId,
+                    displayName: profile.displayName,
+                    pictureUrl: profile.pictureUrl
+                };
+
+                // Update UI with profile info
+                document.getElementById('displayName').textContent = profile.displayName;
+                document.getElementById('profilePic').src = profile.pictureUrl;
+
+                // Load user data
+                await loadUserData();
+                await loadRewards();
+                
+                // Initialize calendar
+                generateCalendar();
+                updateUI();
+                
+                showLoading(false);
+                addMessage('ระบบ', `ยินดีต้อนรับ ${profile.displayName}!`);
+                
+            } catch (error) {
+                console.error('Initialization error:', error);
+                showLoading(false);
+                addMessage('ระบบ', 'เกิดข้อผิดพลาดในการเริ่มต้นระบบ');
+            }
+        }
+
+        // Load user data from Google Sheets
+        async function loadUserData() {
+            try {
+                const response = await sendToAppScript('getUserData', {
+                    userId: currentUser.userId
+                });
+                
+                if (response.success) {
+                    userPoints = response.data.points || 0;
+                    streakCount = response.data.streak || 0;
+                    lastCheckinDate = response.data.lastCheckin;
+                    checkinHistory = response.data.checkinHistory || [];
+                    isAdmin = response.data.isAdmin || false;
                     
-                    // Check if user is admin
-                    checkAdminStatus();
-                    
-                    // Load user data
-                    await loadUserData();
-                    
-                    // Load rewards
-                    await loadRewards();
-                    
-                    // Initialize calendar
-                    generateCalendar();
+                    // Show admin tab if user is admin
+                    if (isAdmin) {
+                        document.getElementById('adminTab').classList.remove('hidden');
+                        await loadPendingExchanges();
+                    }
                 }
             } catch (error) {
-                console.error('LIFF initialization failed', error);
-                showMessage('เกิดข้อผิดพลาดในการเชื่อมต่อ LINE', 'error');
+                console.error('Error loading user data:', error);
             }
         }
 
-        // Check if user is admin
-        function checkAdminStatus() {
-            if (adminUsers.includes(userProfile.userId)) {
-                document.getElementById('adminTab').classList.remove('hidden');
+        // Load rewards from Google Sheets
+        async function loadRewards() {
+            try {
+                const response = await sendToAppScript('getRewards', {});
+                
+                if (response.success) {
+                    rewards = response.data;
+                    displayRewards();
+                }
+            } catch (error) {
+                console.error('Error loading rewards:', error);
             }
         }
 
-        // JSONP callback function
-        function handleResponse(data) {
-            if (window.currentCallback) {
-                window.currentCallback(data);
+        // Load pending exchanges for admin
+        async function loadPendingExchanges() {
+            try {
+                const response = await sendToAppScript('getPendingExchanges', {});
+                
+                if (response.success) {
+                    pendingExchanges = response.data;
+                    displayPendingExchanges();
+                }
+            } catch (error) {
+                console.error('Error loading pending exchanges:', error);
             }
         }
 
-        // Make JSONP request
-        function makeRequest(params) {
+        // Send data to Google Apps Script using JSONP
+        function sendToAppScript(action, data) {
             return new Promise((resolve, reject) => {
                 const callbackName = 'callback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
                 
-                window[callbackName] = (data) => {
-                    resolve(data);
-                    // Cleanup
+                window[callbackName] = function(response) {
                     delete window[callbackName];
-                    if (script.parentNode) {
-                        document.head.removeChild(script);
-                    }
+                    document.head.removeChild(script);
+                    resolve(response);
                 };
 
+                const params = new URLSearchParams({
+                    action: action,
+                    data: JSON.stringify(data),
+                    callback: callbackName
+                });
+
                 const script = document.createElement('script');
-                const queryString = Object.keys(params)
-                    .map(key => encodeURIComponent(key) + '=' + encodeURIComponent(params[key]))
-                    .join('&');
-                
-                script.src = `${scriptUrl}?${queryString}&callback=${callbackName}`;
+                script.src = `${appScriptUrl}?${params.toString()}`;
                 script.onerror = () => {
-                    reject(new Error('Script loading failed'));
                     delete window[callbackName];
-                    if (script.parentNode) {
-                        document.head.removeChild(script);
-                    }
+                    document.head.removeChild(script);
+                    reject(new Error('Script loading failed'));
                 };
                 
                 document.head.appendChild(script);
             });
         }
 
-        // Load user data
-        async function loadUserData() {
-            try {
-                showMessage('กำลังโหลดข้อมูล...', 'info');
+        // Generate calendar for 7 days (Sunday to Monday)
+        function generateCalendar() {
+            const calendarGrid = document.getElementById('calendarGrid');
+            const today = new Date();
+            const dayNames = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
+            
+            // Find the start of current week (Sunday)
+            const startOfWeek = new Date(today);
+            startOfWeek.setDate(today.getDate() - today.getDay());
+            
+            calendarGrid.innerHTML = '';
+            
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(startOfWeek);
+                date.setDate(startOfWeek.getDate() + i);
                 
-                const response = await makeRequest({
-                    action: 'getUserData',
-                    userId: userProfile.userId
-                });
-
-                if (response.success) {
-                    userData = response.data;
-                    document.getElementById('userPoints').textContent = userData.points || 0;
-                    document.getElementById('streakCount').textContent = userData.currentStreak || 0;
-                    clearMessage();
+                const dayElement = document.createElement('div');
+                dayElement.className = 'calendar-day';
+                
+                const dayLabel = document.createElement('div');
+                dayLabel.className = 'day-label';
+                dayLabel.textContent = dayNames[i];
+                
+                const dayNumber = document.createElement('div');
+                dayNumber.className = 'day-number';
+                dayNumber.textContent = date.getDate();
+                
+                dayElement.appendChild(dayLabel);
+                dayElement.appendChild(dayNumber);
+                
+                // Check if this date is checked in
+                const dateStr = date.toISOString().split('T')[0];
+                if (checkinHistory.includes(dateStr)) {
+                    dayElement.classList.add('checked');
+                } else if (date.toDateString() === today.toDateString()) {
+                    dayElement.classList.add('today');
                 } else {
-                    // Create new user if not exists
-                    await createUser();
+                    dayElement.classList.add('unchecked');
                 }
-            } catch (error) {
-                console.error('Error loading user data:', error);
-                showMessage('เกิดข้อผิดพลาดในการโหลดข้อมูล', 'error');
+                
+                calendarGrid.appendChild(dayElement);
             }
         }
 
-        // Create new user
-        async function createUser() {
+        // Perform daily check-in
+        async function performCheckin() {
             try {
-                const response = await makeRequest({
-                    action: 'createUser',
-                    userId: userProfile.userId,
-                    userName: userProfile.displayName,
-                    pictureUrl: userProfile.pictureUrl || ''
+                showLoading(true);
+                
+                const response = await sendToAppScript('performCheckin', {
+                    userId: currentUser.userId,
+                    displayName: currentUser.displayName
                 });
-
+                
                 if (response.success) {
-                    userData = response.data;
-                    document.getElementById('userPoints').textContent = 0;
-                    document.getElementById('streakCount').textContent = 0;
-                    clearMessage();
+                    userPoints = response.data.points;
+                    streakCount = response.data.streak;
+                    lastCheckinDate = response.data.lastCheckin;
+                    checkinHistory = response.data.checkinHistory;
+                    
+                    updateUI();
+                    generateCalendar();
+                    
+                    // Send flex message
+                    const pointsEarned = response.data.pointsEarned;
+                    const message = `🎉 เช็คอินสำเร็จ!\n+${pointsEarned} คะแนน\nติดต่อกัน: ${streakCount} วัน\nคะแนนรวม: ${userPoints} แต้ม`;
+                    
+                    addMessage('ระบบ', message);
+                    await sendFlexMessage(message);
+                    
+                } else {
+                    addMessage('ระบบ', response.message || 'เกิดข้อผิดพลาดในการเช็คอิน');
                 }
+                
             } catch (error) {
-                console.error('Error creating user:', error);
-                showMessage('เกิดข้อผิดพลาดในการสร้างผู้ใช้', 'error');
-            }
-        }
-
-        // Load rewards
-        async function loadRewards() {
-            try {
-                const response = await makeRequest({
-                    action: 'getRewards'
-                });
-
-                if (response.success) {
-                    rewardsData = response.data;
-                    displayRewards();
-                }
-            } catch (error) {
-                console.error('Error loading rewards:', error);
-                showMessage('เกิดข้อผิดพลาดในการโหลดรางวัล', 'error');
+                console.error('Check-in error:', error);
+                addMessage('ระบบ', 'เกิดข้อผิดพลาดในการเช็คอิน');
+            } finally {
+                showLoading(false);
             }
         }
 
@@ -817,183 +762,167 @@
         function displayRewards() {
             const rewardsGrid = document.getElementById('rewardsGrid');
             rewardsGrid.innerHTML = '';
-
-            const currentDate = new Date();
-            const filteredRewards = rewardsData.filter(reward => {
-                const expireDate = new Date(reward.expireDate);
-                return reward.stock > 0 && currentDate <= expireDate;
+            
+            rewards.forEach((reward, index) => {
+                if (reward.quantity > 0) { // Only show available rewards
+                    const rewardCard = document.createElement('div');
+                    rewardCard.className = 'reward-card';
+                    
+                    const canExchange = userPoints >= reward.points;
+                    
+                    rewardCard.innerHTML = `
+                        <img src="${reward.image}" alt="${reward.name}" class="reward-image">
+                        <div class="reward-name">${reward.name}</div>
+                        <div class="reward-points">${reward.points} แต้ม</div>
+                        <div class="reward-quantity">เหลือ: ${reward.quantity} ชิ้น</div>
+                        <button class="exchange-button" ${!canExchange ? 'disabled' : ''} 
+                                onclick="exchangeReward(${index})">
+                            ${canExchange ? 'แลกเลย!' : 'คะแนนไม่พอ'}
+                        </button>
+                    `;
+                    
+                    rewardsGrid.appendChild(rewardCard);
+                }
             });
+        }
 
-            if (filteredRewards.length === 0) {
-                rewardsGrid.innerHTML = `
-                    <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #6c757d;">
-                        <div style="font-size: 48px; margin-bottom: 15px;">🎁</div>
-                        <div style="font-size: 18px; margin-bottom: 10px;">ไม่มีรางวัลในขณะนี้</div>
-                        <div style="font-size: 14px;">รอรางวัลใหม่ๆ เร็วๆ นี้!</div>
-                    </div>
-                `;
+        // Exchange reward
+        async function exchangeReward(rewardIndex) {
+            try {
+                showLoading(true);
+                
+                const reward = rewards[rewardIndex];
+                if (userPoints < reward.points) {
+                    addMessage('ระบบ', 'คะแนนของคุณไม่เพียงพอสำหรับการแลกรางวัลนี้');
+                    return;
+                }
+                
+                const response = await sendToAppScript('exchangeReward', {
+                    userId: currentUser.userId,
+                    displayName: currentUser.displayName,
+                    rewardId: reward.id,
+                    rewardName: reward.name,
+                    points: reward.points
+                });
+                
+                if (response.success) {
+                    userPoints = response.data.points;
+                    updateUI();
+                    await loadRewards(); // Reload rewards to update quantities
+                    
+                    addMessage('ระบบ', `🎁 ส่งคำขอแลกรางวัล "${reward.name}" เรียบร้อย รอการอนุมัติจากผู้ดูแล`);
+                } else {
+                    addMessage('ระบบ', response.message || 'เกิดข้อผิดพลาดในการแลกรางวัล');
+                }
+                
+            } catch (error) {
+                console.error('Exchange error:', error);
+                addMessage('ระบบ', 'เกิดข้อผิดพลาดในการแลกรางวัล');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Display pending exchanges for admin
+        function displayPendingExchanges() {
+            const pendingDiv = document.getElementById('pendingExchanges');
+            
+            if (pendingExchanges.length === 0) {
+                pendingDiv.innerHTML = '<div style="text-align: center; color: #666;">ไม่มีคำขอแลกรางวัลที่รอการอนุมัติ</div>';
                 return;
             }
-
-            filteredRewards.forEach(reward => {
-                const canRedeem = userData && userData.points >= reward.points;
-                const expireDate = new Date(reward.expireDate);
-                const expireDateStr = expireDate.toLocaleDateString('th-TH', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                });
+            
+            pendingDiv.innerHTML = '<h4>คำขอแลกรางวัลที่รอการอนุมัติ</h4>';
+            
+            pendingExchanges.forEach((exchange, index) => {
+                const exchangeItem = document.createElement('div');
+                exchangeItem.className = 'exchange-item';
                 
-                const rewardCard = document.createElement('div');
-                rewardCard.className = 'reward-card';
-                rewardCard.innerHTML = `
-                    ${reward.imageUrl ? 
-                        `<img src="${reward.imageUrl}" alt="${reward.name}" class="reward-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                         <div class="reward-image-placeholder" style="display:none;">🎁</div>` :
-                        `<div class="reward-image-placeholder">🎁</div>`
-                    }
-                    <div class="reward-info">
-                        <div class="reward-title">${reward.name}</div>
-                        <div class="reward-points">💎 ${reward.points} แต้ม</div>
-                        <div class="reward-stock">📦 เหลือ ${reward.stock} ชิ้น</div>
-                        <div class="reward-expire">⏰ หมดอายุ: ${expireDateStr}</div>
-                        <button class="reward-btn ${canRedeem ? 'available' : 'unavailable'}" 
-                                ${!canRedeem ? 'disabled' : ''} 
-                                onclick="redeemReward('${reward.id}')">
-                            ${canRedeem ? '🎁 แลกรางวัล' : '💎 แต้มไม่พอ'}
-                        </button>
+                exchangeItem.innerHTML = `
+                    <div class="exchange-info">
+                        <div><strong>${exchange.displayName}</strong></div>
+                        <div>รางวัล: ${exchange.rewardName}</div>
+                        <div>คะแนน: ${exchange.points} แต้ม</div>
+                        <div>วันที่: ${new Date(exchange.date).toLocaleDateString('th-TH')}</div>
+                    </div>
+                    <div class="exchange-actions">
+                        <button class="approve-btn" onclick="approveExchange('${exchange.id}')">อนุมัติ</button>
+                        <button class="reject-btn" onclick="rejectExchange('${exchange.id}')">ปฏิเสธ</button>
                     </div>
                 `;
-                rewardsGrid.appendChild(rewardCard);
+                
+                pendingDiv.appendChild(exchangeItem);
             });
         }
 
-        // Generate calendar
-        function generateCalendar() {
-            const calendar = document.getElementById('checkinCalendar');
-            calendar.innerHTML = '';
-
-            const days = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
-            const today = new Date();
-            const currentWeekStart = getWeekStart(today);
-
-            for (let i = 0; i < 7; i++) {
-                const dayDate = new Date(currentWeekStart);
-                dayDate.setDate(currentWeekStart.getDate() + i);
+        // Approve exchange
+        async function approveExchange(exchangeId) {
+            try {
+                showLoading(true);
                 
-                const dayCard = document.createElement('div');
-                dayCard.className = 'day-card';
+                const response = await sendToAppScript('approveExchange', {
+                    exchangeId: exchangeId,
+                    adminId: currentUser.userId
+                });
                 
-                const isToday = dayDate.toDateString() === today.toDateString();
-                const isPast = dayDate < today && !isToday;
-                const isFuture = dayDate > today;
-                
-                // Check if day is checked in
-                const dateStr = dayDate.toISOString().split('T')[0];
-                const isChecked = userData && userData.checkinDates && userData.checkinDates.includes(dateStr);
-                
-                if (isPast) {
-                    dayCard.classList.add(isChecked ? 'checked' : 'past');
-                } else if (isToday) {
-                    dayCard.classList.add(isChecked ? 'checked' : 'today');
+                if (response.success) {
+                    await loadPendingExchanges();
+                    addMessage('ระบบ', 'ปฏิเสธการแลกรางวัลเรียบร้อย');
                 } else {
-                    dayCard.classList.add('future');
+                    addMessage('ระบบ', response.message || 'เกิดข้อผิดพลาดในการปฏิเสธ');
                 }
-
-                // Add bonus indicator for 7th day
-                if (i === 6) {
-                    dayCard.classList.add('bonus');
-                }
-
-                dayCard.innerHTML = `
-                    <div class="day-name">${days[i]}</div>
-                    <div class="day-number">${dayDate.getDate()}</div>
-                    ${isChecked ? '<div class="check-mark">✓</div>' : ''}
-                `;
-
-                calendar.appendChild(dayCard);
+                
+            } catch (error) {
+                console.error('Reject error:', error);
+                addMessage('ระบบ', 'เกิดข้อผิดพลาดในการปฏิเสธ');
+            } finally {
+                showLoading(false);
             }
-
-            // Update check-in button
-            updateCheckinButton();
         }
 
-        // Get week start (Sunday)
-        function getWeekStart(date) {
-            const d = new Date(date);
-            const day = d.getDay();
-            const diff = d.getDate() - day;
-            return new Date(d.setDate(diff));
+        // Send flex message to LINE
+        async function sendFlexMessage(message) {
+            try {
+                if (liff.isApiAvailable('sendMessages')) {
+                    await liff.sendMessages([{
+                        type: 'text',
+                        text: message
+                    }]);
+                }
+            } catch (error) {
+                console.error('Error sending message:', error);
+            }
         }
 
-        // Update check-in button
-        function updateCheckinButton() {
-            const checkinBtn = document.getElementById('checkinBtn');
-            const today = new Date().toISOString().split('T')[0];
-            
-            if (userData && userData.checkinDates && userData.checkinDates.includes(today)) {
-                checkinBtn.innerHTML = '✅ เช็คอินวันนี้แล้ว';
-                checkinBtn.disabled = true;
+        // Show/hide loading indicator
+        function showLoading(show) {
+            const loadingDiv = document.getElementById('loadingDiv');
+            if (show) {
+                loadingDiv.classList.add('show');
             } else {
-                checkinBtn.innerHTML = '✨ เช็คอินวันนี้';
-                checkinBtn.disabled = false;
+                loadingDiv.classList.remove('show');
             }
         }
 
-        // Do check-in
-        async function doCheckin() {
-            try {
-                showMessage('กำลังเช็คอิน...', 'info');
-                
-                const response = await makeRequest({
-                    action: 'checkin',
-                    userId: userProfile.userId
-                });
-
-                if (response.success) {
-                    userData = response.data;
-                    document.getElementById('userPoints').textContent = userData.points;
-                    document.getElementById('streakCount').textContent = userData.currentStreak;
-                    
-                    generateCalendar();
-                    
-                    const earnedPoints = response.earnedPoints;
-                    let message = `🎉 เช็คอินสำเร็จ! ได้รับ ${earnedPoints} แต้ม`;
-                    
-                    if (userData.currentStreak === 7) {
-                        message += ' 🔥 ครบ 7 วันติดต่อกัน! ได้โบนัส!';
-                    }
-                    
-                    showMessage(message, 'success');
-                } else {
-                    showMessage(response.message || 'เกิดข้อผิดพลาด', 'error');
-                }
-            } catch (error) {
-                console.error('Check-in error:', error);
-                showMessage('เกิดข้อผิดพลาดในการเช็คอิน', 'error');
-            }
-        }
-
-        // Redeem reward
-        async function redeemReward(rewardId) {
-            try {
-                showMessage('กำลังส่งคำขอแลกรางวัล...', 'info');
-                
-                const response = await makeRequest({
-                    action: 'redeemReward',
-                    userId: userProfile.userId,
-                    rewardId: rewardId
-                });
-
-                if (response.success) {
-                    showMessage('✅ ส่งคำขอแลกรางวัลแล้ว รอการอนุมัติจากแอดมิน', 'success');
-                } else {
-                    showMessage(response.message || 'เกิดข้อผิดพลาด', 'error');
-                }
-            } catch (error) {
-                console.error('Redeem error:', error);
-                showMessage('เกิดข้อผิดพลาดในการแลกรางวัล', 'error');
-            }
+        // Add message to chat
+        function addMessage(sender, message) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+            
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('th-TH', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            
+            messageDiv.innerHTML = `
+                <div class="message-time">${sender} - ${timeStr}</div>
+                <div>${message}</div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
         // Show tab
@@ -1010,150 +939,56 @@
             
             // Show selected tab
             document.getElementById(tabName + 'Tab').classList.add('active');
+            
+            // Add active class to clicked nav tab
             event.target.classList.add('active');
             
-            // Load admin data if admin tab
-            if (tabName === 'admin') {
-                loadPendingRequests();
-            } else if (tabName === 'rewards') {
-                loadRewards();
+            // Load data if needed
+            if (tabName === 'admin' && isAdmin) {
+                loadPendingExchanges();
             }
         }
 
-        // Load pending requests (admin only)
-        async function loadPendingRequests() {
-            try {
-                const response = await makeRequest({
-                    action: 'getPendingRequests'
-                });
-
-                if (response.success) {
-                    displayPendingRequests(response.data);
-                }
-            } catch (error) {
-                console.error('Error loading pending requests:', error);
-                showMessage('เกิดข้อผิดพลาดในการโหลดคำขอ', 'error');
+        // Update UI elements
+        function updateUI() {
+            document.getElementById('userPoints').textContent = userPoints;
+            document.getElementById('streakCount').textContent = streakCount;
+            
+            // Check if user can check in today
+            const today = new Date().toISOString().split('T')[0];
+            const canCheckin = lastCheckinDate !== today;
+            
+            const checkinBtn = document.getElementById('checkinBtn');
+            if (canCheckin) {
+                checkinBtn.disabled = false;
+                checkinBtn.textContent = 'เช็คอินวันนี้';
+            } else {
+                checkinBtn.disabled = true;
+                checkinBtn.textContent = 'เช็คอินแล้ววันนี้';
             }
         }
 
-        // Display pending requests
-        function displayPendingRequests(requests) {
-            const pendingList = document.getElementById('pendingRequests');
-            pendingList.innerHTML = '';
+        // Check if rewards program is active
+        function isRewardProgramActive() {
+            const startDate = new Date('2025-07-01');
+            const endDate = new Date('2025-07-31');
+            const today = new Date();
+            
+            return today >= startDate && today <= endDate;
+        }
 
-            if (requests.length === 0) {
-                pendingList.innerHTML = `
-                    <div style="text-align: center; padding: 40px; color: #6c757d;">
-                        <div style="font-size: 48px; margin-bottom: 15px;">📋</div>
-                        <div style="font-size: 16px;">ไม่มีคำขอรอการอนุมัติ</div>
-                    </div>
-                `;
-                return;
+        // Initialize when page loads
+        window.addEventListener('load', function() {
+            // Set expire date
+            document.getElementById('expireDate').textContent = '31 กรกฎาคม 2568';
+            
+            // Check if program is active
+            if (!isRewardProgramActive()) {
+                const expireInfo = document.querySelector('.expires-info');
+                expireInfo.style.background = '#ffcccc';
+                expireInfo.innerHTML = '⚠️ โปรแกรมแลกรางวัลหมดอายุแล้ว';
             }
-
-            requests.forEach(request => {
-                const requestDate = new Date(request.requestDate);
-                const requestDateStr = requestDate.toLocaleDateString('th-TH', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
-
-                const requestItem = document.createElement('div');
-                requestItem.className = 'pending-item';
-                requestItem.innerHTML = `
-                    <div class="pending-info">
-                        <strong>${request.userName}</strong><br>
-                        🎁 ขอแลก: ${request.rewardName}<br>
-                        💎 ใช้แต้ม: ${request.points} แต้ม<br>
-                        <small>📅 ${requestDateStr}</small>
-                    </div>
-                    <div class="pending-actions">
-                        <button class="approve-btn" onclick="approveRequest('${request.id}')">✅ อนุมัติ</button>
-                        <button class="reject-btn" onclick="rejectRequest('${request.id}')">❌ ปฏิเสธ</button>
-                    </div>
-                `;
-                pendingList.appendChild(requestItem);
-            });
-        }
-
-        // Approve request
-        async function approveRequest(requestId) {
-            try {
-                showMessage('กำลังอนุมัติ...', 'info');
-                
-                const response = await makeRequest({
-                    action: 'approveRequest',
-                    requestId: requestId
-                });
-
-                if (response.success) {
-                    showMessage('✅ อนุมัติการแลกรางวัลแล้ว', 'success');
-                    loadPendingRequests();
-                    loadRewards();
-                } else {
-                    showMessage(response.message || 'เกิดข้อผิดพลาด', 'error');
-                }
-            } catch (error) {
-                console.error('Approve error:', error);
-                showMessage('เกิดข้อผิดพลาด', 'error');
-            }
-        }
-
-        // Reject request
-        async function rejectRequest(requestId) {
-            try {
-                showMessage('กำลังปฏิเสธ...', 'info');
-                
-                const response = await makeRequest({
-                    action: 'rejectRequest',
-                    requestId: requestId
-                });
-
-                if (response.success) {
-                    showMessage('❌ ปฏิเสธการแลกรางวัลแล้ว', 'success');
-                    loadPendingRequests();
-                } else {
-                    showMessage(response.message || 'เกิดข้อผิดพลาด', 'error');
-                }
-            } catch (error) {
-                console.error('Reject error:', error);
-                showMessage('เกิดข้อผิดพลาด', 'error');
-            }
-        }
-
-        // Show message
-        function showMessage(message, type = 'info') {
-            const messageDiv = document.getElementById('checkinMessage');
-            messageDiv.innerHTML = `<div class="message ${type}">${message}</div>`;
-        }
-
-        // Clear message
-        function clearMessage() {
-            const messageDiv = document.getElementById('checkinMessage');
-            messageDiv.innerHTML = '';
-        }
-
-        // Initialize app
-        window.addEventListener('load', () => {
-            initLiff();
         });
-
-        // Auto clear messages after 5 seconds
-        setInterval(() => {
-            const messages = document.querySelectorAll('.message');
-            messages.forEach(msg => {
-                if (msg.textContent.includes('กำลัง') === false) {
-                    setTimeout(() => {
-                        if (msg.parentNode) {
-                            msg.remove();
-                        }
-                    }, 5000);
-                }
-            });
-        }, 1000);
     </script>
 </body>
 </html>
