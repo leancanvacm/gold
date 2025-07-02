@@ -1,1 +1,2122 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบเช็คอินและแลกรางวัล</title>
+    <link href="https://cdn.jsdelivr.net/gh/maketline/goodday/font/stylesheet.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'line_seed_sans_th', sans-serif;
+        }
 
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: #fff;
+            min-height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #ee5a24 0%, #f368e0 100%);
+            padding: 20px;
+            color: white;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .profile-section {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .profile-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .profile-pic {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .user-name {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .points-badge {
+            background: white;
+            color: #ee5a24;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        /* Navigation */
+        .nav-tabs {
+            display: flex;
+            background: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+            color: #666;
+            border-bottom: 3px solid transparent;
+        }
+
+        .nav-tab.active {
+            color: #ee5a24;
+            border-bottom-color: #ee5a24;
+            background: rgba(238, 90, 36, 0.05);
+        }
+
+        .nav-tab:hover {
+            background: rgba(238, 90, 36, 0.05);
+        }
+
+        /* Content Sections */
+        .content-section {
+            display: none;
+            padding: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Check-in Calendar */
+        .checkin-calendar {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .calendar-header {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .calendar-header h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        .streak-info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            display: inline-block;
+            font-weight: bold;
+        }
+
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .day-card {
+            text-align: center;
+            padding: 15px 5px;
+            border-radius: 10px;
+            background: #f8f9fa;
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .day-card.checked {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .day-card.today {
+            border: 2px solid #ee5a24;
+            background: white;
+        }
+
+        .day-card.today:not(.checked) {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(238, 90, 36, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(238, 90, 36, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(238, 90, 36, 0); }
+        }
+
+        .day-name {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .day-card.checked .day-name {
+            color: white;
+        }
+
+        .day-number {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .day-points {
+            font-size: 11px;
+            color: #999;
+        }
+
+        .day-card.checked .day-points {
+            color: white;
+        }
+
+        .check-icon {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            color: #11998e;
+            font-weight: bold;
+        }
+
+        .day-card.checked .check-icon {
+            display: flex;
+        }
+
+        .checkin-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #ee5a24 0%, #f368e0 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(238, 90, 36, 0.3);
+        }
+
+        .checkin-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(238, 90, 36, 0.4);
+        }
+
+        .checkin-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* Rewards Section */
+        .rewards-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .reward-card {
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .reward-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+
+        .reward-card.unavailable {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .reward-card.out-of-stock {
+            display: none;
+        }
+
+        .reward-image {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .reward-name {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .reward-points {
+            color: #ee5a24;
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .reward-stock {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .reward-expiry {
+            font-size: 11px;
+            color: #999;
+            background: #f8f9fa;
+            padding: 5px 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .redeem-btn {
+            width: 100%;
+            padding: 8px;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .redeem-btn:hover:not(:disabled) {
+            transform: scale(1.05);
+        }
+
+        .redeem-btn:disabled {
+            background: #ddd;
+            color: #999;
+            cursor: not-allowed;
+        }
+
+        /* Admin Section */
+        .admin-section {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .pending-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .pending-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .pending-info {
+            flex: 1;
+        }
+
+        .pending-user {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .pending-reward {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .admin-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .approve-btn, .reject-btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .approve-btn {
+            background: #11998e;
+            color: white;
+        }
+
+        .reject-btn {
+            background: #ee5a24;
+            color: white;
+        }
+
+        .approve-btn:hover, .reject-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* Loading */
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .loading.show {
+            display: flex;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #ee5a24;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="profile-section">
+                <div class="profile-info">
+                    <img id="profilePic" class="profile-pic" src="https://via.placeholder.com/50" alt="Profile">
+                    <div>
+                        <div id="userName" class="user-name">Loading...</div>
+                        <div style="font-size: 12px; opacity: 0.8;">สมาชิก</div>
+                    </div>
+                </div>
+                <div class="points-badge">
+                    <span id="userPoints">0</span> แต้ม
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="nav-tabs">
+            <div class="nav-tab active" onclick="switchTab('checkin')">เช็คอิน</div>
+            <div class="nav-tab" onclick="switchTab('rewards')">แลกรางวัล</div>
+            <div id="adminTab" class="nav-tab" onclick="switchTab('admin')" style="display: none;">จัดการ</div>
+            <div id="scanTab" class="nav-tab" onclick="switchTab('scan')" style="display: none;">สแกน QR</div>
+        </div>
+
+        <!-- Check-in Section -->
+        <div id="checkinSection" class="content-section active">
+            <div class="checkin-calendar">
+                <div class="calendar-header">
+                    <h3>เช็คอินประจำสัปดาห์</h3>
+                    <div class="streak-info">
+                        <span id="streakCount">0</span> วันติดต่อกัน
+                    </div>
+                </div>
+                <div class="weekdays" id="weekdaysContainer">
+                    <!-- Generated by JS -->
+                </div>
+                <button id="checkinBtn" class="checkin-btn" onclick="performCheckin()">
+                    เช็คอินวันนี้
+                </button>
+            </div>
+        </div>
+
+        <!-- Rewards Section -->
+        <div id="rewardsSection" class="content-section">
+            <h3 style="margin-bottom: 15px; color: #333;">รางวัลที่สามารถแลกได้</h3>
+            <div class="rewards-grid" id="rewardsContainer">
+                <!-- Generated by JS -->
+            </div>
+        </div>
+
+        <!-- Admin Section -->
+        <div id="adminSection" class="content-section">
+            <div class="admin-section">
+                <h3 style="margin-bottom: 15px; color: #333;">รายการรอการอนุมัติ</h3>
+                <div class="pending-list" id="pendingList">
+                    <!-- Generated by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Scan QR Section -->
+        <div id="scanSection" class="content-section">
+            <div class="admin-section" style="text-align: center;">
+                <h3 style="margin-bottom: 20px; color: #333;">สแกน QR Code</h3>
+                <div style="
+                    background: #f8f9fa;
+                    border-radius: 15px;
+                    padding: 30px;
+                    margin-bottom: 20px;
+                ">
+                    <img src="https://cdn-icons-png.flaticon.com/512/1197/1197366.png" 
+                         style="width: 100px; height: 100px; margin-bottom: 20px; opacity: 0.7;">
+                    <p style="color: #666; margin-bottom: 20px;">สแกน QR Code เพื่อยืนยันการรับรางวัล</p>
+                    <button onclick="openQRScanner()" style="
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        color: white;
+                        border: none;
+                        padding: 15px 40px;
+                        border-radius: 30px;
+                        font-size: 18px;
+                        font-weight: bold;
+                        cursor: pointer;
+                        font-family: 'line_seed_sans_th';
+                        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+                    ">
+                        <i style="margin-right: 10px;">📷</i> เปิดกล้องสแกน
+                    </button>
+                </div>
+                
+                <div style="
+                    background: #FFF5E1;
+                    border: 1px solid #FFD700;
+                    border-radius: 10px;
+                    padding: 15px;
+                    margin-bottom: 20px;
+                    font-size: 14px;
+                    color: #B8860B;
+                    text-align: left;
+                    font-family: 'line_seed_sans_th';
+                ">
+                    <strong>📋 วิธีใช้งาน:</strong><br>
+                    1. กดปุ่ม "เปิดกล้องสแกน"<br>
+                    2. อนุญาตให้ใช้กล้อง<br>
+                    3. สแกน QR Code ของผู้รับรางวัล<br>
+                    4. ระบบจะยืนยันการรับรางวัลอัตโนมัติ
+                </div>
+
+                <!-- Recent Scans -->
+                <div style="margin-top: 30px;">
+                    <h4 style="color: #333; margin-bottom: 15px;">📜 ประวัติการสแกนล่าสุด</h4>
+                    <div id="recentScans" style="max-height: 300px; overflow-y: auto;">
+                        <!-- Generated by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div id="loading" class="loading">
+        <div class="spinner"></div>
+    </div>
+
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script>
+        // Global variables
+        let userId = '';
+        let userProfile = {};
+        let userPoints = 0;
+        let checkinData = [];
+        let rewardsData = [];
+        let isAdmin = false;
+        let currentStreak = 0;
+        let isFriend = false;
+
+        // LIFF Initialization
+        window.onload = function() {
+            initializeLiff();
+        };
+
+        async function initializeLiff() {
+            try {
+                await liff.init({ liffId: '1656032875-GLpZe6By' });
+                
+                if (!liff.isLoggedIn()) {
+                    liff.login();
+                } else {
+                    // Check if there's a scan parameter
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const scanData = urlParams.get('scan');
+                    
+                    if (scanData) {
+                        // Admin scanning QR code
+                        await handleQRScan(scanData);
+                    } else {
+                        // Normal flow - check friendship status
+                        await checkFriendship();
+                    }
+                }
+            } catch (error) {
+                console.error('LIFF initialization failed', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: 'ไม่สามารถเริ่มต้นระบบได้',
+                });
+            }
+        }
+
+        // Handle QR Code Scanning
+        async function handleQRScan(scanData) {
+            try {
+                // Get user profile first
+                userProfile = await liff.getProfile();
+                userId = userProfile.userId;
+                
+                // Check if user is admin
+                showLoading();
+                
+                const url = 'https://script.google.com/macros/s/AKfycbxmTQ0knrfzI2puvfueSrjlTFKjA7KzG9aj1H356zyyUAwiCrP0HxkROceSsOVSdNgPHg/exec';
+                
+                const script = document.createElement('script');
+                const callbackName = 'scanCallback_' + Date.now();
+                
+                window[callbackName] = function(data) {
+                    hideLoading();
+                    handleScanResponse(data);
+                    delete window[callbackName];
+                    document.body.removeChild(script);
+                };
+                
+                script.src = `${url}?action=confirmDelivery&adminId=${userId}&scanData=${encodeURIComponent(scanData)}&callback=${callbackName}`;
+                document.body.appendChild(script);
+                
+            } catch (error) {
+                console.error('Error handling QR scan', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: 'ไม่สามารถประมวลผล QR Code ได้',
+                });
+            }
+        }
+
+        function handleScanResponse(data) {
+            if (data.success) {
+                // Show success screen
+                document.querySelector('.container').innerHTML = `
+                    <div style="
+                        min-height: 100vh;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        padding: 20px;
+                        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+                        color: white;
+                        text-align: center;
+                    ">
+                        <div style="
+                            background: white;
+                            border-radius: 20px;
+                            padding: 40px 30px;
+                            max-width: 350px;
+                            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+                        ">
+                            <div style="
+                                width: 100px;
+                                height: 100px;
+                                background: #11998e;
+                                border-radius: 50%;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                margin: 0 auto 20px;
+                                font-size: 50px;
+                            ">
+                                ✓
+                            </div>
+                            <h2 style="color: #333; margin-bottom: 15px; font-family: 'line_seed_sans_th';">
+                                ยืนยันการรับรางวัลสำเร็จ!
+                            </h2>
+                            <div style="color: #666; font-size: 16px; line-height: 1.5; font-family: 'line_seed_sans_th';">
+                                <p><strong>ผู้รับ:</strong> ${data.userName}</p>
+                                <p><strong>รางวัล:</strong> ${data.rewardName}</p>
+                                <p><strong>รหัสอ้างอิง:</strong> ${data.redemptionId}</p>
+                                <p style="margin-top: 15px; font-size: 14px;">
+                                    ${new Date().toLocaleDateString('th-TH', {
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                    })}
+                                </p>
+                            </div>
+                            <button onclick="liff.closeWindow()" style="
+                                background: #11998e;
+                                color: white;
+                                border: none;
+                                padding: 15px 40px;
+                                border-radius: 30px;
+                                font-size: 18px;
+                                font-weight: bold;
+                                cursor: pointer;
+                                font-family: 'line_seed_sans_th';
+                                margin-top: 20px;
+                                width: 100%;
+                            ">
+                                ปิดหน้าต่าง
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                // Send notification to user
+                if (data.userId) {
+                    sendDeliveryConfirmation(data.userId, data.rewardName);
+                }
+                
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'ไม่สามารถยืนยันได้',
+                    text: data.message || 'กรุณาตรวจสอบ QR Code หรือสิทธิ์การเข้าถึง',
+                    confirmButtonText: 'ตกลง',
+                    confirmButtonColor: '#ee5a24'
+                }).then(() => {
+                    liff.closeWindow();
+                });
+            }
+        }
+
+        // Send delivery confirmation to user
+        async function sendDeliveryConfirmation(targetUserId, rewardName) {
+            const flexMessage = {
+                type: 'flex',
+                altText: '✅ คุณได้รับรางวัลแล้ว!',
+                contents: {
+                    type: 'bubble',
+                    header: {
+                        type: 'box',
+                        layout: 'vertical',
+                        contents: [
+                            {
+                                type: 'text',
+                                text: '✅ ได้รับรางวัลเรียบร้อยแล้ว',
+                                weight: 'bold',
+                                size: 'lg',
+                                color: '#11998e',
+                                align: 'center'
+                            }
+                        ],
+                        backgroundColor: '#e8f5e9',
+                        paddingAll: '15px'
+                    },
+                    body: {
+                        type: 'box',
+                        layout: 'vertical',
+                        contents: [
+                            {
+                                type: 'image',
+                                url: 'https://stickershop.line-scdn.net/stickershop/v1/sticker/51626495/android/sticker.png',
+                                size: '120px',
+                                aspectMode: 'fit',
+                                margin: 'md'
+                            },
+                            {
+                                type: 'text',
+                                text: `🎁 ${rewardName}`,
+                                size: 'md',
+                                weight: 'bold',
+                                align: 'center',
+                                margin: 'lg',
+                                wrap: true
+                            },
+                            {
+                                type: 'text',
+                                text: 'ขอบคุณที่ร่วมกิจกรรมกับเรา',
+                                size: 'sm',
+                                color: '#666666',
+                                align: 'center',
+                                margin: 'sm'
+                            },
+                            {
+                                type: 'separator',
+                                margin: 'lg'
+                            },
+                            {
+                                type: 'text',
+                                text: `ยืนยันการรับรางวัลเมื่อ:\n${new Date().toLocaleDateString('th-TH', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                })}`,
+                                size: 'xs',
+                                color: '#666666',
+                                align: 'center',
+                                margin: 'md',
+                                wrap: true
+                            }
+                        ],
+                        paddingAll: '20px'
+                    }
+                }
+            };
+
+            // This would need server-side implementation to send to specific user
+            console.log('Delivery confirmation for user:', targetUserId);
+        }
+
+        async function checkFriendship() {
+            try {
+                const friendshipStatus = await liff.getFriendship();
+                isFriend = friendshipStatus.friendFlag;
+                
+                if (!isFriend) {
+                    // User is not friend or has blocked the bot
+                    showAddFriendDialog('notFriend');
+                } else {
+                    // Continue with normal flow
+                    getUserProfile();
+                }
+            } catch (error) {
+                console.error('Error checking friendship status', error);
+                // If error, assume not friend/blocked and show appropriate dialog
+                showAddFriendDialog('error');
+            }
+        }
+
+        function showAddFriendDialog(reason = 'notFriend') {
+            // Hide main container
+            document.querySelector('.container').style.display = 'none';
+            
+            // Determine message based on reason
+            let title = 'กรุณาเพิ่มเพื่อนบอทก่อน';
+            let message = 'เพิ่มบอท <strong>@dgw5488h</strong> เป็นเพื่อน<br>เพื่อเริ่มสะสมแต้มและรับรางวัลพิเศษ!';
+            let buttonText = 'เพิ่มเพื่อน';
+            
+            if (reason === 'blocked') {
+                title = 'กรุณาปลดบล็อคบอท';
+                message = 'คุณได้บล็อคบอท <strong>@dgw5488h</strong><br>กรุณาปลดบล็อคและเพิ่มเพื่อนเพื่อเข้าร่วมกิจกรรม';
+                buttonText = 'ปลดบล็อคและเพิ่มเพื่อน';
+            }
+            
+            // Create and show add friend overlay
+            const overlay = document.createElement('div');
+            overlay.id = 'addFriendOverlay';
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 9999;
+            `;
+            
+            overlay.innerHTML = `
+                <div style="
+                    background: white;
+                    border-radius: 20px;
+                    padding: 40px 30px;
+                    max-width: 350px;
+                    text-align: center;
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+                ">
+                    <img src="https://stickershop.line-scdn.net/stickershop/v1/sticker/51626494/android/sticker.png" 
+                         style="width: 120px; height: 120px; margin-bottom: 20px;">
+                    <h2 style="color: #333; margin-bottom: 15px; font-family: 'line_seed_sans_th';">
+                        ${title}
+                    </h2>
+                    <p style="color: #666; margin-bottom: 25px; font-size: 16px; line-height: 1.5; font-family: 'line_seed_sans_th';">
+                        ${message}
+                    </p>
+                    <div style="
+                        background: #FFF5E1;
+                        border: 1px solid #FFD700;
+                        border-radius: 10px;
+                        padding: 15px;
+                        margin-bottom: 20px;
+                        font-size: 14px;
+                        color: #B8860B;
+                        text-align: left;
+                        font-family: 'line_seed_sans_th';
+                    ">
+                        <strong>⚠️ สำคัญ:</strong><br>
+                        • หากเคยบล็อคบอท กรุณาปลดบล็อคก่อน<br>
+                        • ต้องเป็นเพื่อนกับบอทเท่านั้น<br>
+                        • ระบบจะตรวจสอบสถานะอัตโนมัติ
+                    </div>
+                    <button onclick="addFriend()" style="
+                        background: #00B900;
+                        color: white;
+                        border: none;
+                        padding: 15px 40px;
+                        border-radius: 30px;
+                        font-size: 18px;
+                        font-weight: bold;
+                        cursor: pointer;
+                        font-family: 'line_seed_sans_th';
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                        margin: 0 auto 15px;
+                        box-shadow: 0 4px 15px rgba(0, 185, 0, 0.3);
+                    ">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/4/41/LINE_logo.svg" 
+                             style="width: 24px; height: 24px; filter: brightness(0) invert(1);">
+                        ${buttonText}
+                    </button>
+                    <button onclick="checkFriendshipAgain()" style="
+                        background: transparent;
+                        color: #666;
+                        border: 1px solid #ddd;
+                        padding: 10px 30px;
+                        border-radius: 20px;
+                        font-size: 14px;
+                        cursor: pointer;
+                        font-family: 'line_seed_sans_th';
+                    ">
+                        ฉันเพิ่มเพื่อนแล้ว
+                    </button>
+                </div>
+            `;
+            
+            document.body.appendChild(overlay);
+        }
+
+        function addFriend() {
+            // Open LINE add friend URL
+            window.open('https://line.me/R/ti/p/@dgw5488h', '_blank');
+        }
+
+        async function checkFriendshipAgain() {
+            try {
+                const friendshipStatus = await liff.getFriendship();
+                isFriend = friendshipStatus.friendFlag;
+                
+                if (isFriend) {
+                    // Remove overlay and continue
+                    const overlay = document.getElementById('addFriendOverlay');
+                    if (overlay) {
+                        overlay.remove();
+                    }
+                    document.querySelector('.container').style.display = 'block';
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'ยินดีต้อนรับ!',
+                        text: 'ตอนนี้คุณสามารถเริ่มสะสมแต้มได้แล้ว',
+                        showConfirmButton: false,
+                        timer: 2000
+                    });
+                    
+                    getUserProfile();
+                } else {
+                    // Still not friend or blocked
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'ยังไม่ได้เพิ่มเพื่อน',
+                        html: `
+                            <div style="text-align: left; font-size: 14px;">
+                                <p><strong>กรุณาตรวจสอบ:</strong></p>
+                                <ol style="margin-top: 10px;">
+                                    <li>เพิ่มบอท <strong>@dgw5488h</strong> เป็นเพื่อน</li>
+                                    <li>หากเคยบล็อค ต้องปลดบล็อคก่อน</li>
+                                    <li>รอสักครู่แล้วลองใหม่</li>
+                                </ol>
+                            </div>
+                        `,
+                        confirmButtonText: 'เพิ่มเพื่อนอีกครั้ง',
+                        confirmButtonColor: '#00B900',
+                        showCancelButton: true,
+                        cancelButtonText: 'ลองอีกครั้ง',
+                        cancelButtonColor: '#666'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            addFriend();
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Error re-checking friendship', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: 'ไม่สามารถตรวจสอบสถานะได้ กรุณาลองใหม่อีกครั้ง',
+                    confirmButtonText: 'ตกลง',
+                    confirmButtonColor: '#ee5a24'
+                });
+            }
+        }
+
+        async function getUserProfile() {
+            try {
+                userProfile = await liff.getProfile();
+                userId = userProfile.userId;
+                
+                document.getElementById('userName').textContent = userProfile.displayName;
+                document.getElementById('profilePic').src = userProfile.pictureUrl;
+                
+                loadUserData();
+            } catch (error) {
+                console.error('Error getting profile', error);
+            }
+        }
+
+        // Load user data
+        function loadUserData() {
+            showLoading();
+            
+            const url = 'https://script.google.com/macros/s/AKfycbxmTQ0knrfzI2puvfueSrjlTFKjA7KzG9aj1H356zyyUAwiCrP0HxkROceSsOVSdNgPHg/exec';
+            
+            // Using JSONP
+            const script = document.createElement('script');
+            const callbackName = 'jsonpCallback_' + Date.now();
+            
+            window[callbackName] = function(data) {
+                hideLoading();
+                handleUserData(data);
+                delete window[callbackName];
+                document.body.removeChild(script);
+            };
+            
+            script.src = `${url}?action=getUserData&userId=${userId}&callback=${callbackName}`;
+            document.body.appendChild(script);
+        }
+
+        function handleUserData(data) {
+            if (data.success) {
+                userPoints = data.points || 0;
+                checkinData = data.checkins || [];
+                rewardsData = data.rewards || [];
+                isAdmin = data.isAdmin || false;
+                currentStreak = data.streak || 0;
+                
+                document.getElementById('userPoints').textContent = userPoints.toFixed(1);
+                document.getElementById('streakCount').textContent = currentStreak;
+                
+                if (isAdmin) {
+                    document.getElementById('adminTab').style.display = 'block';
+                    document.getElementById('scanTab').style.display = 'block';
+                    loadPendingRedemptions();
+                }
+                
+                updateCalendar();
+                updateRewards();
+            }
+        }
+
+        // Update calendar display
+        function updateCalendar() {
+            const container = document.getElementById('weekdaysContainer');
+            container.innerHTML = '';
+            
+            const days = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
+            const today = new Date();
+            const currentDay = today.getDay();
+            
+            // Get start of week (Sunday)
+            const startOfWeek = new Date(today);
+            startOfWeek.setDate(today.getDate() - currentDay);
+            
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(startOfWeek);
+                date.setDate(startOfWeek.getDate() + i);
+                
+                const dayCard = document.createElement('div');
+                dayCard.className = 'day-card';
+                
+                // Check if this day has been checked in
+                const dateStr = formatDate(date);
+                const isChecked = checkinData.some(c => c.date === dateStr);
+                
+                if (isChecked) {
+                    dayCard.classList.add('checked');
+                }
+                
+                if (i === currentDay) {
+                    dayCard.classList.add('today');
+                    if (!isChecked) {
+                        document.getElementById('checkinBtn').disabled = false;
+                    } else {
+                        document.getElementById('checkinBtn').disabled = true;
+                        document.getElementById('checkinBtn').textContent = 'เช็คอินแล้ววันนี้';
+                    }
+                }
+                
+                const points = (i === 6 && currentStreak >= 6) ? 1 : 0.5;
+                
+                dayCard.innerHTML = `
+                    <div class="check-icon">✓</div>
+                    <div class="day-name">${days[i]}</div>
+                    <div class="day-number">${date.getDate()}</div>
+                    <div class="day-points">+${points} แต้ม</div>
+                `;
+                
+                container.appendChild(dayCard);
+            }
+        }
+
+        // Update rewards display
+        function updateRewards() {
+            const container = document.getElementById('rewardsContainer');
+            container.innerHTML = '';
+            
+            rewardsData.forEach((reward, index) => {
+                if (reward.stock <= 0) return;
+                
+                const card = document.createElement('div');
+                card.className = 'reward-card';
+                
+                if (userPoints < reward.points) {
+                    card.classList.add('unavailable');
+                }
+                
+                card.innerHTML = `
+                    <img src="${reward.image}" alt="${reward.name}" class="reward-image">
+                    <div class="reward-name">${reward.name}</div>
+                    <div class="reward-points">${reward.points} แต้ม</div>
+                    <div class="reward-stock">คงเหลือ: ${reward.stock} ชิ้น</div>
+                    <div class="reward-expiry">แลกได้ถึง: ${formatThaiDate(reward.expiry)}</div>
+                    <button class="redeem-btn" 
+                            onclick="redeemReward(${index})"
+                            ${userPoints < reward.points ? 'disabled' : ''}>
+                        ${userPoints < reward.points ? 'แต้มไม่พอ' : 'แลกรางวัล'}
+                    </button>
+                `;
+                
+                container.appendChild(card);
+            });
+        }
+
+        // Perform check-in
+        function performCheckin() {
+            // Check friendship before allowing checkin
+            if (!isFriend) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'ไม่สามารถเช็คอินได้',
+                    html: `
+                        <p>กรุณาเพิ่มบอท <strong>@dgw5488h</strong> เป็นเพื่อนก่อน</p>
+                        <p style="font-size: 14px; color: #666; margin-top: 10px;">
+                            หากเคยบล็อคบอท ต้องปลดบล็อคและเพิ่มเพื่อนใหม่
+                        </p>
+                    `,
+                    confirmButtonText: 'เพิ่มเพื่อน',
+                    confirmButtonColor: '#00B900',
+                    showCancelButton: true,
+                    cancelButtonText: 'ยกเลิก'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        addFriend();
+                    }
+                });
+                return;
+            }
+            
+            showLoading();
+            
+            const url = 'https://script.google.com/macros/s/AKfycbxmTQ0knrfzI2puvfueSrjlTFKjA7KzG9aj1H356zyyUAwiCrP0HxkROceSsOVSdNgPHg/exec';
+            
+            const script = document.createElement('script');
+            const callbackName = 'checkinCallback_' + Date.now();
+            
+            window[callbackName] = function(data) {
+                hideLoading();
+                handleCheckinResponse(data);
+                delete window[callbackName];
+                document.body.removeChild(script);
+            };
+            
+            script.src = `${url}?action=checkin&userId=${userId}&userName=${encodeURIComponent(userProfile.displayName)}&callback=${callbackName}`;
+            document.body.appendChild(script);
+        }
+
+        function handleCheckinResponse(data) {
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'เช็คอินสำเร็จ!',
+                    text: `คุณได้รับ ${data.pointsEarned} แต้ม`,
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+                
+                // Send Flex Message to chat
+                sendFlexMessage(data.pointsEarned, data.totalPoints, data.streak);
+                
+                loadUserData();
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: data.message || 'ไม่สามารถเช็คอินได้',
+                });
+            }
+        }
+
+        // Send Flex Message
+        async function sendFlexMessage(pointsEarned, totalPoints, streak) {
+            const flexMessage = {
+                type: 'flex',
+                altText: '✅ เช็คอินสำเร็จ!',
+                contents: {
+                    type: 'bubble',
+                    hero: {
+                        type: 'box',
+                        layout: 'vertical',
+                        contents: [
+                            {
+                                type: 'box',
+                                layout: 'horizontal',
+                                contents: [
+                                    {
+                                        type: 'box',
+                                        layout: 'vertical',
+                                        contents: [
+                                            {
+                                                type: 'image',
+                                                url: userProfile.pictureUrl || 'https://via.placeholder.com/50',
+                                                size: '50px',
+                                                aspectMode: 'cover',
+                                                aspectRatio: '1:1'
+                                            }
+                                        ],
+                                        width: '50px',
+                                        height: '50px',
+                                        cornerRadius: '25px',
+                                        backgroundColor: '#ffffff',
+                                        borderWidth: '2px',
+                                        borderColor: '#ee5a24'
+                                    },
+                                    {
+                                        type: 'box',
+                                        layout: 'vertical',
+                                        contents: [
+                                            {
+                                                type: 'text',
+                                                text: userProfile.displayName,
+                                                size: 'sm',
+                                                color: '#666666',
+                                                margin: 'none'
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: 'เช็คอินสำเร็จ! 🎉',
+                                                weight: 'bold',
+                                                size: 'lg',
+                                                color: '#ee5a24',
+                                                margin: 'sm'
+                                            }
+                                        ],
+                                        margin: 'lg',
+                                        spacing: 'none'
+                                    }
+                                ],
+                                paddingAll: '20px',
+                                backgroundColor: '#f8f9fa'
+                            }
+                        ]
+                    },
+                    body: {
+                        type: 'box',
+                        layout: 'vertical',
+                        contents: [
+                            {
+                                type: 'box',
+                                layout: 'vertical',
+                                margin: 'lg',
+                                spacing: 'sm',
+                                contents: [
+                                    {
+                                        type: 'box',
+                                        layout: 'horizontal',
+                                        contents: [
+                                            {
+                                                type: 'text',
+                                                text: '🎁 แต้มที่ได้รับ',
+                                                size: 'md',
+                                                color: '#666666',
+                                                flex: 0
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: `+${pointsEarned} แต้ม`,
+                                                size: 'md',
+                                                weight: 'bold',
+                                                color: '#11998e',
+                                                align: 'end'
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        type: 'separator',
+                                        margin: 'md'
+                                    },
+                                    {
+                                        type: 'box',
+                                        layout: 'horizontal',
+                                        contents: [
+                                            {
+                                                type: 'text',
+                                                text: '💰 แต้มสะสมทั้งหมด',
+                                                size: 'md',
+                                                color: '#666666',
+                                                flex: 0
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: `${totalPoints} แต้ม`,
+                                                size: 'lg',
+                                                weight: 'bold',
+                                                color: '#ee5a24',
+                                                align: 'end'
+                                            }
+                                        ],
+                                        margin: 'md'
+                                    },
+                                    {
+                                        type: 'box',
+                                        layout: 'horizontal',
+                                        contents: [
+                                            {
+                                                type: 'text',
+                                                text: '🔥 เช็คอินติดต่อกัน',
+                                                size: 'sm',
+                                                color: '#666666',
+                                                flex: 0
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: `${streak} วัน`,
+                                                size: 'sm',
+                                                weight: 'bold',
+                                                color: '#764ba2',
+                                                align: 'end'
+                                            }
+                                        ],
+                                        margin: 'md'
+                                    }
+                                ]
+                            },
+                            {
+                                type: 'box',
+                                layout: 'vertical',
+                                margin: 'lg',
+                                spacing: 'sm',
+                                contents: [
+                                    {
+                                        type: 'text',
+                                        text: streak >= 7 ? '🎊 ยินดีด้วย! เช็คอินครบ 7 วันแล้ว' : `📅 เช็คอินอีก ${7-streak} วัน รับแต้มพิเศษ!`,
+                                        size: 'xs',
+                                        color: '#764ba2',
+                                        align: 'center',
+                                        wrap: true
+                                    }
+                                ],
+                                backgroundColor: '#f8f9fa',
+                                paddingAll: '10px',
+                                cornerRadius: '8px'
+                            }
+                        ]
+                    },
+                    footer: {
+                        type: 'box',
+                        layout: 'vertical',
+                        spacing: 'sm',
+                        contents: [
+                            {
+                                type: 'button',
+                                style: 'primary',
+                                height: 'sm',
+                                color: '#ee5a24',
+                                action: {
+                                    type: 'uri',
+                                    label: 'ดูแต้มและแลกรางวัล',
+                                    uri: liff.permanentLink.createUrl()
+                                }
+                            }
+                        ],
+                        flex: 0
+                    }
+                }
+            };
+
+            try {
+                await liff.sendMessages([flexMessage]);
+            } catch (error) {
+                console.error('Error sending flex message', error);
+            }
+        }
+
+        // Redeem reward
+        function redeemReward(index) {
+            // Check friendship before allowing redemption
+            if (!isFriend) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'ไม่สามารถแลกรางวัลได้',
+                    html: `
+                        <p>กรุณาเพิ่มบอท <strong>@dgw5488h</strong> เป็นเพื่อนก่อน</p>
+                        <p style="font-size: 14px; color: #666; margin-top: 10px;">
+                            หากเคยบล็อคบอท ต้องปลดบล็อคและเพิ่มเพื่อนใหม่
+                        </p>
+                    `,
+                    confirmButtonText: 'เพิ่มเพื่อน',
+                    confirmButtonColor: '#00B900',
+                    showCancelButton: true,
+                    cancelButtonText: 'ยกเลิก'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        addFriend();
+                    }
+                });
+                return;
+            }
+            
+            const reward = rewardsData[index];
+            
+            Swal.fire({
+                title: 'ยืนยันการแลกรางวัล',
+                html: `
+                    <div style="text-align: center;">
+                        <img src="${reward.image}" style="width: 150px; height: 150px; object-fit: cover; border-radius: 10px; margin-bottom: 10px;">
+                        <p><strong>${reward.name}</strong></p>
+                        <p>ใช้แต้ม: ${reward.points} แต้ม</p>
+                    </div>
+                `,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'ยืนยัน',
+                cancelButtonText: 'ยกเลิก',
+                confirmButtonColor: '#11998e'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    processRedemption(index);
+                }
+            });
+        }
+
+        function processRedemption(index) {
+            showLoading();
+            
+            const reward = rewardsData[index];
+            const url = 'https://script.google.com/macros/s/AKfycbxmTQ0knrfzI2puvfueSrjlTFKjA7KzG9aj1H356zyyUAwiCrP0HxkROceSsOVSdNgPHg/exec';
+            
+            const script = document.createElement('script');
+            const callbackName = 'redeemCallback_' + Date.now();
+            
+            window[callbackName] = function(data) {
+                hideLoading();
+                handleRedemptionResponse(data);
+                delete window[callbackName];
+                document.body.removeChild(script);
+            };
+            
+            const params = new URLSearchParams({
+                action: 'redeem',
+                userId: userId,
+                userName: userProfile.displayName,
+                rewardId: reward.id,
+                rewardName: reward.name,
+                rewardPoints: reward.points,
+                callback: callbackName
+            });
+            
+            script.src = `${url}?${params.toString()}`;
+            document.body.appendChild(script);
+        }
+
+        function handleRedemptionResponse(data) {
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'แลกรางวัลสำเร็จ!',
+                    text: 'รอการอนุมัติจาก Admin',
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+                
+                // Send redemption flex message
+                sendRedemptionFlexMessage(data.redemptionId, data.rewardName, data.rewardPoints);
+                
+                loadUserData();
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: data.message || 'ไม่สามารถแลกรางวัลได้',
+                });
+            }
+        }
+
+        // Send Redemption Flex Message with QR Code
+        async function sendRedemptionFlexMessage(redemptionId, rewardName, rewardPoints) {
+            // Generate QR code data with LIFF URL for scanning
+            const scanUrl = `https://liff.line.me/1656032875-GLpZe6By?scan=REDEEM:${redemptionId}`;
+            const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(scanUrl)}`;
+            
+            const flexMessage = {
+                type: 'flex',
+                altText: '🎁 แลกรางวัลสำเร็จ!',
+                contents: {
+                    type: 'bubble',
+                    size: 'kilo',
+                    header: {
+                        type: 'box',
+                        layout: 'vertical',
+                        contents: [
+                            {
+                                type: 'box',
+                                layout: 'horizontal',
+                                contents: [
+                                    {
+                                        type: 'box',
+                                        layout: 'vertical',
+                                        contents: [
+                                            {
+                                                type: 'image',
+                                                url: userProfile.pictureUrl || 'https://via.placeholder.com/40',
+                                                size: '40px',
+                                                aspectMode: 'cover',
+                                                aspectRatio: '1:1'
+                                            }
+                                        ],
+                                        width: '40px',
+                                        height: '40px',
+                                        cornerRadius: '20px'
+                                    },
+                                    {
+                                        type: 'box',
+                                        layout: 'vertical',
+                                        contents: [
+                                            {
+                                                type: 'text',
+                                                text: userProfile.displayName,
+                                                size: 'xs',
+                                                color: '#666666'
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: '🎁 แลกรางวัลสำเร็จ',
+                                                weight: 'bold',
+                                                size: 'md',
+                                                color: '#11998e'
+                                            }
+                                        ],
+                                        margin: 'md'
+                                    }
+                                ],
+                                paddingAll: '15px'
+                            }
+                        ],
+                        backgroundColor: '#f8f9fa'
+                    },
+                    body: {
+                        type: 'box',
+                        layout: 'vertical',
+                        contents: [
+                            {
+                                type: 'box',
+                                layout: 'vertical',
+                                contents: [
+                                    {
+                                        type: 'text',
+                                        text: 'QR Code สำหรับรับรางวัล',
+                                        size: 'sm',
+                                        color: '#666666',
+                                        align: 'center',
+                                        margin: 'sm'
+                                    },
+                                    {
+                                        type: 'image',
+                                        url: qrCodeUrl,
+                                        size: 'xl',
+                                        aspectMode: 'cover',
+                                        aspectRatio: '1:1',
+                                        margin: 'md'
+                                    }
+                                ],
+                                margin: 'md',
+                                paddingAll: '10px',
+                                backgroundColor: '#ffffff',
+                                cornerRadius: '10px',
+                                borderWidth: '1px',
+                                borderColor: '#eeeeee'
+                            },
+                            {
+                                type: 'box',
+                                layout: 'vertical',
+                                spacing: 'xs',
+                                margin: 'lg',
+                                contents: [
+                                    {
+                                        type: 'box',
+                                        layout: 'horizontal',
+                                        contents: [
+                                            {
+                                                type: 'text',
+                                                text: '📦 รางวัล:',
+                                                size: 'sm',
+                                                color: '#666666',
+                                                flex: 0
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: rewardName,
+                                                size: 'sm',
+                                                weight: 'bold',
+                                                color: '#333333',
+                                                align: 'end',
+                                                wrap: true
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        type: 'box',
+                                        layout: 'horizontal',
+                                        contents: [
+                                            {
+                                                type: 'text',
+                                                text: '💰 ใช้แต้ม:',
+                                                size: 'sm',
+                                                color: '#666666',
+                                                flex: 0
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: `${rewardPoints} แต้ม`,
+                                                size: 'sm',
+                                                weight: 'bold',
+                                                color: '#ee5a24',
+                                                align: 'end'
+                                            }
+                                        ],
+                                        margin: 'sm'
+                                    },
+                                    {
+                                        type: 'box',
+                                        layout: 'horizontal',
+                                        contents: [
+                                            {
+                                                type: 'text',
+                                                text: '🔢 รหัสอ้างอิง:',
+                                                size: 'sm',
+                                                color: '#666666',
+                                                flex: 0
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: redemptionId,
+                                                size: 'sm',
+                                                color: '#666666',
+                                                align: 'end'
+                                            }
+                                        ],
+                                        margin: 'sm'
+                                    },
+                                    {
+                                        type: 'box',
+                                        layout: 'horizontal',
+                                        contents: [
+                                            {
+                                                type: 'text',
+                                                text: '📅 วันที่:',
+                                                size: 'sm',
+                                                color: '#666666',
+                                                flex: 0
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: new Date().toLocaleDateString('th-TH', {
+                                                    year: 'numeric',
+                                                    month: 'short',
+                                                    day: 'numeric',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit'
+                                                }),
+                                                size: 'sm',
+                                                color: '#666666',
+                                                align: 'end',
+                                                wrap: true
+                                            }
+                                        ],
+                                        margin: 'sm'
+                                    }
+                                ]
+                            },
+                            {
+                                type: 'box',
+                                layout: 'vertical',
+                                margin: 'lg',
+                                contents: [
+                                    {
+                                        type: 'box',
+                                        layout: 'vertical',
+                                        contents: [
+                                            {
+                                                type: 'text',
+                                                text: '⏳ สถานะ: รอการอนุมัติ',
+                                                size: 'sm',
+                                                color: '#ff9800',
+                                                weight: 'bold',
+                                                align: 'center'
+                                            }
+                                        ],
+                                        backgroundColor: '#fff3e0',
+                                        paddingAll: '10px',
+                                        cornerRadius: '8px'
+                                    }
+                                ]
+                            },
+                            {
+                                type: 'separator',
+                                margin: 'lg'
+                            },
+                            {
+                                type: 'box',
+                                layout: 'vertical',
+                                margin: 'md',
+                                contents: [
+                                    {
+                                        type: 'text',
+                                        text: '💡 วิธีการรับรางวัล:',
+                                        size: 'sm',
+                                        weight: 'bold',
+                                        color: '#333333',
+                                        margin: 'sm'
+                                    },
+                                    {
+                                        type: 'text',
+                                        text: '1. รอ Admin อนุมัติการแลกรางวัล\n2. ให้ Admin สแกน QR Code นี้\n3. ระบบจะยืนยันการรับรางวัลอัตโนมัติ',
+                                        size: 'xs',
+                                        color: '#666666',
+                                        wrap: true,
+                                        margin: 'sm'
+                                    }
+                                ]
+                            }
+                        ],
+                        paddingAll: '15px'
+                    },
+                    footer: {
+                        type: 'box',
+                        layout: 'vertical',
+                        spacing: 'sm',
+                        contents: [
+                            {
+                                type: 'button',
+                                style: 'primary',
+                                height: 'sm',
+                                color: '#11998e',
+                                action: {
+                                    type: 'uri',
+                                    label: 'ดูสถานะการแลกรางวัล',
+                                    uri: liff.permanentLink.createUrl()
+                                }
+                            }
+                        ],
+                        paddingAll: '10px'
+                    }
+                }
+            };
+
+            try {
+                await liff.sendMessages([flexMessage]);
+            } catch (error) {
+                console.error('Error sending redemption flex message', error);
+            }
+        }
+
+        // Admin functions
+        function loadPendingRedemptions() {
+            if (!isAdmin) return;
+            
+            const url = 'https://script.google.com/macros/s/AKfycbxmTQ0knrfzI2puvfueSrjlTFKjA7KzG9aj1H356zyyUAwiCrP0HxkROceSsOVSdNgPHg/exec';
+            
+            const script = document.createElement('script');
+            const callbackName = 'pendingCallback_' + Date.now();
+            
+            window[callbackName] = function(data) {
+                handlePendingData(data);
+                delete window[callbackName];
+                document.body.removeChild(script);
+            };
+            
+            script.src = `${url}?action=getPending&callback=${callbackName}`;
+            document.body.appendChild(script);
+        }
+
+        function handlePendingData(data) {
+            if (data.success) {
+                const container = document.getElementById('pendingList');
+                container.innerHTML = '';
+                
+                if (data.pending.length === 0) {
+                    container.innerHTML = '<p style="text-align: center; color: #999;">ไม่มีรายการรอการอนุมัติ</p>';
+                } else {
+                    data.pending.forEach(item => {
+                        const pendingItem = document.createElement('div');
+                        pendingItem.className = 'pending-item';
+                        pendingItem.innerHTML = `
+                            <div class="pending-info">
+                                <div class="pending-user">${item.userName}</div>
+                                <div class="pending-reward">${item.rewardName} (${item.rewardPoints} แต้ม)</div>
+                            </div>
+                            <div class="admin-actions">
+                                <button class="approve-btn" onclick="approveRedemption('${item.id}')">อนุมัติ</button>
+                                <button class="reject-btn" onclick="rejectRedemption('${item.id}')">ปฏิเสธ</button>
+                            </div>
+                        `;
+                        container.appendChild(pendingItem);
+                    });
+                }
+            }
+        }
+
+        function approveRedemption(redemptionId) {
+            Swal.fire({
+                title: 'ยืนยันการอนุมัติ?',
+                text: "การแลกรางวัลนี้จะถูกอนุมัติ",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'อนุมัติ',
+                cancelButtonText: 'ยกเลิก',
+                confirmButtonColor: '#11998e'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    processApproval(redemptionId, 'approve');
+                }
+            });
+        }
+
+        function rejectRedemption(redemptionId) {
+            Swal.fire({
+                title: 'ยืนยันการปฏิเสธ?',
+                text: "การแลกรางวัลนี้จะถูกปฏิเสธ",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'ปฏิเสธ',
+                cancelButtonText: 'ยกเลิก',
+                confirmButtonColor: '#ee5a24'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    processApproval(redemptionId, 'reject');
+                }
+            });
+        }
+
+        function processApproval(redemptionId, action) {
+            showLoading();
+            
+            const url = 'https://script.google.com/macros/s/AKfycbxmTQ0knrfzI2puvfueSrjlTFKjA7KzG9aj1H356zyyUAwiCrP0HxkROceSsOVSdNgPHg/exec';
+            
+            const script = document.createElement('script');
+            const callbackName = 'approvalCallback_' + Date.now();
+            
+            window[callbackName] = function(data) {
+                hideLoading();
+                handleApprovalResponse(data);
+                delete window[callbackName];
+                document.body.removeChild(script);
+            };
+            
+            script.src = `${url}?action=${action}&redemptionId=${redemptionId}&adminId=${userId}&callback=${callbackName}`;
+            document.body.appendChild(script);
+        }
+
+        function handleApprovalResponse(data) {
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'สำเร็จ!',
+                    text: data.message,
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+                
+                loadPendingRedemptions();
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: data.message || 'ไม่สามารถดำเนินการได้',
+                });
+            }
+        }
+
+        // Utility functions
+        function switchTab(tab) {
+            // Update nav tabs
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Update content sections
+            document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+            document.getElementById(tab + 'Section').classList.add('active');
+            
+            // Load data if needed
+            if (tab === 'admin' && isAdmin) {
+                loadPendingRedemptions();
+            } else if (tab === 'scan' && isAdmin) {
+                loadRecentScans();
+            }
+        }
+
+        // Open QR Scanner
+        async function openQRScanner() {
+            try {
+                if (liff.isApiAvailable('scanCodeV2')) {
+                    const result = await liff.scanCodeV2();
+                    if (result && result.value) {
+                        // Parse scanned data
+                        handleScannedQR(result.value);
+                    }
+                } else {
+                    // Fallback to scanCode for older versions
+                    const result = await liff.scanCode();
+                    if (result && result.value) {
+                        handleScannedQR(result.value);
+                    }
+                }
+            } catch (error) {
+                console.error('Error scanning QR code:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'ไม่สามารถเปิดกล้องได้',
+                    text: 'กรุณาตรวจสอบการอนุญาตใช้กล้องในแอป LINE',
+                });
+            }
+        }
+
+        // Handle scanned QR code
+        function handleScannedQR(scannedValue) {
+            // Check if it's a LIFF URL with scan parameter
+            if (scannedValue.includes('liff.line.me') && scannedValue.includes('scan=')) {
+                // Extract scan data from URL
+                const url = new URL(scannedValue);
+                const scanData = url.searchParams.get('scan');
+                if (scanData) {
+                    confirmDeliveryFromScan(scanData);
+                } else {
+                    showInvalidQRError();
+                }
+            } else {
+                showInvalidQRError();
+            }
+        }
+
+        function showInvalidQRError() {
+            Swal.fire({
+                icon: 'error',
+                title: 'QR Code ไม่ถูกต้อง',
+                text: 'กรุณาสแกน QR Code ที่ได้จากระบบเท่านั้น',
+            });
+        }
+
+        // Confirm delivery from QR scan
+        function confirmDeliveryFromScan(scanData) {
+            Swal.fire({
+                title: 'ยืนยันการรับรางวัล?',
+                text: 'ต้องการยืนยันว่าผู้ใช้ได้รับรางวัลแล้วใช่หรือไม่?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'ยืนยัน',
+                cancelButtonText: 'ยกเลิก',
+                confirmButtonColor: '#11998e'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    processDeliveryScan(scanData);
+                }
+            });
+        }
+
+        function processDeliveryScan(scanData) {
+            showLoading();
+            
+            const url = 'https://script.google.com/macros/s/AKfycbxmTQ0knrfzI2puvfueSrjlTFKjA7KzG9aj1H356zyyUAwiCrP0HxkROceSsOVSdNgPHg/exec';
+            
+            const script = document.createElement('script');
+            const callbackName = 'deliveryCallback_' + Date.now();
+            
+            window[callbackName] = function(data) {
+                hideLoading();
+                handleDeliveryResponse(data);
+                delete window[callbackName];
+                document.body.removeChild(script);
+            };
+            
+            script.src = `${url}?action=confirmDelivery&adminId=${userId}&scanData=${encodeURIComponent(scanData)}&callback=${callbackName}`;
+            document.body.appendChild(script);
+        }
+
+        function handleDeliveryResponse(data) {
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'ยืนยันสำเร็จ!',
+                    html: `
+                        <div style="text-align: left;">
+                            <p><strong>ผู้รับ:</strong> ${data.userName}</p>
+                            <p><strong>รางวัล:</strong> ${data.rewardName}</p>
+                            <p><strong>รหัสอ้างอิง:</strong> ${data.redemptionId}</p>
+                        </div>
+                    `,
+                    showConfirmButton: false,
+                    timer: 3000
+                });
+                
+                // Reload recent scans
+                loadRecentScans();
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'ไม่สามารถยืนยันได้',
+                    text: data.message || 'กรุณาตรวจสอบ QR Code หรือสิทธิ์การเข้าถึง',
+                });
+            }
+        }
+
+        // Load recent scans
+        function loadRecentScans() {
+            const url = 'https://script.google.com/macros/s/AKfycbxmTQ0knrfzI2puvfueSrjlTFKjA7KzG9aj1H356zyyUAwiCrP0HxkROceSsOVSdNgPHg/exec';
+            
+            const script = document.createElement('script');
+            const callbackName = 'recentScansCallback_' + Date.now();
+            
+            window[callbackName] = function(data) {
+                handleRecentScansData(data);
+                delete window[callbackName];
+                document.body.removeChild(script);
+            };
+            
+            script.src = `${url}?action=getRecentDeliveries&callback=${callbackName}`;
+            document.body.appendChild(script);
+        }
+
+        function handleRecentScansData(data) {
+            const container = document.getElementById('recentScans');
+            
+            if (data.success && data.deliveries.length > 0) {
+                container.innerHTML = data.deliveries.map(item => `
+                    <div style="
+                        background: #f8f9fa;
+                        padding: 15px;
+                        border-radius: 10px;
+                        margin-bottom: 10px;
+                        text-align: left;
+                        font-size: 14px;
+                    ">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <strong>${item.userName}</strong>
+                            <span style="color: #11998e;">✓ รับแล้ว</span>
+                        </div>
+                        <div style="color: #666; font-size: 12px;">
+                            ${item.rewardName}<br>
+                            ${formatThaiDateTime(item.deliveredDate)}
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = '<p style="text-align: center; color: #999;">ยังไม่มีประวัติการสแกน</p>';
+            }
+        }
+
+        function formatThaiDateTime(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('th-TH', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function formatThaiDate(dateStr) {
+            const date = new Date(dateStr);
+            const months = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+            const day = date.getDate();
+            const month = months[date.getMonth()];
+            const year = date.getFullYear() + 543;
+            return `${day} ${month} ${year}`;
+        }
+
+        function showLoading() {
+            document.getElementById('loading').classList.add('show');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').classList.remove('show');
+        }
+    </script>
+</body>
+</html>
