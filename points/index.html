@@ -455,7 +455,7 @@
         <div class="header">
             <div class="profile-section">
                 <div class="profile-info">
-                    <img id="profilePic" class="profile-pic" src="https://assets-v2.lottiefiles.com/a/4e57efe0-116f-11ee-996b-33ed91e4f89b/88U1Cylizi.gif" alt="Profile">
+                    <img id="profilePic" class="profile-pic" src="https://via.placeholder.com/50" alt="Profile">
                     <div>
                         <div id="userName" class="user-name">Loading...</div>
                         <div style="font-size: 12px; opacity: 0.8;">สมาชิก</div>
@@ -540,8 +540,17 @@
                 if (!liff.isLoggedIn()) {
                     liff.login();
                 } else {
-                    // Check friendship status first
-                    await checkFriendship();
+                    // Check if there's a scan parameter
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const scanData = urlParams.get('scan');
+                    
+                    if (scanData) {
+                        // Admin scanning QR code
+                        await handleQRScan(scanData);
+                    } else {
+                        // Normal flow - check friendship status
+                        await checkFriendship();
+                    }
                 }
             } catch (error) {
                 console.error('LIFF initialization failed', error);
@@ -551,6 +560,210 @@
                     text: 'ไม่สามารถเริ่มต้นระบบได้',
                 });
             }
+        }
+
+        // Handle QR Code Scanning
+        async function handleQRScan(scanData) {
+            try {
+                // Get user profile first
+                userProfile = await liff.getProfile();
+                userId = userProfile.userId;
+                
+                // Check if user is admin
+                showLoading();
+                
+                const url = 'https://script.google.com/macros/s/AKfycbxmTQ0knrfzI2puvfueSrjlTFKjA7KzG9aj1H356zyyUAwiCrP0HxkROceSsOVSdNgPHg/exec';
+                
+                const script = document.createElement('script');
+                const callbackName = 'scanCallback_' + Date.now();
+                
+                window[callbackName] = function(data) {
+                    hideLoading();
+                    handleScanResponse(data);
+                    delete window[callbackName];
+                    document.body.removeChild(script);
+                };
+                
+                script.src = `${url}?action=confirmDelivery&adminId=${userId}&scanData=${encodeURIComponent(scanData)}&callback=${callbackName}`;
+                document.body.appendChild(script);
+                
+            } catch (error) {
+                console.error('Error handling QR scan', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: 'ไม่สามารถประมวลผล QR Code ได้',
+                });
+            }
+        }
+
+        function handleScanResponse(data) {
+            if (data.success) {
+                // Show success screen
+                document.querySelector('.container').innerHTML = `
+                    <div style="
+                        min-height: 100vh;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        padding: 20px;
+                        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+                        color: white;
+                        text-align: center;
+                    ">
+                        <div style="
+                            background: white;
+                            border-radius: 20px;
+                            padding: 40px 30px;
+                            max-width: 350px;
+                            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+                        ">
+                            <div style="
+                                width: 100px;
+                                height: 100px;
+                                background: #11998e;
+                                border-radius: 50%;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                margin: 0 auto 20px;
+                                font-size: 50px;
+                            ">
+                                ✓
+                            </div>
+                            <h2 style="color: #333; margin-bottom: 15px; font-family: 'line_seed_sans_th';">
+                                ยืนยันการรับรางวัลสำเร็จ!
+                            </h2>
+                            <div style="color: #666; font-size: 16px; line-height: 1.5; font-family: 'line_seed_sans_th';">
+                                <p><strong>ผู้รับ:</strong> ${data.userName}</p>
+                                <p><strong>รางวัล:</strong> ${data.rewardName}</p>
+                                <p><strong>รหัสอ้างอิง:</strong> ${data.redemptionId}</p>
+                                <p style="margin-top: 15px; font-size: 14px;">
+                                    ${new Date().toLocaleDateString('th-TH', {
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                    })}
+                                </p>
+                            </div>
+                            <button onclick="liff.closeWindow()" style="
+                                background: #11998e;
+                                color: white;
+                                border: none;
+                                padding: 15px 40px;
+                                border-radius: 30px;
+                                font-size: 18px;
+                                font-weight: bold;
+                                cursor: pointer;
+                                font-family: 'line_seed_sans_th';
+                                margin-top: 20px;
+                                width: 100%;
+                            ">
+                                ปิดหน้าต่าง
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                // Send notification to user
+                if (data.userId) {
+                    sendDeliveryConfirmation(data.userId, data.rewardName);
+                }
+                
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'ไม่สามารถยืนยันได้',
+                    text: data.message || 'กรุณาตรวจสอบ QR Code หรือสิทธิ์การเข้าถึง',
+                    confirmButtonText: 'ตกลง',
+                    confirmButtonColor: '#ee5a24'
+                }).then(() => {
+                    liff.closeWindow();
+                });
+            }
+        }
+
+        // Send delivery confirmation to user
+        async function sendDeliveryConfirmation(targetUserId, rewardName) {
+            const flexMessage = {
+                type: 'flex',
+                altText: '✅ คุณได้รับรางวัลแล้ว!',
+                contents: {
+                    type: 'bubble',
+                    header: {
+                        type: 'box',
+                        layout: 'vertical',
+                        contents: [
+                            {
+                                type: 'text',
+                                text: '✅ ได้รับรางวัลเรียบร้อยแล้ว',
+                                weight: 'bold',
+                                size: 'lg',
+                                color: '#11998e',
+                                align: 'center'
+                            }
+                        ],
+                        backgroundColor: '#e8f5e9',
+                        paddingAll: '15px'
+                    },
+                    body: {
+                        type: 'box',
+                        layout: 'vertical',
+                        contents: [
+                            {
+                                type: 'image',
+                                url: 'https://stickershop.line-scdn.net/stickershop/v1/sticker/51626495/android/sticker.png',
+                                size: '120px',
+                                aspectMode: 'fit',
+                                margin: 'md'
+                            },
+                            {
+                                type: 'text',
+                                text: `🎁 ${rewardName}`,
+                                size: 'md',
+                                weight: 'bold',
+                                align: 'center',
+                                margin: 'lg',
+                                wrap: true
+                            },
+                            {
+                                type: 'text',
+                                text: 'ขอบคุณที่ร่วมกิจกรรมกับเรา',
+                                size: 'sm',
+                                color: '#666666',
+                                align: 'center',
+                                margin: 'sm'
+                            },
+                            {
+                                type: 'separator',
+                                margin: 'lg'
+                            },
+                            {
+                                type: 'text',
+                                text: `ยืนยันการรับรางวัลเมื่อ:\n${new Date().toLocaleDateString('th-TH', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                })}`,
+                                size: 'xs',
+                                color: '#666666',
+                                align: 'center',
+                                margin: 'md',
+                                wrap: true
+                            }
+                        ],
+                        paddingAll: '20px'
+                    }
+                }
+            };
+
+            // This would need server-side implementation to send to specific user
+            console.log('Delivery confirmation for user:', targetUserId);
         }
 
         async function checkFriendship() {
@@ -676,7 +889,7 @@
 
         function addFriend() {
             // Open LINE add friend URL
-            window.open('https://line.me/R/ti/p/@513pzbxe', '_blank');
+            window.open('https://line.me/R/ti/p/@dgw5488h', '_blank');
         }
 
         async function checkFriendshipAgain() {
@@ -1226,6 +1439,9 @@
                     timer: 2000
                 });
                 
+                // Send redemption flex message
+                sendRedemptionFlexMessage(data.redemptionId, data.rewardName, data.rewardPoints);
+                
                 loadUserData();
             } else {
                 Swal.fire({
@@ -1233,6 +1449,284 @@
                     title: 'เกิดข้อผิดพลาด',
                     text: data.message || 'ไม่สามารถแลกรางวัลได้',
                 });
+            }
+        }
+
+        // Send Redemption Flex Message with QR Code
+        async function sendRedemptionFlexMessage(redemptionId, rewardName, rewardPoints) {
+            // Generate QR code data with LIFF URL for scanning
+            const scanUrl = `https://liff.line.me/1656032875-GLpZe6By?scan=REDEEM:${redemptionId}`;
+            const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(scanUrl)}`;
+            
+            const flexMessage = {
+                type: 'flex',
+                altText: '🎁 แลกรางวัลสำเร็จ!',
+                contents: {
+                    type: 'bubble',
+                    size: 'kilo',
+                    header: {
+                        type: 'box',
+                        layout: 'vertical',
+                        contents: [
+                            {
+                                type: 'box',
+                                layout: 'horizontal',
+                                contents: [
+                                    {
+                                        type: 'box',
+                                        layout: 'vertical',
+                                        contents: [
+                                            {
+                                                type: 'image',
+                                                url: userProfile.pictureUrl || 'https://via.placeholder.com/40',
+                                                size: '40px',
+                                                aspectMode: 'cover',
+                                                aspectRatio: '1:1'
+                                            }
+                                        ],
+                                        width: '40px',
+                                        height: '40px',
+                                        cornerRadius: '20px'
+                                    },
+                                    {
+                                        type: 'box',
+                                        layout: 'vertical',
+                                        contents: [
+                                            {
+                                                type: 'text',
+                                                text: userProfile.displayName,
+                                                size: 'xs',
+                                                color: '#666666'
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: '🎁 แลกรางวัลสำเร็จ',
+                                                weight: 'bold',
+                                                size: 'md',
+                                                color: '#11998e'
+                                            }
+                                        ],
+                                        margin: 'md'
+                                    }
+                                ],
+                                paddingAll: '15px'
+                            }
+                        ],
+                        backgroundColor: '#f8f9fa'
+                    },
+                    body: {
+                        type: 'box',
+                        layout: 'vertical',
+                        contents: [
+                            {
+                                type: 'box',
+                                layout: 'vertical',
+                                contents: [
+                                    {
+                                        type: 'text',
+                                        text: 'QR Code สำหรับรับรางวัล',
+                                        size: 'sm',
+                                        color: '#666666',
+                                        align: 'center',
+                                        margin: 'sm'
+                                    },
+                                    {
+                                        type: 'image',
+                                        url: qrCodeUrl,
+                                        size: 'xl',
+                                        aspectMode: 'cover',
+                                        aspectRatio: '1:1',
+                                        margin: 'md'
+                                    }
+                                ],
+                                margin: 'md',
+                                paddingAll: '10px',
+                                backgroundColor: '#ffffff',
+                                cornerRadius: '10px',
+                                borderWidth: '1px',
+                                borderColor: '#eeeeee'
+                            },
+                            {
+                                type: 'box',
+                                layout: 'vertical',
+                                spacing: 'xs',
+                                margin: 'lg',
+                                contents: [
+                                    {
+                                        type: 'box',
+                                        layout: 'horizontal',
+                                        contents: [
+                                            {
+                                                type: 'text',
+                                                text: '📦 รางวัล:',
+                                                size: 'sm',
+                                                color: '#666666',
+                                                flex: 0
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: rewardName,
+                                                size: 'sm',
+                                                weight: 'bold',
+                                                color: '#333333',
+                                                align: 'end',
+                                                wrap: true
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        type: 'box',
+                                        layout: 'horizontal',
+                                        contents: [
+                                            {
+                                                type: 'text',
+                                                text: '💰 ใช้แต้ม:',
+                                                size: 'sm',
+                                                color: '#666666',
+                                                flex: 0
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: `${rewardPoints} แต้ม`,
+                                                size: 'sm',
+                                                weight: 'bold',
+                                                color: '#ee5a24',
+                                                align: 'end'
+                                            }
+                                        ],
+                                        margin: 'sm'
+                                    },
+                                    {
+                                        type: 'box',
+                                        layout: 'horizontal',
+                                        contents: [
+                                            {
+                                                type: 'text',
+                                                text: '🔢 รหัสอ้างอิง:',
+                                                size: 'sm',
+                                                color: '#666666',
+                                                flex: 0
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: redemptionId,
+                                                size: 'sm',
+                                                color: '#666666',
+                                                align: 'end'
+                                            }
+                                        ],
+                                        margin: 'sm'
+                                    },
+                                    {
+                                        type: 'box',
+                                        layout: 'horizontal',
+                                        contents: [
+                                            {
+                                                type: 'text',
+                                                text: '📅 วันที่:',
+                                                size: 'sm',
+                                                color: '#666666',
+                                                flex: 0
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: new Date().toLocaleDateString('th-TH', {
+                                                    year: 'numeric',
+                                                    month: 'short',
+                                                    day: 'numeric',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit'
+                                                }),
+                                                size: 'sm',
+                                                color: '#666666',
+                                                align: 'end',
+                                                wrap: true
+                                            }
+                                        ],
+                                        margin: 'sm'
+                                    }
+                                ]
+                            },
+                            {
+                                type: 'box',
+                                layout: 'vertical',
+                                margin: 'lg',
+                                contents: [
+                                    {
+                                        type: 'box',
+                                        layout: 'vertical',
+                                        contents: [
+                                            {
+                                                type: 'text',
+                                                text: '⏳ สถานะ: รอการอนุมัติ',
+                                                size: 'sm',
+                                                color: '#ff9800',
+                                                weight: 'bold',
+                                                align: 'center'
+                                            }
+                                        ],
+                                        backgroundColor: '#fff3e0',
+                                        paddingAll: '10px',
+                                        cornerRadius: '8px'
+                                    }
+                                ]
+                            },
+                            {
+                                type: 'separator',
+                                margin: 'lg'
+                            },
+                            {
+                                type: 'box',
+                                layout: 'vertical',
+                                margin: 'md',
+                                contents: [
+                                    {
+                                        type: 'text',
+                                        text: '💡 วิธีการรับรางวัล:',
+                                        size: 'sm',
+                                        weight: 'bold',
+                                        color: '#333333',
+                                        margin: 'sm'
+                                    },
+                                    {
+                                        type: 'text',
+                                        text: '1. รอ Admin อนุมัติการแลกรางวัล\n2. ให้ Admin สแกน QR Code นี้\n3. ระบบจะยืนยันการรับรางวัลอัตโนมัติ',
+                                        size: 'xs',
+                                        color: '#666666',
+                                        wrap: true,
+                                        margin: 'sm'
+                                    }
+                                ]
+                            }
+                        ],
+                        paddingAll: '15px'
+                    },
+                    footer: {
+                        type: 'box',
+                        layout: 'vertical',
+                        spacing: 'sm',
+                        contents: [
+                            {
+                                type: 'button',
+                                style: 'primary',
+                                height: 'sm',
+                                color: '#11998e',
+                                action: {
+                                    type: 'uri',
+                                    label: 'ดูสถานะการแลกรางวัล',
+                                    uri: liff.permanentLink.createUrl()
+                                }
+                            }
+                        ],
+                        paddingAll: '10px'
+                    }
+                }
+            };
+
+            try {
+                await liff.sendMessages([flexMessage]);
+            } catch (error) {
+                console.error('Error sending redemption flex message', error);
             }
         }
 
