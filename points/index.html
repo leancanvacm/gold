@@ -789,7 +789,7 @@
             };
 
             try {
-                await liff.shareTargetPicker([flexMessage]);
+                await liff.sendMessage([flexMessage]);
             } catch (error) {
                 console.error('Error sending flex message', error);
             }
