@@ -526,6 +526,7 @@
         let rewardsData = [];
         let isAdmin = false;
         let currentStreak = 0;
+        let isFriend = false;
 
         // LIFF Initialization
         window.onload = function() {
@@ -539,7 +540,8 @@
                 if (!liff.isLoggedIn()) {
                     liff.login();
                 } else {
-                    getUserProfile();
+                    // Check friendship status first
+                    await checkFriendship();
                 }
             } catch (error) {
                 console.error('LIFF initialization failed', error);
@@ -547,6 +549,140 @@
                     icon: 'error',
                     title: 'เกิดข้อผิดพลาด',
                     text: 'ไม่สามารถเริ่มต้นระบบได้',
+                });
+            }
+        }
+
+        async function checkFriendship() {
+            try {
+                const friendshipStatus = await liff.getFriendship();
+                isFriend = friendshipStatus.friendFlag;
+                
+                if (!isFriend) {
+                    // Show add friend dialog
+                    showAddFriendDialog();
+                } else {
+                    // Continue with normal flow
+                    getUserProfile();
+                }
+            } catch (error) {
+                console.error('Error checking friendship status', error);
+                // If error, assume not friend and show add friend dialog
+                showAddFriendDialog();
+            }
+        }
+
+        function showAddFriendDialog() {
+            // Hide main container
+            document.querySelector('.container').style.display = 'none';
+            
+            // Create and show add friend overlay
+            const overlay = document.createElement('div');
+            overlay.id = 'addFriendOverlay';
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 9999;
+            `;
+            
+            overlay.innerHTML = `
+                <div style="
+                    background: white;
+                    border-radius: 20px;
+                    padding: 40px 30px;
+                    max-width: 350px;
+                    text-align: center;
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+                ">
+                    <img src="https://stickershop.line-scdn.net/stickershop/v1/sticker/51626494/android/sticker.png" 
+                         style="width: 120px; height: 120px; margin-bottom: 20px;">
+                    <h2 style="color: #333; margin-bottom: 15px; font-family: 'line_seed_sans_th';">
+                        กรุณาเพิ่มเพื่อนบอทก่อน
+                    </h2>
+                    <p style="color: #666; margin-bottom: 25px; font-size: 16px; line-height: 1.5; font-family: 'line_seed_sans_th';">
+                        เพิ่มบอท <strong>@dgw5488h</strong> เป็นเพื่อน<br>
+                        เพื่อเริ่มสะสมแต้มและรับรางวัลพิเศษ!
+                    </p>
+                    <button onclick="addFriend()" style="
+                        background: #00B900;
+                        color: white;
+                        border: none;
+                        padding: 15px 40px;
+                        border-radius: 30px;
+                        font-size: 18px;
+                        font-weight: bold;
+                        cursor: pointer;
+                        font-family: 'line_seed_sans_th';
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                        margin: 0 auto 15px;
+                        box-shadow: 0 4px 15px rgba(0, 185, 0, 0.3);
+                    ">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/4/41/LINE_logo.svg" 
+                             style="width: 24px; height: 24px; filter: brightness(0) invert(1);">
+                        เพิ่มเพื่อน
+                    </button>
+                    <button onclick="checkFriendshipAgain()" style="
+                        background: transparent;
+                        color: #666;
+                        border: 1px solid #ddd;
+                        padding: 10px 30px;
+                        border-radius: 20px;
+                        font-size: 14px;
+                        cursor: pointer;
+                        font-family: 'line_seed_sans_th';
+                    ">
+                        ฉันเพิ่มเพื่อนแล้ว
+                    </button>
+                </div>
+            `;
+            
+            document.body.appendChild(overlay);
+        }
+
+        function addFriend() {
+            // Open LINE add friend URL
+            window.open('https://line.me/R/ti/p/@dgw5488h', '_blank');
+        }
+
+        async function checkFriendshipAgain() {
+            try {
+                const friendshipStatus = await liff.getFriendship();
+                isFriend = friendshipStatus.friendFlag;
+                
+                if (isFriend) {
+                    // Remove overlay and continue
+                    const overlay = document.getElementById('addFriendOverlay');
+                    if (overlay) {
+                        overlay.remove();
+                    }
+                    document.querySelector('.container').style.display = 'block';
+                    getUserProfile();
+                } else {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'ยังไม่ได้เพิ่มเพื่อน',
+                        text: 'กรุณาเพิ่มบอท @dgw5488h เป็นเพื่อนก่อน',
+                        confirmButtonText: 'ตกลง',
+                        confirmButtonColor: '#ee5a24'
+                    });
+                }
+            } catch (error) {
+                console.error('Error re-checking friendship', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: 'ไม่สามารถตรวจสอบสถานะได้',
+                    confirmButtonText: 'ลองอีกครั้ง',
+                    confirmButtonColor: '#ee5a24'
                 });
             }
         }
@@ -692,6 +828,24 @@
 
         // Perform check-in
         function performCheckin() {
+            // Check friendship before allowing checkin
+            if (!isFriend) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'ไม่สามารถเช็คอินได้',
+                    text: 'กรุณาเพิ่มบอท @dgw5488h เป็นเพื่อนก่อน',
+                    confirmButtonText: 'เพิ่มเพื่อน',
+                    confirmButtonColor: '#00B900',
+                    showCancelButton: true,
+                    cancelButtonText: 'ยกเลิก'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        addFriend();
+                    }
+                });
+                return;
+            }
+            
             showLoading();
             
             const url = 'https://script.google.com/macros/s/AKfycbxmTQ0knrfzI2puvfueSrjlTFKjA7KzG9aj1H356zyyUAwiCrP0HxkROceSsOVSdNgPHg/exec';
@@ -929,6 +1083,24 @@
 
         // Redeem reward
         function redeemReward(index) {
+            // Check friendship before allowing redemption
+            if (!isFriend) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'ไม่สามารถแลกรางวัลได้',
+                    text: 'กรุณาเพิ่มบอท @dgw5488h เป็นเพื่อนก่อน',
+                    confirmButtonText: 'เพิ่มเพื่อน',
+                    confirmButtonColor: '#00B900',
+                    showCancelButton: true,
+                    cancelButtonText: 'ยกเลิก'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        addFriend();
+                    }
+                });
+                return;
+            }
+            
             const reward = rewardsData[index];
             
             Swal.fire({
