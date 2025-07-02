@@ -559,22 +559,33 @@
                 isFriend = friendshipStatus.friendFlag;
                 
                 if (!isFriend) {
-                    // Show add friend dialog
-                    showAddFriendDialog();
+                    // User is not friend or has blocked the bot
+                    showAddFriendDialog('notFriend');
                 } else {
                     // Continue with normal flow
                     getUserProfile();
                 }
             } catch (error) {
                 console.error('Error checking friendship status', error);
-                // If error, assume not friend and show add friend dialog
-                showAddFriendDialog();
+                // If error, assume not friend/blocked and show appropriate dialog
+                showAddFriendDialog('error');
             }
         }
 
-        function showAddFriendDialog() {
+        function showAddFriendDialog(reason = 'notFriend') {
             // Hide main container
             document.querySelector('.container').style.display = 'none';
+            
+            // Determine message based on reason
+            let title = 'กรุณาเพิ่มเพื่อนบอทก่อน';
+            let message = 'เพิ่มบอท <strong>@dgw5488h</strong> เป็นเพื่อน<br>เพื่อเริ่มสะสมแต้มและรับรางวัลพิเศษ!';
+            let buttonText = 'เพิ่มเพื่อน';
+            
+            if (reason === 'blocked') {
+                title = 'กรุณาปลดบล็อคบอท';
+                message = 'คุณได้บล็อคบอท <strong>@dgw5488h</strong><br>กรุณาปลดบล็อคและเพิ่มเพื่อนเพื่อเข้าร่วมกิจกรรม';
+                buttonText = 'ปลดบล็อคและเพิ่มเพื่อน';
+            }
             
             // Create and show add friend overlay
             const overlay = document.createElement('div');
@@ -604,12 +615,27 @@
                     <img src="https://stickershop.line-scdn.net/stickershop/v1/sticker/51626494/android/sticker.png" 
                          style="width: 120px; height: 120px; margin-bottom: 20px;">
                     <h2 style="color: #333; margin-bottom: 15px; font-family: 'line_seed_sans_th';">
-                        กรุณาเพิ่มเพื่อนบอทก่อน
+                        ${title}
                     </h2>
                     <p style="color: #666; margin-bottom: 25px; font-size: 16px; line-height: 1.5; font-family: 'line_seed_sans_th';">
-                        เพิ่มบอท <strong>@dgw5488h</strong> เป็นเพื่อน<br>
-                        เพื่อเริ่มสะสมแต้มและรับรางวัลพิเศษ!
+                        ${message}
                     </p>
+                    <div style="
+                        background: #FFF5E1;
+                        border: 1px solid #FFD700;
+                        border-radius: 10px;
+                        padding: 15px;
+                        margin-bottom: 20px;
+                        font-size: 14px;
+                        color: #B8860B;
+                        text-align: left;
+                        font-family: 'line_seed_sans_th';
+                    ">
+                        <strong>⚠️ สำคัญ:</strong><br>
+                        • หากเคยบล็อคบอท กรุณาปลดบล็อคก่อน<br>
+                        • ต้องเป็นเพื่อนกับบอทเท่านั้น<br>
+                        • ระบบจะตรวจสอบสถานะอัตโนมัติ
+                    </div>
                     <button onclick="addFriend()" style="
                         background: #00B900;
                         color: white;
@@ -628,7 +654,7 @@
                     ">
                         <img src="https://upload.wikimedia.org/wikipedia/commons/4/41/LINE_logo.svg" 
                              style="width: 24px; height: 24px; filter: brightness(0) invert(1);">
-                        เพิ่มเพื่อน
+                        ${buttonText}
                     </button>
                     <button onclick="checkFriendshipAgain()" style="
                         background: transparent;
@@ -665,14 +691,40 @@
                         overlay.remove();
                     }
                     document.querySelector('.container').style.display = 'block';
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'ยินดีต้อนรับ!',
+                        text: 'ตอนนี้คุณสามารถเริ่มสะสมแต้มได้แล้ว',
+                        showConfirmButton: false,
+                        timer: 2000
+                    });
+                    
                     getUserProfile();
                 } else {
+                    // Still not friend or blocked
                     Swal.fire({
                         icon: 'warning',
                         title: 'ยังไม่ได้เพิ่มเพื่อน',
-                        text: 'กรุณาเพิ่มบอท @dgw5488h เป็นเพื่อนก่อน',
-                        confirmButtonText: 'ตกลง',
-                        confirmButtonColor: '#ee5a24'
+                        html: `
+                            <div style="text-align: left; font-size: 14px;">
+                                <p><strong>กรุณาตรวจสอบ:</strong></p>
+                                <ol style="margin-top: 10px;">
+                                    <li>เพิ่มบอท <strong>@dgw5488h</strong> เป็นเพื่อน</li>
+                                    <li>หากเคยบล็อค ต้องปลดบล็อคก่อน</li>
+                                    <li>รอสักครู่แล้วลองใหม่</li>
+                                </ol>
+                            </div>
+                        `,
+                        confirmButtonText: 'เพิ่มเพื่อนอีกครั้ง',
+                        confirmButtonColor: '#00B900',
+                        showCancelButton: true,
+                        cancelButtonText: 'ลองอีกครั้ง',
+                        cancelButtonColor: '#666'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            addFriend();
+                        }
                     });
                 }
             } catch (error) {
@@ -680,8 +732,8 @@
                 Swal.fire({
                     icon: 'error',
                     title: 'เกิดข้อผิดพลาด',
-                    text: 'ไม่สามารถตรวจสอบสถานะได้',
-                    confirmButtonText: 'ลองอีกครั้ง',
+                    text: 'ไม่สามารถตรวจสอบสถานะได้ กรุณาลองใหม่อีกครั้ง',
+                    confirmButtonText: 'ตกลง',
                     confirmButtonColor: '#ee5a24'
                 });
             }
@@ -833,7 +885,12 @@
                 Swal.fire({
                     icon: 'warning',
                     title: 'ไม่สามารถเช็คอินได้',
-                    text: 'กรุณาเพิ่มบอท @dgw5488h เป็นเพื่อนก่อน',
+                    html: `
+                        <p>กรุณาเพิ่มบอท <strong>@dgw5488h</strong> เป็นเพื่อนก่อน</p>
+                        <p style="font-size: 14px; color: #666; margin-top: 10px;">
+                            หากเคยบล็อคบอท ต้องปลดบล็อคและเพิ่มเพื่อนใหม่
+                        </p>
+                    `,
                     confirmButtonText: 'เพิ่มเพื่อน',
                     confirmButtonColor: '#00B900',
                     showCancelButton: true,
@@ -1088,7 +1145,12 @@
                 Swal.fire({
                     icon: 'warning',
                     title: 'ไม่สามารถแลกรางวัลได้',
-                    text: 'กรุณาเพิ่มบอท @dgw5488h เป็นเพื่อนก่อน',
+                    html: `
+                        <p>กรุณาเพิ่มบอท <strong>@dgw5488h</strong> เป็นเพื่อนก่อน</p>
+                        <p style="font-size: 14px; color: #666; margin-top: 10px;">
+                            หากเคยบล็อคบอท ต้องปลดบล็อคและเพิ่มเพื่อนใหม่
+                        </p>
+                    `,
                     confirmButtonText: 'เพิ่มเพื่อน',
                     confirmButtonColor: '#00B900',
                     showCancelButton: true,
