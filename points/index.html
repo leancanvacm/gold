@@ -1766,24 +1766,60 @@
         }
 
       // Send Flex Message
+        // Send Flex Message
         async function sendFlexMessage(pointsEarned, totalPoints, streak) {
             const flexMessage = {
                 type: 'flex',
                 altText: '✅ เช็คอินสำเร็จ!',
                 contents: {
                     type: 'bubble',
-                    size: 'micro',
+                    size: 'mega',
                     body: {
                         type: 'box',
                         layout: 'vertical',
                         contents: [
                             {
+                                type: 'box',
+                                layout: 'horizontal',
+                                contents: [
+                                    {
+                                        type: 'box',
+                                        layout: 'vertical',
+                                        contents: [
+                                            {
+                                                type: 'image',
+                                                url: userProfile.pictureUrl || 'https://via.placeholder.com/40',
+                                                size: '40px',
+                                                aspectMode: 'cover',
+                                                aspectRatio: '1:1'
+                                            }
+                                        ],
+                                        width: '40px',
+                                        height: '40px',
+                                        cornerRadius: '20px'
+                                    },
+                                    {
+                                        type: 'text',
+                                        text: userProfile.displayName,
+                                        size: 'sm',
+                                        color: '#666666',
+                                        margin: 'md',
+                                        gravity: 'center'
+                                    },
+                                    {
+                                        type: 'filler'
+                                    }
+                                ],
+                                margin: 'none'
+                            },
+                            {
                                 type: 'text',
                                 text: '✅ เช็คอินสำเร็จ!',
                                 weight: 'bold',
-                                size: 'lg',
+                                size: 'xl',
                                 color: '#11998e',
-                                align: 'center'
+                                align: 'center',
+                                margin: 'md'
                             },
                             {
                                 type: 'separator',
@@ -1792,43 +1828,105 @@
                             {
                                 type: 'box',
                                 layout: 'vertical',
-                                margin: 'md',
-                                spacing: 'xs',
+                                margin: 'lg',
+                                spacing: 'sm',
                                 contents: [
                                     {
-                                        type: 'text',
-                                        text: `🎁 ได้รับ +${pointsEarned} แต้ม`,
-                                        size: 'sm',
-                                        color: '#666666'
+                                        type: 'box',
+                                        layout: 'horizontal',
+                                        contents: [
+                                            {
+                                                type: 'text',
+                                                text: '🎁 แต้มที่ได้รับ',
+                                                size: 'md',
+                                                color: '#666666',
+                                                flex: 0
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: `+${pointsEarned} แต้ม`,
+                                                size: 'md',
+                                                weight: 'bold',
+                                                color: '#11998e',
+                                                align: 'end'
+                                            }
+                                        ]
                                     },
                                     {
-                                        type: 'text',
-                                        text: `💰 แต้มสะสม: ${totalPoints} แต้ม`,
-                                        size: 'md',
-                                        weight: 'bold',
-                                        color: '#ee5a24',
-                                        margin: 'xs'
+                                        type: 'box',
+                                        layout: 'horizontal',
+                                        contents: [
+                                            {
+                                                type: 'text',
+                                                text: '💰 แต้มสะสมทั้งหมด',
+                                                size: 'md',
+                                                color: '#666666',
+                                                flex: 0
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: `${totalPoints} แต้ม`,
+                                                size: 'lg',
+                                                weight: 'bold',
+                                                color: '#ee5a24',
+                                                align: 'end'
+                                            }
+                                        ],
+                                        margin: 'sm'
                                     },
                                     {
-                                        type: 'text',
-                                        text: `🔥 ${streak} วันติดต่อกัน`,
-                                        size: 'sm',
-                                        color: '#764ba2',
-                                        margin: 'xs'
+                                        type: 'box',
+                                        layout: 'horizontal',
+                                        contents: [
+                                            {
+                                                type: 'text',
+                                                text: '🔥 เช็คอินติดต่อกัน',
+                                                size: 'md',
+                                                color: '#666666',
+                                                flex: 0
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: `${streak} วัน`,
+                                                size: 'md',
+                                                weight: 'bold',
+                                                color: '#764ba2',
+                                                align: 'end'
+                                            }
+                                        ],
+                                        margin: 'sm'
                                     }
                                 ]
                             },
                             {
+                                type: 'box',
+                                layout: 'vertical',
+                                margin: 'lg',
+                                contents: [
+                                    {
+                                        type: 'text',
+                                        text: streak >= 7 ? '🎊 ยินดีด้วย! เช็คอินครบ 7 วันแล้ว' : `📅 เช็คอินอีก ${7-streak} วัน รับแต้มพิเศษ!`,
+                                        size: 'sm',
+                                        color: '#764ba2',
+                                        align: 'center',
+                                        wrap: true
+                                    }
+                                ],
+                                backgroundColor: '#f8f9fa',
+                                paddingAll: '10px',
+                                cornerRadius: '8px'
+                            },
+                            {
                                 type: 'button',
                                 style: 'primary',
-                                height: 'sm',
+                                height: 'md',
                                 color: '#ee5a24',
                                 action: {
                                     type: 'uri',
-                                    label: 'ดูรางวัล',
+                                    label: 'ดูแต้มและแลกรางวัล',
                                     uri: liff.permanentLink.createUrl()
                                 },
-                                margin: 'md'
+                                margin: 'xl'
                             }
                         ],
                         paddingAll: '20px'
