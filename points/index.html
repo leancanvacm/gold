@@ -670,6 +670,7 @@
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script>
         // Global variables
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxmTQ0knrfzI2puvfueSrjlTFKjA7KzG9aj1H356zyyUAwiCrP0HxkROceSsOVSdNgPHg/exec';
         let userId = '';
         let userProfile = {};
         let userPoints = 0;
@@ -766,8 +767,6 @@
                 // Check if user is admin
                 showLoading();
                 
-                const url = 'https://script.google.com/macros/s/AKfycbxmTQ0knrfzI2puvfueSrjlTFKjA7KzG9aj1H356zyyUAwiCrP0HxkROceSsOVSdNgPHg/exec';
-                
                 const script = document.createElement('script');
                 const callbackName = 'scanCallback_' + Date.now();
                 
@@ -778,7 +777,7 @@
                     document.body.removeChild(script);
                 };
                 
-                script.src = `${url}?action=confirmDelivery&adminId=${userId}&scanData=${encodeURIComponent(scanData)}&callback=${callbackName}`;
+                script.src = `${GOOGLE_SCRIPT_URL}?action=confirmDelivery&adminId=${userId}&scanData=${encodeURIComponent(scanData)}&callback=${callbackName}`;
                 document.body.appendChild(script);
                 
             } catch (error) {
@@ -1491,9 +1490,6 @@
         function loadUserData() {
             showLoading();
             
-            const url = 'https://script.google.com/macros/s/AKfycbxmTQ0knrfzI2puvfueSrjlTFKjA7KzG9aj1H356zyyUAwiCrP0HxkROceSsOVSdNgPHg/exec';
-            
-            // Using JSONP
             const script = document.createElement('script');
             const callbackName = 'jsonpCallback_' + Date.now();
             
@@ -1504,7 +1500,7 @@
                 document.body.removeChild(script);
             };
             
-            script.src = `${url}?action=getUserData&userId=${userId}&callback=${callbackName}`;
+            script.src = `${GOOGLE_SCRIPT_URL}?action=getUserData&userId=${userId}&callback=${callbackName}`;
             document.body.appendChild(script);
         }
 
@@ -1662,8 +1658,6 @@
             
             showLoading();
             
-            const url = 'https://script.google.com/macros/s/AKfycbxmTQ0knrfzI2puvfueSrjlTFKjA7KzG9aj1H356zyyUAwiCrP0HxkROceSsOVSdNgPHg/exec';
-            
             const script = document.createElement('script');
             const callbackName = 'checkinCallback_' + Date.now();
             
@@ -1674,7 +1668,7 @@
                 document.body.removeChild(script);
             };
             
-            script.src = `${url}?action=checkin&userId=${userId}&userName=${encodeURIComponent(userProfile.displayName)}&callback=${callbackName}`;
+            script.src = `${GOOGLE_SCRIPT_URL}?action=checkin&userId=${userId}&userName=${encodeURIComponent(userProfile.displayName)}&callback=${callbackName}`;
             document.body.appendChild(script);
         }
 
@@ -1765,7 +1759,6 @@
             }
         }
 
-      // Send Flex Message
         // Send Flex Message
         async function sendFlexMessage(pointsEarned, totalPoints, streak) {
             const flexMessage = {
@@ -1963,7 +1956,7 @@
                                 color: white;
                             ">🔗</div>
                             <p style="font-size: 16px; margin-bottom: 15px;">
-                                กรุณาเพิ่มบอท <strong>@dgw5888h</strong> เป็นเพื่อนก่อน
+                                กรุณาเพิ่มบอท <strong>@dgw5488h</strong> เป็นเพื่อนก่อน
                             </p>
                             <div style="
                                 background: #fff3cd;
@@ -2068,7 +2061,6 @@
             showLoading();
             
             const reward = rewardsData[index];
-            const url = 'https://script.google.com/macros/s/AKfycbxmTQ0knrfzI2puvfueSrjlTFKjA7KzG9aj1H356zyyUAwiCrP0HxkROceSsOVSdNgPHg/exec';
             
             const script = document.createElement('script');
             const callbackName = 'redeemCallback_' + Date.now();
@@ -2090,7 +2082,7 @@
                 callback: callbackName
             });
             
-            script.src = `${url}?${params.toString()}`;
+            script.src = `${GOOGLE_SCRIPT_URL}?${params.toString()}`;
             document.body.appendChild(script);
         }
 
@@ -2567,8 +2559,6 @@
         function loadPendingRedemptions() {
             if (!isAdmin) return;
             
-            const url = 'https://script.google.com/macros/s/AKfycbxmTQ0knrfzI2puvfueSrjlTFKjA7KzG9aj1H356zyyUAwiCrP0HxkROceSsOVSdNgPHg/exec';
-            
             const script = document.createElement('script');
             const callbackName = 'pendingCallback_' + Date.now();
             
@@ -2578,7 +2568,7 @@
                 document.body.removeChild(script);
             };
             
-            script.src = `${url}?action=getPending&callback=${callbackName}`;
+            script.src = `${GOOGLE_SCRIPT_URL}?action=getPending&callback=${callbackName}`;
             document.body.appendChild(script);
         }
 
@@ -2815,8 +2805,6 @@
         function processApproval(redemptionId, action) {
             showLoading();
             
-            const url = 'https://script.google.com/macros/s/AKfycbxmTQ0knrfzI2puvfueSrjlTFKjA7KzG9aj1H356zyyUAwiCrP0HxkROceSsOVSdNgPHg/exec';
-            
             const script = document.createElement('script');
             const callbackName = 'approvalCallback_' + Date.now();
             
@@ -2827,7 +2815,7 @@
                 document.body.removeChild(script);
             };
             
-            script.src = `${url}?action=${action}&redemptionId=${redemptionId}&adminId=${userId}&callback=${callbackName}`;
+            script.src = `${GOOGLE_SCRIPT_URL}?action=${action}&redemptionId=${redemptionId}&adminId=${userId}&callback=${callbackName}`;
             document.body.appendChild(script);
         }
 
@@ -3083,8 +3071,6 @@
         function processDeliveryScan(scanData) {
             showLoading();
             
-            const url = 'https://script.google.com/macros/s/AKfycbxmTQ0knrfzI2puvfueSrjlTFKjA7KzG9aj1H356zyyUAwiCrP0HxkROceSsOVSdNgPHg/exec';
-            
             const script = document.createElement('script');
             const callbackName = 'deliveryCallback_' + Date.now();
             
@@ -3095,7 +3081,7 @@
                 document.body.removeChild(script);
             };
             
-            script.src = `${url}?action=confirmDelivery&adminId=${userId}&scanData=${encodeURIComponent(scanData)}&callback=${callbackName}`;
+            script.src = `${GOOGLE_SCRIPT_URL}?action=confirmDelivery&adminId=${userId}&scanData=${encodeURIComponent(scanData)}&callback=${callbackName}`;
             document.body.appendChild(script);
         }
 
@@ -3216,8 +3202,6 @@
 
         // Load recent scans
         function loadRecentScans() {
-            const url = 'https://script.google.com/macros/s/AKfycbxmTQ0knrfzI2puvfueSrjlTFKjA7KzG9aj1H356zyyUAwiCrP0HxkROceSsOVSdNgPHg/exec';
-            
             const script = document.createElement('script');
             const callbackName = 'recentScansCallback_' + Date.now();
             
@@ -3227,7 +3211,7 @@
                 document.body.removeChild(script);
             };
             
-            script.src = `${url}?action=getRecentDeliveries&callback=${callbackName}`;
+            script.src = `${GOOGLE_SCRIPT_URL}?action=getRecentDeliveries&callback=${callbackName}`;
             document.body.appendChild(script);
         }
 
